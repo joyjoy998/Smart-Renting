@@ -21,7 +21,7 @@ import { useAuthStore } from "@/store/useAuthStore";
 
 export function Sidebar() {
   const { isOpen, setOpen } = useSidebarStore();
-  const { isAuthenticated, signOut } = useAuthStore();
+  const { isAuthenticated, signOut, signIn } = useAuthStore();
 
   return (
     <>
@@ -41,11 +41,12 @@ export function Sidebar() {
           bg-background border-r 
           transform transition-transform duration-300 ease-in-out 
           z-[1002]
+          flex flex-col
           ${isOpen ? "translate-x-0" : "-translate-x-full"}
         `}
       >
-        <div className="p-4">
-          <div className="flex items-center justify-between mb-4">
+        <div className="p-4 border-b">
+          <div className="flex items-center justify-between mb-4 ">
             <Logo />
             <Button variant="ghost" size="icon" onClick={() => setOpen(false)}>
               <X className="h-4 w-4" />
@@ -63,10 +64,10 @@ export function Sidebar() {
             <MapPin className="h-5 w-5" />
             <span>Saved Location</span>
           </button>
-        </div>
+          {/* </div> */}
 
-        {/* Main functional area for report generation, recommendation, and history management */}
-        <div className="p-4 border-t space-y-2">
+          {/* Main functional area for report generation, recommendation, and history management */}
+          {/* <div className="p-4 border-t space-y-2"> */}
           <button className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg">
             <FileText className="h-5 w-5" />
             <span>Report Generation</span>
@@ -83,8 +84,8 @@ export function Sidebar() {
           </button>
         </div>
 
-        {/* Functional area for help, account management, and sign out */}
-        <div className="p-4 border-t space-y-2">
+        {/* Functional area for help, Settings and Login Logout */}
+        <div className="p-4 border-t space-y-2 mt-auto">
           <button className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg">
             <HelpCircle className="h-5 w-5" />
             <span>Help/Guidance</span>
@@ -93,8 +94,8 @@ export function Sidebar() {
           {isAuthenticated ? (
             <>
               <button className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg">
-                <UserCog className="h-5 w-5" />
-                <span>Account Management</span>
+                <Settings className="h-5 w-5" />
+                <span>Setting</span>
               </button>
 
               <button
@@ -107,9 +108,7 @@ export function Sidebar() {
             </>
           ) : (
             <button
-              onClick={() => {
-                // Process Sign in
-              }}
+              onClick={signIn}
               className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg text-blue-500"
             >
               <LogIn className="h-5 w-5" />

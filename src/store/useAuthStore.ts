@@ -1,4 +1,3 @@
-// store/useAuthStore.ts
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
@@ -12,7 +11,7 @@ interface User {
 interface AuthStore {
   user: User | null;
   isAuthenticated: boolean;
-  signIn: (user: User) => void;
+  signIn: () => void;
   signOut: () => void;
 }
 
@@ -21,7 +20,7 @@ export const useAuthStore = create<AuthStore>()(
     (set) => ({
       user: null,
       isAuthenticated: false,
-      signIn: (user) => set({ user, isAuthenticated: true }),
+      signIn: () => set({ user: null, isAuthenticated: true }),
       signOut: () => set({ user: null, isAuthenticated: false }),
     }),
     {
