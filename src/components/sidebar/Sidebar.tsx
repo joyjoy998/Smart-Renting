@@ -95,7 +95,7 @@ export function Sidebar() {
             <>
               <button className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg">
                 <Settings className="h-5 w-5" />
-                <span>Setting</span>
+                <span>Settings</span>
               </button>
 
               <button
