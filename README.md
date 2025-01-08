@@ -5,3 +5,4 @@
 用到的开发框架是 nextjs 全栈框架,结合 shadcn/ui,tailwind css,lucide-react 用于 ui 开发,zustand 用于状态管理,clerk,supabase 用于用户认证以及关系型数据库的开发,以及 github 用于版本管理以及 CICD ,vercel 用于部署;
 
 测试是否可行
+test
