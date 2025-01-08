@@ -1,0 +1,40 @@
+name: Reviewer Assignment
+
+on:
+  pull_request:
+    types: [opened, ready_for_review]
+
+jobs:
+  assign-reviewer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v6
+        with:
+          script: |
+            const fixedReviewer = 'joyjoy998';  // 替换成固定审查者的用户名
+            const reviewers = [
+              'joyjoy998',
+              'BerniceQQ',
+              'ClaireWu27',
+              'mushroom18',
+              'quilla3',
+              'YaraWang999'
+              // 添加所有可能的审查者用户名
+            ];
+
+            // 排除 PR 作者和固定审查者
+            const availableReviewers = reviewers.filter(reviewer => 
+              reviewer !== context.payload.pull_request.user.login &&
+              reviewer !== fixedReviewer
+            );
+
+            // 随机选择一位审查者
+            const randomReviewer = availableReviewers[Math.floor(Math.random() * availableReviewers.length)];
+
+            // 分配固定审查者和随机审查者
+            await github.rest.pulls.requestReviewers({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number,
+              reviewers: [fixedReviewer, randomReviewer]
+            });
