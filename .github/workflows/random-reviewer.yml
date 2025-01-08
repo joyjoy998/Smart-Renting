@@ -27,8 +27,16 @@ jobs:
               
               const prAuthor = context.payload.pull_request.user.login;
               
+              // 设置 PR 创建者为 assignee
+              await github.rest.issues.addAssignees({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                assignees: [prAuthor]
+              });
+              
               if (prAuthor !== owner) {
-                // 如果不是 owner 发起的 PR,owner 必定是其中一个 reviewer
+                // 如果不是 owner 发起的 PR，owner 必定是其中一个 reviewer
                 const otherReviewers = reviewers.filter(r => r !== prAuthor);
                 const randomReviewer = otherReviewers[Math.floor(Math.random() * otherReviewers.length)];
                 
@@ -39,7 +47,7 @@ jobs:
                   reviewers: [owner, randomReviewer]
                 });
               } else {
-                // 如果是 owner 发起的 PR,随机选择两位其他审查者
+                // 如果是 owner 发起的 PR，随机选择两位其他审查者
                 const availableReviewers = reviewers.filter(r => r !== prAuthor);
                 const shuffled = availableReviewers.sort(() => 0.5 - Math.random());
                 const selectedReviewers = shuffled.slice(0, 2);
@@ -52,5 +60,6 @@ jobs:
                 });
               }
             } catch (error) {
+              console.log('Error:', error.message);
               core.setFailed(error.message);
             }
