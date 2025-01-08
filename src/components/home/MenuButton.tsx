@@ -1,6 +1,6 @@
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useSidebarStore } from "@/store/useSidebarStore";
+import { useSidebarStore } from "@/stores/useSidebarStore";
 
 export function MenuButton() {
   const setOpen = useSidebarStore((state) => state.setOpen);

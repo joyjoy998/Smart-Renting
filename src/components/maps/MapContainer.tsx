@@ -1,97 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  APIProvider,
-  Map,
-  useMap,
-  AdvancedMarker,
-  Pin,
-} from "@vis.gl/react-google-maps";
+import { APIProvider, Map } from "@vis.gl/react-google-maps";
 import { MAPS_CONFIG } from "@/lib/constants/mapConfigure";
-import Loading from "@/components/loading/Loading";
+import {
+  GOOGLE_DARK_MAPS_ID,
+  GOOGLE_LIGHT_MAPS_ID,
+} from "@/lib/constants/mapId";
+import Loading from "@/components/ui/Loading";
 import { useTheme } from "next-themes";
-
-function useUserLocation() {
-  const [location, setLocation] = useState<google.maps.LatLngLiteral | null>(
-    null
-  );
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          });
-        },
-        (error) => {
-          console.error("Error getting location:", error);
-          setError(error.message);
-          setLocation(MAPS_CONFIG.defaultCenter); // 失败时使用默认位置
-        }
-      );
-    } else {
-      setError("Geolocation is not supported by this browser.");
-      setLocation(MAPS_CONFIG.defaultCenter);
-    }
-  }, []);
-
-  return { location, error };
-}
-
-// UserLocationMarker component to handle the user's location marker
-function UserLocationMarker({
-  position,
-}: {
-  position: google.maps.LatLngLiteral;
-}) {
-  return (
-    <AdvancedMarker position={position}>
-      <Pin
-        background={"#3B82F6"} // Tailwind blue-500
-        borderColor={"#1D4ED8"} // Tailwind blue-700
-        glyphColor={"#FFFFFF"}
-        scale={1.2}
-      />
-    </AdvancedMarker>
-  );
-}
-
-// MapContent component to handle map state and markers
-function MapContent() {
-  const map = useMap();
-  const [userLocation, setUserLocation] = useState<google.maps.LatLngLiteral>(
-    MAPS_CONFIG.defaultCenter
-  );
-
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const pos = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          };
-          setUserLocation(pos);
-
-          // Update map center and zoom if map is available
-          if (map) {
-            map.panTo(pos);
-            map.setZoom(15);
-          }
-        },
-        (error) => {
-          console.error("Error getting location:", error);
-        }
-      );
-    }
-  }, [map]);
-
-  return <UserLocationMarker position={userLocation} />;
-}
+import { useUserLocation } from "@/hooks/map/useUserLocation";
+import { MapContent } from "./MapContent";
 
 export function MapContainer() {
   const [isError, setIsError] = useState<string | null>(null);
@@ -143,9 +62,7 @@ export function MapContainer() {
               defaultCenter={MAPS_CONFIG.defaultCenter}
               defaultZoom={MAPS_CONFIG.defaultZoom}
               mapId={
-                theme === "dark"
-                  ? process.env.NEXT_PUBLIC_GOOGLE_DARK_MAPS_ID
-                  : process.env.NEXT_PUBLIC_GOOGLE_LIGHT_MAPS_ID
+                theme === "dark" ? GOOGLE_DARK_MAPS_ID : GOOGLE_LIGHT_MAPS_ID
               }
               gestureHandling="greedy"
               fullscreenControl={false}
@@ -155,14 +72,14 @@ export function MapContainer() {
               scaleControl={true}
               streetViewControl={true}
               rotateControl={true}
-              minZoom={3} // Min zoom level
-              maxZoom={18} // Max zoom level
+              minZoom={3}
+              maxZoom={18}
               restriction={{
                 latLngBounds: {
-                  north: 85, // North Pole
-                  south: -85, // South Pole
-                  west: -180, // Westest
-                  east: 180, // Eastest
+                  north: 85,
+                  south: -85,
+                  west: -180,
+                  east: 180,
                 },
                 strictBounds: true,
               }}

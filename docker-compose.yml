@@ -1,0 +1,21 @@
+version: "3.8"
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+        NEXT_PUBLIC_GOOGLE_MAPS_API_KEY = AIzaSyCo_eaqVgk1voGM_HOWMh9i7UOqZE1RDrU
+        NEXT_PUBLIC_SUPABASE_URL = "https://rjgkwbxzuoriqmhwjylp.supabase.co"
+        NEXT_PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJqZ2t3Ynh6dW9yaXFtaHdqeWxwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzYyNDk0NjksImV4cCI6MjA1MTgyNTQ2OX0.NArzrR-DibRJWdrt5gZltI-IPR4vbNTE_s3n6Q6cKQ0"
+    command: npm run dev
+    # 添加开发时的热重载支持
+    stdin_open: true
+    tty: true

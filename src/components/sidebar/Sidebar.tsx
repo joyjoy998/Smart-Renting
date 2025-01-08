@@ -1,7 +1,7 @@
 // components/sidebar/Sidebar.tsx
 "use client";
 
-import { useSidebarStore } from "@/store/useSidebarStore";
+import { useSidebarStore } from "@/stores/useSidebarStore";
 import {
   X,
   BookmarkCheck,
@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "../home/Logo";
-import { useAuthStore } from "@/store/useAuthStore";
+import { useAuthStore } from "@/stores/useAuthStore";
 
 export function Sidebar() {
   const { isOpen, setOpen } = useSidebarStore();
