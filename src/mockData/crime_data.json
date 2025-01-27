@@ -1,0 +1,654 @@
+{
+    "total": [
+        {
+            "surburb": "Albury",
+            "crime count": 28408,
+            "safety score": 0.8130671386927597
+        },
+        {
+            "surburb": "Armidale Regional",
+            "crime count": 16239,
+            "safety score": 0.8931426804150846
+        },
+        {
+            "surburb": "Ballina",
+            "crime count": 11700,
+            "safety score": 0.9230106140068041
+        },
+        {
+            "surburb": "Balranald",
+            "crime count": 637,
+            "safety score": 0.9958083556514815
+        },
+        {
+            "surburb": "Bathurst Regional",
+            "crime count": 17157,
+            "safety score": 0.8871019747448493
+        },
+        {
+            "surburb": "Bayside",
+            "crime count": 36361,
+            "safety score": 0.7607340970855898
+        },
+        {
+            "surburb": "Bega Valley",
+            "crime count": 7292,
+            "safety score": 0.9520165296869756
+        },
+        {
+            "surburb": "Bellingen",
+            "crime count": 3084,
+            "safety score": 0.9797063874869216
+        },
+        {
+            "surburb": "Berrigan",
+            "crime count": 1887,
+            "safety score": 0.9875829939000718
+        },
+        {
+            "surburb": "Blacktown",
+            "crime count": 125572,
+            "safety score": 0.17369989932157215
+        },
+        {
+            "surburb": "Bland",
+            "crime count": 1460,
+            "safety score": 0.9903927774743533
+        },
+        {
+            "surburb": "Blayney",
+            "crime count": 1813,
+            "safety score": 0.9880699353157552
+        },
+        {
+            "surburb": "Blue Mountains",
+            "crime count": 14267,
+            "safety score": 0.9061190111141088
+        },
+        {
+            "surburb": "Bogan",
+            "crime count": 1600,
+            "safety score": 0.9894715369581955
+        },
+        {
+            "surburb": "Bourke",
+            "crime count": 5667,
+            "safety score": 0.9627094999638084
+        },
+        {
+            "surburb": "Brewarrina",
+            "crime count": 2009,
+            "safety score": 0.9867801985931342
+        },
+        {
+            "surburb": "Broken Hill",
+            "crime count": 10678,
+            "safety score": 0.9297356697747567
+        },
+        {
+            "surburb": "Burwood",
+            "crime count": 11205,
+            "safety score": 0.9262678572603623
+        },
+        {
+            "surburb": "Byron",
+            "crime count": 13200,
+            "safety score": 0.9131401799051122
+        },
+        {
+            "surburb": "Cabonne",
+            "crime count": 2523,
+            "safety score": 0.9833979298409544
+        },
+        {
+            "surburb": "Camden",
+            "crime count": 15879,
+            "safety score": 0.8955115845994907
+        },
+        {
+            "surburb": "Campbelltown",
+            "crime count": 56166,
+            "safety score": 0.6304114654962525
+        },
+        {
+            "surburb": "Canada Bay",
+            "crime count": 14626,
+            "safety score": 0.9037566872191038
+        },
+        {
+            "surburb": "Canterbury-Bankstown",
+            "crime count": 77931,
+            "safety score": 0.48719146668070457
+        },
+        {
+            "surburb": "Carrathool",
+            "crime count": 973,
+            "safety score": 0.9935973784127026
+        },
+        {
+            "surburb": "Central Coast",
+            "crime count": 100717,
+            "safety score": 0.3372529923866051
+        },
+        {
+            "surburb": "Central Darling",
+            "crime count": 2565,
+            "safety score": 0.983121557686107
+        },
+        {
+            "surburb": "Cessnock",
+            "crime count": 26617,
+            "safety score": 0.8248524370101797
+        },
+        {
+            "surburb": "Clarence Valley",
+            "crime count": 19007,
+            "safety score": 0.8749284393527628
+        },
+        {
+            "surburb": "Cobar",
+            "crime count": 2114,
+            "safety score": 0.9860892682060157
+        },
+        {
+            "surburb": "Coffs Harbour",
+            "crime count": 32919,
+            "safety score": 0.7833834532042719
+        },
+        {
+            "surburb": "Coolamon",
+            "crime count": 746,
+            "safety score": 0.9950911041067586
+        },
+        {
+            "surburb": "Coonamble",
+            "crime count": 4217,
+            "safety score": 0.9722509195954439
+        },
+        {
+            "surburb": "Cootamundra-Gundagai",
+            "crime count": 2928,
+            "safety score": 0.9807329126334976
+        },
+        {
+            "surburb": "Cowra",
+            "crime count": 5665,
+            "safety score": 0.9627226605426107
+        },
+        {
+            "surburb": "Cumberland",
+            "crime count": 59411,
+            "safety score": 0.6090584263895926
+        },
+        {
+            "surburb": "Dubbo Regional",
+            "crime count": 38544,
+            "safety score": 0.7463693253229278
+        },
+        {
+            "surburb": "Dungog",
+            "crime count": 1775,
+            "safety score": 0.988319986312998
+        },
+        {
+            "surburb": "Edward River",
+            "crime count": 3119,
+            "safety score": 0.9794760773578822
+        },
+        {
+            "surburb": "Eurobodalla",
+            "crime count": 13143,
+            "safety score": 0.9135152564009765
+        },
+        {
+            "surburb": "Fairfield",
+            "crime count": 45582,
+            "safety score": 0.7000572485177898
+        },
+        {
+            "surburb": "Federation",
+            "crime count": 3176,
+            "safety score": 0.9791010008620179
+        },
+        {
+            "surburb": "Forbes",
+            "crime count": 5252,
+            "safety score": 0.9654403200652765
+        },
+        {
+            "surburb": "Georges River",
+            "crime count": 26188,
+            "safety score": 0.8276753811632636
+        },
+        {
+            "surburb": "Gilgandra",
+            "crime count": 1996,
+            "safety score": 0.9868657423553487
+        },
+        {
+            "surburb": "Glen Innes Severn",
+            "crime count": 4141,
+            "safety score": 0.9727510215899295
+        },
+        {
+            "surburb": "Goulburn Mulwaree",
+            "crime count": 9453,
+            "safety score": 0.9377965242911384
+        },
+        {
+            "surburb": "Greater Hume Shire",
+            "crime count": 1986,
+            "safety score": 0.9869315452493601
+        },
+        {
+            "surburb": "Griffith",
+            "crime count": 12396,
+            "safety score": 0.9184307325836191
+        },
+        {
+            "surburb": "Gunnedah",
+            "crime count": 6032,
+            "safety score": 0.9603076943323967
+        },
+        {
+            "surburb": "Gwydir",
+            "crime count": 1246,
+            "safety score": 0.9918009594061947
+        },
+        {
+            "surburb": "Hawkesbury",
+            "crime count": 15904,
+            "safety score": 0.8953470773644625
+        },
+        {
+            "surburb": "Hay",
+            "crime count": 1217,
+            "safety score": 0.9919917877988274
+        },
+        {
+            "surburb": "Hilltops",
+            "crime count": 5332,
+            "safety score": 0.9649138969131863
+        },
+        {
+            "surburb": "Hornsby",
+            "crime count": 18981,
+            "safety score": 0.8750995268771921
+        },
+        {
+            "surburb": "Hunters Hill",
+            "crime count": 2268,
+            "safety score": 0.985075903638242
+        },
+        {
+            "surburb": "Inner West",
+            "crime count": 45726,
+            "safety score": 0.6991096868440274
+        },
+        {
+            "surburb": "Inverell",
+            "crime count": 8752,
+            "safety score": 0.942409307161329
+        },
+        {
+            "surburb": "Junee",
+            "crime count": 1512,
+            "safety score": 0.9900506024254947
+        },
+        {
+            "surburb": "Kempsey",
+            "crime count": 18243,
+            "safety score": 0.8799557804552244
+        },
+        {
+            "surburb": "Kiama",
+            "crime count": 3657,
+            "safety score": 0.9759358816600754
+        },
+        {
+            "surburb": "Ku-Ring-Gai",
+            "crime count": 11238,
+            "safety score": 0.9260507077101251
+        },
+        {
+            "surburb": "Kyogle",
+            "crime count": 2085,
+            "safety score": 0.9862800965986485
+        },
+        {
+            "surburb": "Lachlan",
+            "crime count": 3838,
+            "safety score": 0.9747448492784713
+        },
+        {
+            "surburb": "Lake Macquarie",
+            "crime count": 61275,
+            "safety score": 0.5967927669458903
+        },
+        {
+            "surburb": "Lane Cove",
+            "crime count": 5083,
+            "safety score": 0.966552388974067
+        },
+        {
+            "surburb": "Leeton",
+            "crime count": 4524,
+            "safety score": 0.9702307707492975
+        },
+        {
+            "surburb": "Lismore",
+            "crime count": 17384,
+            "safety score": 0.8856082490507933
+        },
+        {
+            "surburb": "Lithgow",
+            "crime count": 8273,
+            "safety score": 0.9455612657844692
+        },
+        {
+            "surburb": "Liverpool",
+            "crime count": 64862,
+            "safety score": 0.5731892688640446
+        },
+        {
+            "surburb": "Liverpool Plains",
+            "crime count": 2392,
+            "safety score": 0.9842599477525021
+        },
+        {
+            "surburb": "Lockhart",
+            "crime count": 661,
+            "safety score": 0.9956504287058545
+        },
+        {
+            "surburb": "Lord Howe Island",
+            "crime count": 100,
+            "safety score": 0.9993419710598872
+        },
+        {
+            "surburb": "Maitland",
+            "crime count": 33778,
+            "safety score": 0.777730984608703
+        },
+        {
+            "surburb": "Mid-Coast",
+            "crime count": 35557,
+            "safety score": 0.7660246497640966
+        },
+        {
+            "surburb": "Mid-Western Regional",
+            "crime count": 7404,
+            "safety score": 0.9512795372740493
+        },
+        {
+            "surburb": "Moree Plains",
+            "crime count": 15306,
+            "safety score": 0.899282090426337
+        },
+        {
+            "surburb": "Mosman",
+            "crime count": 3948,
+            "safety score": 0.9740210174443472
+        },
+        {
+            "surburb": "Murray River",
+            "crime count": 3269,
+            "safety score": 0.978489033947713
+        },
+        {
+            "surburb": "Murrumbidgee",
+            "crime count": 1047,
+            "safety score": 0.9931104369970192
+        },
+        {
+            "surburb": "Muswellbrook",
+            "crime count": 8305,
+            "safety score": 0.9453506965236331
+        },
+        {
+            "surburb": "Nambucca Valley",
+            "crime count": 8707,
+            "safety score": 0.9427054201843797
+        },
+        {
+            "surburb": "Narrabri",
+            "crime count": 5741,
+            "safety score": 0.962222558548125
+        },
+        {
+            "surburb": "Narrandera",
+            "crime count": 3115,
+            "safety score": 0.9795023985154867
+        },
+        {
+            "surburb": "Narromine",
+            "crime count": 4451,
+            "safety score": 0.9707111318755799
+        },
+        {
+            "surburb": "Newcastle",
+            "crime count": 84735,
+            "safety score": 0.4424191775954307
+        },
+        {
+            "surburb": "North Sydney",
+            "crime count": 12160,
+            "safety score": 0.9199836808822852
+        },
+        {
+            "surburb": "Northern Beaches",
+            "crime count": 42183,
+            "safety score": 0.7224236521922234
+        },
+        {
+            "surburb": "Oberon",
+            "crime count": 1305,
+            "safety score": 0.9914127223315281
+        },
+        {
+            "surburb": "Orange",
+            "crime count": 22704,
+            "safety score": 0.850601109436793
+        },
+        {
+            "surburb": "Parkes",
+            "crime count": 6692,
+            "safety score": 0.9559647033276524
+        },
+        {
+            "surburb": "Parramatta",
+            "crime count": 70807,
+            "safety score": 0.5340694483743396
+        },
+        {
+            "surburb": "Penrith",
+            "crime count": 75288,
+            "safety score": 0.5045831715678856
+        },
+        {
+            "surburb": "Port Macquarie-Hastings",
+            "crime count": 22406,
+            "safety score": 0.8525620356783291
+        },
+        {
+            "surburb": "Port Stephens",
+            "crime count": 21757,
+            "safety score": 0.8568326434996612
+        },
+        {
+            "surburb": "Queanbeyan-Palerang Regional",
+            "crime count": 15366,
+            "safety score": 0.8988872730622692
+        },
+        {
+            "surburb": "Randwick",
+            "crime count": 31872,
+            "safety score": 0.7902730162072528
+        },
+        {
+            "surburb": "Richmond Valley",
+            "crime count": 9737,
+            "safety score": 0.935927722101218
+        },
+        {
+            "surburb": "Ryde",
+            "crime count": 21636,
+            "safety score": 0.8576288585171976
+        },
+        {
+            "surburb": "Shellharbour",
+            "crime count": 18680,
+            "safety score": 0.8770801939869315
+        },
+        {
+            "surburb": "Shoalhaven",
+            "crime count": 31579,
+            "safety score": 0.7922010410017832
+        },
+        {
+            "surburb": "Singleton",
+            "crime count": 8352,
+            "safety score": 0.9450414229217801
+        },
+        {
+            "surburb": "Snowy Monaro Regional",
+            "crime count": 4162,
+            "safety score": 0.9726128355125059
+        },
+        {
+            "surburb": "Snowy Valleys",
+            "crime count": 4857,
+            "safety score": 0.968039534378722
+        },
+        {
+            "surburb": "Strathfield",
+            "crime count": 11787,
+            "safety score": 0.9224381288289059
+        },
+        {
+            "surburb": "Sutherland Shire",
+            "crime count": 36203,
+            "safety score": 0.7617737828109681
+        },
+        {
+            "surburb": "Sydney",
+            "crime count": 151969,
+            "safety score": 0.0
+        },
+        {
+            "surburb": "Tamworth Regional",
+            "crime count": 29635,
+            "safety score": 0.8049931235975758
+        },
+        {
+            "surburb": "Temora",
+            "crime count": 1548,
+            "safety score": 0.989813712007054
+        },
+        {
+            "surburb": "Tenterfield",
+            "crime count": 2791,
+            "safety score": 0.9816344122814521
+        },
+        {
+            "surburb": "The Hills Shire",
+            "crime count": 24511,
+            "safety score": 0.8387105264889549
+        },
+        {
+            "surburb": "Tweed",
+            "crime count": 24749,
+            "safety score": 0.8371444176114866
+        },
+        {
+            "surburb": "Unincorporated Far West",
+            "crime count": 641,
+            "safety score": 0.995782034493877
+        },
+        {
+            "surburb": "Upper Hunter Shire",
+            "crime count": 3640,
+            "safety score": 0.9760477465798946
+        },
+        {
+            "surburb": "Upper Lachlan Shire",
+            "crime count": 1119,
+            "safety score": 0.992636656160138
+        },
+        {
+            "surburb": "Uralla",
+            "crime count": 1149,
+            "safety score": 0.9924392474781041
+        },
+        {
+            "surburb": "Wagga Wagga",
+            "crime count": 34456,
+            "safety score": 0.7732695483947384
+        },
+        {
+            "surburb": "Walcha",
+            "crime count": 752,
+            "safety score": 0.9950516223703518
+        },
+        {
+            "surburb": "Walgett",
+            "crime count": 5566,
+            "safety score": 0.9633741091933223
+        },
+        {
+            "surburb": "Warren",
+            "crime count": 1818,
+            "safety score": 0.9880370338687495
+        },
+        {
+            "surburb": "Warrumbungle Shire",
+            "crime count": 3572,
+            "safety score": 0.9764952062591713
+        },
+        {
+            "surburb": "Waverley",
+            "crime count": 22251,
+            "safety score": 0.8535819805355039
+        },
+        {
+            "surburb": "Weddin",
+            "crime count": 662,
+            "safety score": 0.9956438484164534
+        },
+        {
+            "surburb": "Wentworth",
+            "crime count": 3333,
+            "safety score": 0.9780678954260409
+        },
+        {
+            "surburb": "Willoughby",
+            "crime count": 16289,
+            "safety score": 0.8928136659450283
+        },
+        {
+            "surburb": "Wingecarribee",
+            "crime count": 7808,
+            "safety score": 0.9486211003559937
+        },
+        {
+            "surburb": "Wollondilly",
+            "crime count": 7151,
+            "safety score": 0.9529443504925347
+        },
+        {
+            "surburb": "Wollongong",
+            "crime count": 66519,
+            "safety score": 0.5622857293263758
+        },
+        {
+            "surburb": "Woollahra",
+            "crime count": 10023,
+            "safety score": 0.9340457593324955
+        },
+        {
+            "surburb": "Yass Valley",
+            "crime count": 2305,
+            "safety score": 0.9848324329304002
+        }
+    ]
+}

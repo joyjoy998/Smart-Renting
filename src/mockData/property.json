@@ -1,0 +1,50 @@
+[
+  {
+    "property_property_id": "pro1",
+    "address": "2/40 Virginia Street, NORTH WOLLONGONG NSW 2500",
+    "bedrooms": 3,
+    "bathrooms": 1,
+    "parkingSpaces": 2,
+    "weeklyRent": 780,
+    "propertyType": "Unit"
+  },
+
+  {
+    "property_property_id": "pro2",
+    "address": "27 Porter Street, NORTH WOLLONGONG NSW 2500",
+    "bedrooms": 3,
+    "bathrooms": 1,
+    "parkingSpaces": 0,
+    "weeklyRent": 680,
+    "propertyType": "House"
+  },
+  {
+    "property_id": "pro3",
+    "address": "4/13-15 Soudan Street, FAIRY MEADOW NSW 2519",
+    "bedrooms": 3,
+    "bathrooms": 1,
+    "parkingSpaces": 1,
+    "weeklyRent": 585,
+    "propertyType": "Apartment"
+  },
+
+  {
+    "property_id": "pro4",
+    "address": "5/34 Daisy Street, FAIRY MEADOW NSW 25190",
+    "bedrooms": 2,
+    "bathrooms": 1,
+    "parkingSpaces": 1,
+    "weeklyRent": 520,
+    "propertyType": "Apartment"
+  },
+
+  {
+    "property_id": "pro5",
+    "address": "12 Old Farm Road, HELENSBURGH NSW 2508",
+    "bedrooms": 3,
+    "bathrooms": 1,
+    "parkingSpaces": 2,
+    "weeklyRent": 780,
+    "propertyType": "House"
+  }
+]
