@@ -1,6 +1,6 @@
 import { ModeToggle } from "@/components/theme/ModeToggle";
 import { AccountButton } from "./AccountButton";
-import { LanguageToggle } from "../userSettings/LanguageToggle";
+import { LanguageToggle } from "../userCustomization/LanguageToggle";
 import { SearchBox } from "./SearchBox";
 
 export function Header() {

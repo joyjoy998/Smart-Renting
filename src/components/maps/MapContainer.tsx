@@ -11,6 +11,7 @@ import Loading from "@/components/ui/Loading";
 import { useTheme } from "next-themes";
 import { useUserLocation } from "@/hooks/map/useUserLocation";
 import { MapContent } from "./MapContent";
+import { SettingsPopup } from "@/components/sidebar/SettingsPopup";
 
 export function MapContainer() {
   const [isError, setIsError] = useState<string | null>(null);
@@ -85,6 +86,7 @@ export function MapContainer() {
               }}
             >
               <MapContent />
+              <SettingsPopup />
             </Map>
           </div>
         </APIProvider>
