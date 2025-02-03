@@ -1,0 +1,42 @@
+[
+  {
+    "user_id": "u1",
+    "poi_id": "poi1",
+    "address": "University of Wollongong, Northfields Ave, Stand D, Keiraville NSW 2500, Australia",
+    "type": "school",
+    "linkedProperties": ["pro1", "pro2"],
+    "customType": null,
+    "createdAt": "2025-01-10T08:30:00Z",
+    "notes": ""
+  },
+  {
+    "user_id": "u1",
+    "poi_id": "poi2",
+    "address": "Anytime Fitness Figtree, Unit 17/2 Drummond St, Spring Hill NSW 2500, Australia",
+    "type": "gym",
+    "linkedProperties": ["pro1", "pro2"],
+    "customType": null,
+    "createdAt": "2025-01-10T08:31:00Z",
+    "notes": "24/7 gym access"
+  },
+  {
+    "user_id": "u1",
+    "poi_id": "poi3",
+    "address": "Coles Wollongong, 200 Crown St, Wollongong NSW 2500, Australia",
+    "type": "grocery",
+    "linkedProperties": ["pro1", "pro2"],
+    "customType": null,
+    "createdAt": "2025-01-10T08:32:00Z",
+    "notes": ""
+  },
+  {
+    "user_id": "u1",
+    "poi_id": "poi4",
+    "address": "North Wollongong Station",
+    "type": "station",
+    "linkedProperties": ["pro1", "pro2"],
+    "customType": null,
+    "createdAt": "2025-01-10T08:33:00Z",
+    "notes": ""
+  }
+]
