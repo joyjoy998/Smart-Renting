@@ -4,7 +4,7 @@ const TravelModeSelector = () => {
   const { travelMode, setTravelMode } = useRatingStore();
 
   const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setTravelMode(event.target.value as "walking" | "driving" | "transit");
+    setTravelMode(event.target.value as "WALKING" | "DRIVING" | "TRANSIT");
   };
 
   return (
@@ -13,9 +13,9 @@ const TravelModeSelector = () => {
       value={travelMode}
       onChange={handleChange}
     >
-      <option value="walking">🚶 Walking</option>
-      <option value="driving">🚗 Driving</option>
-      <option value="transit">🚌 Public Transit</option>
+      <option value="WALKING">🚶 Walking</option>
+      <option value="DRIVING">🚗 Driving</option>
+      <option value="TRANSIT">🚌 Public Transit</option>
     </select>
   );
 };

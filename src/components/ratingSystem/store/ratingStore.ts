@@ -5,10 +5,10 @@ import propertiesData from "@/components/ratingSystem/mockData/property.json";
 interface Property {
   property_property_id: string;
   address: string;
-  bedrooms: number; // 卧室数量
-  bathrooms: number; // 浴室数量
-  parkingSpaces: number; // 车位数量
-  weeklyRent: number; // 每周租金，单位：澳元
+  bedrooms: number;
+  bathrooms: number;
+  parkingSpaces: number;
+  weeklyRent: number;
 }
 
 interface POI {
@@ -16,7 +16,7 @@ interface POI {
   address: string;
 }
 
-type TravelMode = "walking" | "driving" | "transit";
+type TravelMode = "WALKING" | "DRIVING" | "TRANSIT";
 
 interface RatingState {
   properties: Property[];
@@ -37,7 +37,7 @@ export const useRatingStore = create<RatingState>((set) => ({
   properties: propertiesData,
   pois: poisData,
   selectedPOI: null,
-  travelMode: "walking",
+  travelMode: "WALKING",
   distanceScores: {},
   travelTimes: {},
   distances: {},
