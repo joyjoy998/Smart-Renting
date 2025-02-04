@@ -2,14 +2,14 @@
 
 import { MapContainer } from "@/components/maps/MapContainer";
 import { Header } from "@/components/home/Header";
-import RatingPageTest from "@/components/ratingSystem/ratingReport";
+import RatingReport from "@/components/ratingSystem/RatingReport";
 
 export default function Home() {
   return (
     <main className="h-screen w-screen relative">
       <Header />
       <MapContainer />
-      <RatingPageTest />
+      <RatingReport />
     </main>
   );
 }

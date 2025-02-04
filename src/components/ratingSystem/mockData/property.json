@@ -19,7 +19,7 @@
     "propertyType": "House"
   },
   {
-    "property_id": "pro3",
+    "property_property_id": "pro3",
     "address": "4/13-15 Soudan Street, FAIRY MEADOW NSW 2519",
     "bedrooms": 3,
     "bathrooms": 1,
@@ -29,7 +29,7 @@
   },
 
   {
-    "property_id": "pro4",
+    "property_property_id": "pro4",
     "address": "5/34 Daisy Street, FAIRY MEADOW NSW 25190",
     "bedrooms": 2,
     "bathrooms": 1,
@@ -39,7 +39,7 @@
   },
 
   {
-    "property_id": "pro5",
+    "property_property_id": "pro5",
     "address": "12 Old Farm Road, HELENSBURGH NSW 2508",
     "bedrooms": 3,
     "bathrooms": 1,
