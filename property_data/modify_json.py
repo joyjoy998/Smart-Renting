@@ -34,11 +34,18 @@ def process_record(record):
     else:
         record["propertyType"] = property_type_str
 
-    # 5. 重新构造记录，确保键的顺序：address 放第一，其后依次是 weeklyRent, image, bedrooms, bathrooms, parkingSpaces, propertyType
+    # 5. image 处理：如果值为空则存成空数组，否则包装成数组
+    image_value = record.get("image", "").strip()
+    if image_value:
+        record["image"] = [image_value]
+    else:
+        record["image"] = []
+
+    # 6. 重新构造记录，确保键的顺序：address 放第一，其后依次是 weeklyRent, image, bedrooms, bathrooms, parkingSpaces, propertyType
     ordered_record = {
         "address": record.get("address", {}),
         "weeklyRent": record.get("weeklyRent", 0),
-        "image": record.get("image", ""),
+        "image": record.get("image", []),
         "bedrooms": record.get("bedrooms", 0),
         "bathrooms": record.get("bathrooms", 0),
         "parkingSpaces": record.get("parkingSpaces", 0),
