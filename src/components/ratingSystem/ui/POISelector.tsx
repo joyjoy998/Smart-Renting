@@ -21,7 +21,7 @@ const POISelector = () => {
       </option>
       {pois.map((poi) => (
         <option key={poi.poi_id} value={poi.poi_id}>
-          {poi.address}
+          {poi.address.split(",")[0]}
         </option>
       ))}
     </select>

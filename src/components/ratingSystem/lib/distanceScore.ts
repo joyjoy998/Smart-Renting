@@ -12,6 +12,20 @@ interface POI {
 
 type TravelMode = "WALKING" | "DRIVING" | "TRANSIT";
 
+declare global {
+  interface Window {
+    google: typeof google;
+  }
+}
+
+function isGoogleMapsLoaded(): boolean {
+  return !!(
+    typeof window !== "undefined" &&
+    window.google &&
+    window.google.maps
+  );
+}
+
 /**
  * 计算选定 POI 的行程时间和距离，并计算距离分数
  * @param selectedPOI 用户选择的 POI
@@ -31,7 +45,13 @@ export async function calculateDistanceScore(
     return;
   }
 
-  if (!travelMode || !(travelMode in google.maps.TravelMode)) {
+  if (!isGoogleMapsLoaded()) {
+    console.error("Google Maps API is not loaded");
+    return;
+  }
+
+  const validTravelModes = ["WALKING", "DRIVING", "TRANSIT"];
+  if (!validTravelModes.includes(travelMode)) {
     console.error("Invalid travelMode value: ", travelMode);
     return;
   }
@@ -40,53 +60,107 @@ export async function calculateDistanceScore(
   const travelTimes: Record<string, number> = {};
   const distances: Record<string, number> = {};
 
-  // 获取 Google Maps Distance Matrix Service
-  const service = new google.maps.DistanceMatrixService();
+  try {
+    const service = new window.google.maps.DistanceMatrixService();
+    const origins = properties.map((p) => p.address);
+    const destinations = [selectedPOI.address];
 
-  const origins = properties.map((p) => p.address);
-  const destinations = [selectedPOI.address];
+    const matrixResponse =
+      await new Promise<google.maps.DistanceMatrixResponse>(
+        (resolve, reject) => {
+          service.getDistanceMatrix(
+            {
+              origins,
+              destinations,
+              travelMode: travelMode as google.maps.TravelMode,
+              unitSystem: google.maps.UnitSystem.METRIC,
+            },
+            (response, status) => {
+              if (status === "OK" && response) {
+                resolve(response);
+              } else {
+                reject(new Error(`Distance Matrix failed: ${status}`));
+              }
+            }
+          );
+        }
+      );
 
-  service.getDistanceMatrix(
-    {
-      origins,
-      destinations,
-      travelMode:
-        google.maps.TravelMode[
-          travelMode as keyof typeof google.maps.TravelMode
-        ],
-      unitSystem: google.maps.UnitSystem.METRIC,
-    },
-    (response, status) => {
-      if (status !== "OK") {
-        console.error("Error fetching distance matrix:", status);
+    if (!matrixResponse || !matrixResponse.rows) {
+      throw new Error("Invalid response from Distance Matrix");
+    }
+
+    properties.forEach((property, index) => {
+      const row = matrixResponse.rows[index];
+      if (!row || !row.elements || !row.elements[0]) {
+        console.warn(`No data for property ${property.property_property_id}`);
+        distances[property.property_property_id] = 9999;
+        travelTimes[property.property_property_id] = 9999;
         return;
       }
 
-      properties.forEach((property, index) => {
-        const element = response.rows[index].elements[0];
+      const element = row.elements[0];
 
-        if (element.status === "OK") {
-          const distanceInKm = element.distance.value / 1000;
-          const durationInMin = element.duration.value / 60;
+      if (element.status === "OK" && element.distance && element.duration) {
+        const distanceInKm = element.distance.value / 1000;
+        const durationInSeconds = element.duration.value;
 
-          distances[property.property_property_id] = distanceInKm;
-          travelTimes[property.property_property_id] = durationInMin;
+        distances[property.property_property_id] = distanceInKm;
+        travelTimes[property.property_property_id] = durationInSeconds;
+      } else {
+        console.warn(
+          `Invalid travel data for ${property.property_property_id}: ${element.status}`
+        );
+        distances[property.property_property_id] = 9999;
+        travelTimes[property.property_property_id] = 9999;
+      }
+    });
+
+    // 确保至少有一个有效的时间值
+    const validTimes = Object.values(travelTimes).filter(
+      (time) => time !== 9999
+    );
+    if (validTimes.length === 0) {
+      throw new Error("No valid travel times calculated");
+    }
+
+    const maxTime = Math.max(...validTimes, 1);
+    const minTime = Math.min(...validTimes);
+
+    if (maxTime === minTime) {
+      properties.forEach((property) => {
+        distanceScores[property.property_property_id] = 1;
+      });
+    } else {
+      properties.forEach((property) => {
+        const propertyId = property.property_property_id;
+        const time = travelTimes[propertyId];
+
+        if (time === 9999) {
+          distanceScores[propertyId] = 0; // 无效路线得分为0
         } else {
-          console.warn(`No travel data for ${property.property_property_id}`);
-          distances[property.property_property_id] = 9999;
-          travelTimes[property.property_property_id] = 9999;
+          distanceScores[propertyId] =
+            1 - (time - minTime) / (maxTime - minTime);
         }
       });
-
-      // 计算最大行程时间（用于归一化）
-      const maxTime = Math.max(...Object.values(travelTimes), 1);
-      for (const propertyId in travelTimes) {
-        distanceScores[propertyId] = 1 - travelTimes[propertyId] / maxTime;
-      }
-
-      setDistanceScores(distanceScores);
-      setTravelTimes(travelTimes);
-      setDistances(distances);
     }
-  );
+
+    setDistanceScores(distanceScores);
+    setTravelTimes(travelTimes);
+    setDistances(distances);
+  } catch (error) {
+    console.error("Error calculating distance scores:", error);
+
+    // 设置默认值
+    properties.forEach((property) => {
+      const propertyId = property.property_property_id;
+      distanceScores[propertyId] = 0;
+      travelTimes[propertyId] = 9999;
+      distances[propertyId] = 9999;
+    });
+
+    setDistanceScores(distanceScores);
+    setTravelTimes(travelTimes);
+    setDistances(distances);
+  }
 }
