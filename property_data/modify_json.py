@@ -32,7 +32,7 @@ def process_record(record):
     if "/" in property_type_str:
         record["propertyType"] = [part.strip() for part in property_type_str.split("/") if part.strip()]
     else:
-        record["propertyType"] = property_type_str
+        record["propertyType"] = [property_type_str]
 
     # 5. image 处理：如果值为空则存成空数组，否则包装成数组
     image_value = record.get("image", "").strip()
