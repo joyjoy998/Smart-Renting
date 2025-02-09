@@ -2,10 +2,13 @@
 
 import { X } from "lucide-react";
 import { useSettingsStore } from "@/stores/useSettingsStore";
+import { usePreferencesStore } from "@/stores/usePreferencesStore";
 import { Button } from "@/components/ui/button";
+import { SliderWithPlusAndMinus } from "@/components/sidebar/preference/SliderWithPlusAndMinus";
 
 export function SettingsPopup() {
   const { isOpen, setOpen } = useSettingsStore();
+  const { preferences, setPreference } = usePreferencesStore();
 
   if (!isOpen) return null;
 
@@ -15,7 +18,6 @@ export function SettingsPopup() {
         className="fixed inset-0 bg-black/30 z-[2000]"
         onClick={() => setOpen(false)}
       />
-
       <div className="fixed inset-0 flex items-center justify-center z-[2001]">
         <div
           className="bg-background rounded-lg p-6 w-full max-w-2xl"
@@ -32,7 +34,30 @@ export function SettingsPopup() {
             {/* Preferences Section */}
             <div>
               <h3 className="font-medium mb-4">Preferences</h3>
-              <div className="space-y-4"></div>
+              <div className="space-y-4">
+                <SliderWithPlusAndMinus
+                  label="Distance"
+                  initialValue={preferences.distance}
+                  onChange={(value: number) => setPreference("distance", value)}
+                />
+                <SliderWithPlusAndMinus
+                  label="Price"
+                  initialValue={preferences.price}
+                  onChange={(value: number) => setPreference("price", value)}
+                />
+                <SliderWithPlusAndMinus
+                  label="Neighborhood Safety"
+                  initialValue={preferences.neighborhoodSafety}
+                  onChange={(value: number) =>
+                    setPreference("neighborhoodSafety", value)
+                  }
+                />
+                <SliderWithPlusAndMinus
+                  label="Amenity"
+                  initialValue={preferences.amenity}
+                  onChange={(value: number) => setPreference("amenity", value)}
+                />
+              </div>
             </div>
 
             {/* Custom Habits Section */}
