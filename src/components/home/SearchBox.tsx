@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { MenuButton } from "./MenuButton";
 import { Search } from "lucide-react";
 import { Sidebar } from "../sidebar/Sidebar";
+import { useMap } from "@vis.gl/react-google-maps";
 
 interface SearchBoxProps {
   placeholder?: string;
@@ -12,6 +13,7 @@ export const SearchBox: React.FC<SearchBoxProps> = ({
   placeholder = "Search Google Maps",
   onSearch,
 }) => {
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const form = e.target as HTMLFormElement;

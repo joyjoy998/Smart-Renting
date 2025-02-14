@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { APIProvider, Map } from "@vis.gl/react-google-maps";
+import { useEffect, useRef, useState } from "react";
+import { APIProvider, Map, useMap, useMapsLibrary } from "@vis.gl/react-google-maps";
 import { MAPS_CONFIG } from "@/lib/constants/mapConfigure";
 import {
   GOOGLE_DARK_MAPS_ID,
@@ -11,6 +11,8 @@ import Loading from "@/components/ui/Loading";
 import { useTheme } from "next-themes";
 import { useUserLocation } from "@/hooks/map/useUserLocation";
 import { MapContent } from "./MapContent";
+import { usePlacesService } from "@/hooks/map/usePlacesService";
+import MapSeachBox from "./MapSeachBox";
 
 export function MapContainer() {
   const [isError, setIsError] = useState<string | null>(null);
@@ -31,7 +33,7 @@ export function MapContainer() {
   if (!location && !error) {
     return <Loading />;
   }
-
+  
   return (
     <>
       {(isLoaded || isThemeChanging) && <Loading />}
@@ -47,6 +49,7 @@ export function MapContainer() {
       ) : (
         <APIProvider
           apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ""}
+          libraries={['places']}
           onError={(error: unknown) => {
             if (error instanceof Error) {
               setIsError(error.message);
@@ -57,7 +60,8 @@ export function MapContainer() {
           }}
           onLoad={() => setIsLoaded(false)}
         >
-          <div style={{ width: "100%", height: "100vh" }}>
+          <div style={{ width: "100%", height: "100vh", position:'relative' }}>
+            <MapSeachBox></MapSeachBox>
             <Map
               defaultCenter={MAPS_CONFIG.defaultCenter}
               defaultZoom={MAPS_CONFIG.defaultZoom}
@@ -86,6 +90,7 @@ export function MapContainer() {
             >
               <MapContent />
             </Map>
+            
           </div>
         </APIProvider>
       )}
