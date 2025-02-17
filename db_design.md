@@ -31,15 +31,50 @@
 
 
 # tables 
-## users: to store user account info and preference 
+## users: to store user account info 
+根据 RFC 标准，一个完整的电子邮件地址最长为 254 个字符（包括 @ 符号等），通常使用 VARCHAR(255) 是一个常见且安全的选择，大部分项目和实际数据库设计中也普遍采用 VARCHAR(255) 来存储邮箱。
+
 ```sql
 CREATE TABLE users (
-    user_id SERIAL PRIMARY KEY,
-    username VARCHAR(50) NOT NULL,
+    user_id VARCHAR(50) PRIMARY KEY,       -- clerk传入
+    username VARCHAR(20) NOT NULL, 
     email VARCHAR(255) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    preference JSONB                     -- 存储用户选房偏好因素
+);
+```
+
+## preferences: to store user preference
+### 方案一：一行存放四个 preference
+* 每个用户对应一行记录，包含所有四个 preference。
+* 查询简单，更新时一次修改全部字段。
+* 缺点在于扩展性较低，如果未来需要增加更多 preference 类型或附加信息，就不太灵活。
+```sql
+CREATE TABLE user_preferences (
+    user_id VARCHAR(50) PRIMARY KEY,  -- 与 users 表关联
+    distance NUMERIC(3,2) NOT NULL CHECK (distance >= 0 AND distance <= 1),
+    price NUMERIC(3,2) NOT NULL CHECK (price >= 0 AND price <= 1),
+    amenity NUMERIC(3,2) NOT NULL CHECK (amenity >= 0 AND amenity <= 1),
+    neighborhood_safety NUMERIC(3,2) NOT NULL CHECK (neighborhood_safety >= 0 AND neighborhood_safety <= 1),
+    CONSTRAINT fk_user_preferences_user FOREIGN KEY (user_id)
+        REFERENCES users(user_id)
+        ON DELETE CASCADE
+);
+```
+### 方案二：规范化设计，每个 preference 独立一行
+* 每个用户将有 4 条记录，分别对应四个 preference 选项。
+* 可通过 weight 计算相对重要性，也可直接设置 preference_order 来明确排序。
+* 查询时可以对单个 preference 进行筛选、排序、聚合等操作；扩展性更好，未来增加新 preference 类型也更方便。
+```sql
+CREATE TABLE user_preferences (
+    user_id VARCHAR(50) NOT NULL,
+    preference_type VARCHAR(50) NOT NULL,  -- 可限制为 'distance', 'price', 'amenity', 'neighborhood_safety'
+    weight NUMERIC(3,2) NOT NULL CHECK (weight >= 0 AND weight <= 1),
+    preference_order SMALLINT,             -- 可选，用于显式记录排序顺序（例如 1 表示最重要）
+    PRIMARY KEY (user_id, preference_type),
+    CONSTRAINT fk_user_preferences_user FOREIGN KEY (user_id)
+        REFERENCES users(user_id)
+        ON DELETE CASCADE
 );
 ```
 
@@ -53,17 +88,19 @@ CREATE TABLE properties (
     suburb VARCHAR(255) NOT NULL,
     state VARCHAR(50) NOT NULL,
     postcode VARCHAR(20) NOT NULL,
-    latitude DECIMAL(10,7),               -- 位置经度
-    longitude DECIMAL(10,7),              -- 位置纬度
+    latitude DOUBLE PRECISION,               -- 使用 double precision 存储高精度经纬度
+    longitude DOUBLE PRECISION,
     weekly_rent NUMERIC(10,2) NOT NULL,
-    images TEXT[] DEFAULT '{}',         -- 图片数组
+    photo TEXT[] DEFAULT '{}',              -- 图片数组
     bedrooms INT NOT NULL,
     bathrooms INT NOT NULL,
     parking_spaces INT NOT NULL,
-    property_types TEXT[] NOT NULL,       -- 房屋类型数组，比如 ["House"] 或 ["Apartment", "Unit"]
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    property_types TEXT[] NOT NULL,         -- 房屋类型数组
+    safety_score NUMERIC(3,2) NOT NULL DEFAULT 0
+      CHECK (safety_score >= 0 AND safety_score <= 5),  -- 限制 0-5 分
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
 ```
 
 
@@ -72,14 +109,14 @@ CREATE TABLE properties (
 CREATE TABLE poi_markers (
     poi_id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    category VARCHAR(50) NOT NULL,   -- 可存储如 'restaurant'、'school'、'hospital' 等
+    category VARCHAR(50) NOT NULL,   -- 如 'restaurant', 'school', 'hospital'
     street VARCHAR(255) NOT NULL,
     suburb VARCHAR(255) NOT NULL,
     state VARCHAR(50) NOT NULL,
     postcode VARCHAR(20) NOT NULL,
-    latitude DECIMAL(10,7) NOT NULL,
-    longitude DECIMAL(10,7) NOT NULL,
-    notes JSONB                      -- 存储备注信息，可包含 text 和 photos 数组等
+    latitude DOUBLE PRECISION,
+    longitude DOUBLE PRECISION,
+    photo TEXT[] DEFAULT '{}'          -- 新增图片数组列
 );
 ```
 
@@ -88,8 +125,8 @@ CREATE TABLE poi_markers (
 ```sql
 CREATE TABLE saved_groups (
     group_id SERIAL PRIMARY KEY,
-    user_id INT NOT NULL,
-    group_name VARCHAR(100) NOT NULL,
+    user_id VARCHAR(50) NOT NULL,
+    group_name VARCHAR(100) NOT NULL UNIQUE,  -- 全局唯一
     description TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_saved_groups_user FOREIGN KEY (user_id)
@@ -101,10 +138,11 @@ CREATE TABLE saved_groups (
 ## saved_pois: to store pois in each saved group
 ```sql
 CREATE TABLE saved_pois (
-    id SERIAL PRIMARY KEY,
     group_id INT NOT NULL,
     poi_id INT NOT NULL,
+    note TEXT,  -- 用户对该 POI 的个性化备注
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (group_id, poi_id),  -- 复合主键，确保在同一组中同一个 POI 只保存一次
     CONSTRAINT fk_saved_pois_group FOREIGN KEY (group_id)
         REFERENCES saved_groups(group_id)
         ON DELETE CASCADE,
@@ -117,10 +155,11 @@ CREATE TABLE saved_pois (
 ## saved_properties: to store properties in each saved group
 ```sql
 CREATE TABLE saved_properties (
-    id SERIAL PRIMARY KEY,
     group_id INT NOT NULL,
     property_id INT NOT NULL,
+    note TEXT,  -- 用户对该房源的个性化备注
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (group_id, property_id),  -- 复合主键
     CONSTRAINT fk_saved_properties_group FOREIGN KEY (group_id)
         REFERENCES saved_groups(group_id)
         ON DELETE CASCADE,
