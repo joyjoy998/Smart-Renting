@@ -80,7 +80,7 @@ CREATE TABLE user_preferences (
 
 ## properties：to store property information
 这里将解析后的 address 对象拆分成了 street、suburb、state 和 postcode 四个字段，便于后续查询或索引。
-images 和 property_types 均采用数组数据类型，当然也可以用 JSONB 存储，视具体查询需求而定。
+photo 和 property_type 均采用数组数据类型。
 ```sql
 CREATE TABLE properties (
     property_id SERIAL PRIMARY KEY,
@@ -90,17 +90,16 @@ CREATE TABLE properties (
     postcode VARCHAR(20) NOT NULL,
     latitude DOUBLE PRECISION,               -- 使用 double precision 存储高精度经纬度
     longitude DOUBLE PRECISION,
-    weekly_rent NUMERIC(10,2) NOT NULL,
+    weekly_rent NUMERIC(10,2),
     photo TEXT[] DEFAULT '{}',              -- 图片数组
-    bedrooms INT NOT NULL,
-    bathrooms INT NOT NULL,
-    parking_spaces INT NOT NULL,
-    property_types TEXT[] NOT NULL,         -- 房屋类型数组
-    safety_score NUMERIC(3,2) NOT NULL DEFAULT 0
+    bedrooms INT,
+    bathrooms INT,
+    parking_spaces INT,
+    property_type TEXT[],         -- 房屋类型数组
+    safety_score NUMERIC(3,2) DEFAULT 0
       CHECK (safety_score >= 0 AND safety_score <= 5),  -- 限制 0-5 分
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
 ```
 
 
@@ -108,8 +107,8 @@ CREATE TABLE properties (
 ```sql
 CREATE TABLE poi_markers (
     poi_id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    category VARCHAR(50) NOT NULL,   -- 如 'restaurant', 'school', 'hospital'
+    name VARCHAR(255),
+    category VARCHAR(50),   -- 如 'restaurant', 'school'（或用户自定义？）
     street VARCHAR(255) NOT NULL,
     suburb VARCHAR(255) NOT NULL,
     state VARCHAR(50) NOT NULL,
@@ -126,7 +125,7 @@ CREATE TABLE poi_markers (
 CREATE TABLE saved_groups (
     group_id SERIAL PRIMARY KEY,
     user_id VARCHAR(50) NOT NULL,
-    group_name VARCHAR(100) NOT NULL UNIQUE,  -- 全局唯一
+    group_name VARCHAR(100) NOT NULL UNIQUE,  -- 全局唯一，如果用户没有输入名称，系统自动assgin一个随机名称
     description TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_saved_groups_user FOREIGN KEY (user_id)
@@ -168,4 +167,3 @@ CREATE TABLE saved_properties (
         ON DELETE CASCADE
 );
 ```
-
