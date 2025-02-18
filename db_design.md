@@ -45,23 +45,6 @@ CREATE TABLE users (
 ```
 
 ## preferences: to store user preference
-### 方案一：一行存放四个 preference
-* 每个用户对应一行记录，包含所有四个 preference。
-* 查询简单，更新时一次修改全部字段。
-* 缺点在于扩展性较低，如果未来需要增加更多 preference 类型或附加信息，就不太灵活。
-```sql
-CREATE TABLE user_preferences (
-    user_id VARCHAR(50) PRIMARY KEY,  -- 与 users 表关联
-    distance NUMERIC(3,2) NOT NULL CHECK (distance >= 0 AND distance <= 1),
-    price NUMERIC(3,2) NOT NULL CHECK (price >= 0 AND price <= 1),
-    amenity NUMERIC(3,2) NOT NULL CHECK (amenity >= 0 AND amenity <= 1),
-    neighborhood_safety NUMERIC(3,2) NOT NULL CHECK (neighborhood_safety >= 0 AND neighborhood_safety <= 1),
-    CONSTRAINT fk_user_preferences_user FOREIGN KEY (user_id)
-        REFERENCES users(user_id)
-        ON DELETE CASCADE
-);
-```
-### 方案二：规范化设计，每个 preference 独立一行
 * 每个用户将有 4 条记录，分别对应四个 preference 选项。
 * 可通过 weight 计算相对重要性，也可直接设置 preference_order 来明确排序。
 * 查询时可以对单个 preference 进行筛选、排序、聚合等操作；扩展性更好，未来增加新 preference 类型也更方便。
@@ -96,8 +79,7 @@ CREATE TABLE properties (
     bathrooms INT,
     parking_spaces INT,
     property_type TEXT[],         -- 房屋类型数组
-    safety_score NUMERIC(3,2) DEFAULT 0
-      CHECK (safety_score >= 0 AND safety_score <= 5),  -- 限制 0-5 分
+    safety_score NUMERIC(3,2) NOT NULL CHECK (safety_score >= 0 AND safety_score <= 1),  -- 限制 0-1 分
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 ```
@@ -126,7 +108,6 @@ CREATE TABLE saved_groups (
     group_id SERIAL PRIMARY KEY,
     user_id VARCHAR(50) NOT NULL,
     group_name VARCHAR(100) NOT NULL UNIQUE,  -- 全局唯一，如果用户没有输入名称，系统自动assgin一个随机名称
-    description TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_saved_groups_user FOREIGN KEY (user_id)
         REFERENCES users(user_id)
