@@ -5,7 +5,6 @@ export function usePlacesService() {
     const map = useMap();
     const placesLibrary = useMapsLibrary('places');
     const [placesService, setPlacesService] = useState<google.maps.places.PlacesService | null>(null);
-  
     useEffect(() => {
       if (!placesLibrary || !map) return;
   
