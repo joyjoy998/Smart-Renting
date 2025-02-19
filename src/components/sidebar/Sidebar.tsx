@@ -1,6 +1,7 @@
 // components/sidebar/Sidebar.tsx
 "use client";
 
+import { useSettingsStore } from "@/stores/useSettingsStore";
 import { useSidebarStore } from "@/stores/useSidebarStore";
 import {
   X,
@@ -11,7 +12,6 @@ import {
   Lightbulb,
   History,
   HelpCircle,
-  UserCog,
   LogOut,
   LogIn,
 } from "lucide-react";
@@ -93,7 +93,13 @@ export function Sidebar() {
 
           {isAuthenticated ? (
             <>
-              <button className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg">
+              <button
+                onClick={() => {
+                  useSettingsStore.getState().setOpen(true);
+                  useSidebarStore.getState().setOpen(false);
+                }}
+                className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg"
+              >
                 <Settings className="h-5 w-5" />
                 <span>Settings</span>
               </button>

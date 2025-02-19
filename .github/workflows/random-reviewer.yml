@@ -4,6 +4,10 @@ on:
   pull_request:
     types: [opened, ready_for_review]
 
+permissions:
+  pull-requests: write
+  contents: read
+
 jobs:
   assign-reviewer:
     runs-on: ubuntu-latest
@@ -11,30 +15,51 @@ jobs:
       - uses: actions/github-script@v6
         with:
           script: |
-            const fixedReviewer = 'joyjoy998';  // 替换成固定审查者的用户名
-            const reviewers = [
-              'joyjoy998',
-              'BerniceQQ',
-              'ClaireWu27',
-              'mushroom18',
-              'quilla3',
-              'YaraWang999'
-              // 添加所有可能的审查者用户名
-            ];
-
-            // 排除 PR 作者和固定审查者
-            const availableReviewers = reviewers.filter(reviewer => 
-              reviewer !== context.payload.pull_request.user.login &&
-              reviewer !== fixedReviewer
-            );
-
-            // 随机选择一位审查者
-            const randomReviewer = availableReviewers[Math.floor(Math.random() * availableReviewers.length)];
-
-            // 分配固定审查者和随机审查者
-            await github.rest.pulls.requestReviewers({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: context.payload.pull_request.number,
-              reviewers: [fixedReviewer, randomReviewer]
-            });
+            try {
+              const owner = 'joyjoy998'; // 仓库 owner
+              const reviewers = [
+                'BerniceQQ',
+                'ClaireWu27',
+                'mushroom18',
+                'quilla3',
+                'YaraWang999'
+              ];
+              
+              const prAuthor = context.payload.pull_request.user.login;
+              
+              // 设置 PR 创建者为 assignee
+              await github.rest.issues.addAssignees({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                assignees: [prAuthor]
+              });
+              
+              if (prAuthor !== owner) {
+                // 如果不是 owner 发起的 PR，owner 必定是其中一个 reviewer
+                const otherReviewers = reviewers.filter(r => r !== prAuthor);
+                const randomReviewer = otherReviewers[Math.floor(Math.random() * otherReviewers.length)];
+                
+                await github.rest.pulls.requestReviewers({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: context.payload.pull_request.number,
+                  reviewers: [owner, randomReviewer]
+                });
+              } else {
+                // 如果是 owner 发起的 PR，随机选择两位其他审查者
+                const availableReviewers = reviewers.filter(r => r !== prAuthor);
+                const shuffled = availableReviewers.sort(() => 0.5 - Math.random());
+                const selectedReviewers = shuffled.slice(0, 2);
+                
+                await github.rest.pulls.requestReviewers({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: context.payload.pull_request.number,
+                  reviewers: selectedReviewers
+                });
+              }
+            } catch (error) {
+              console.log('Error:', error.message);
+              core.setFailed(error.message);
+            }
