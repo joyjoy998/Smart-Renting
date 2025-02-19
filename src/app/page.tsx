@@ -8,8 +8,8 @@ export default function Home() {
   return (
     <main className="h-screen w-screen relative">
       <Header />
-      <RatingReport />
       <MapContainer />
+      <RatingReport />
     </main>
   );
 }

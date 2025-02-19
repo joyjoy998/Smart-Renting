@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useRatingStore } from "./store/ratingStore";
 import { calculateDistanceScore } from "./lib/distanceScore";
 import { calculatePriceScore } from "./lib/priceScore";
@@ -23,6 +23,7 @@ const ScoreTable = () => {
     amenitiesScores,
     amenitiesData,
     totalScores,
+    weightConfig,
   } = useRatingStore();
 
   // Distance Score
@@ -96,7 +97,18 @@ const ScoreTable = () => {
       }
     };
     calculateScores();
-  }, [properties, selectedPOI]);
+  }, [properties, selectedPOI, weightConfig]);
+
+  // 按总分排序的属性列表
+  const sortedProperties = useMemo(() => {
+    if (Object.keys(totalScores).length === 0) return properties;
+
+    return [...properties].sort((a, b) => {
+      const scoreA = totalScores[a.property_property_id] || 0;
+      const scoreB = totalScores[b.property_property_id] || 0;
+      return scoreB - scoreA; // 从高到低排序
+    });
+  }, [properties, totalScores]);
 
   return (
     <div className="overflow-x-auto">
@@ -123,7 +135,7 @@ const ScoreTable = () => {
           </tr>
         </thead>
         <tbody>
-          {properties.map((property) => (
+          {sortedProperties.map((property) => (
             <tr key={property.property_property_id} className="border-t">
               <td className="p-2">{property.property_property_id}</td>
               <td className="p-2">{property.address}</td>

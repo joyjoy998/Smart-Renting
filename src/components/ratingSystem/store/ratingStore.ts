@@ -59,10 +59,10 @@ interface RatingState {
 }
 
 const defaultWeightConfig: WeightConfig = {
-  distance: 1,
-  price: 1,
-  neighborhood_safety: 0.2,
-  amenity: 0.3,
+  distance: 0.5,
+  price: 0.5,
+  neighborhood_safety: 0.5,
+  amenity: 0.5,
 };
 
 export const useRatingStore = create<RatingState>((set) => ({
@@ -77,7 +77,6 @@ export const useRatingStore = create<RatingState>((set) => ({
   safetyScores: {},
   amenitiesScores: {},
   amenitiesData: {},
-
   totalScores: {},
   weightConfig: defaultWeightConfig,
 

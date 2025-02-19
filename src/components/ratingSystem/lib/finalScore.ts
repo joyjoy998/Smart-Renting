@@ -1,5 +1,4 @@
 import { useRatingStore } from "../store/ratingStore";
-import userPreference from "@/components/ratingSystem/mockData/preference-u1.json";
 
 interface Weight {
   distance: number;
@@ -9,10 +8,10 @@ interface Weight {
 }
 
 const defaultWeight: Weight = {
-  distance: 1,
-  price: 1,
-  neighborhood_safety: 0.2,
-  amenity: 0.3,
+  distance: 0.5,
+  price: 0.5,
+  neighborhood_safety: 0.5,
+  amenity: 0.5,
 };
 
 function normalizeWeights(weights: Weight): Weight {
@@ -25,6 +24,20 @@ function normalizeWeights(weights: Weight): Weight {
   };
 }
 
+function mapPreferenceToWeight(weightConfig: {
+  distance: number;
+  price: number;
+  neighborhood_safety: number;
+  amenity: number;
+}): Weight {
+  return {
+    distance: weightConfig.distance,
+    price: weightConfig.price,
+    neighborhood_safety: weightConfig.neighborhood_safety,
+    amenity: weightConfig.amenity,
+  };
+}
+
 export function calculateTotalScore() {
   const {
     properties,
@@ -33,18 +46,18 @@ export function calculateTotalScore() {
     safetyScores,
     amenitiesScores,
     setTotalScores,
+    weightConfig,
   } = useRatingStore.getState();
 
-  const typedUserPreference = userPreference as Weight;
+  const userWeights = mapPreferenceToWeight(weightConfig);
 
-  // 检查用户偏好是否有效
   const selectedWeights =
-    typedUserPreference &&
-    Object.keys(typedUserPreference).length === 4 &&
-    Object.values(typedUserPreference).every(
-      (weight) => typeof weight === "number"
+    userWeights &&
+    Object.keys(userWeights).length === 4 &&
+    Object.values(userWeights).every(
+      (weight) => typeof weight === "number" && weight >= 0
     )
-      ? typedUserPreference
+      ? userWeights
       : defaultWeight;
 
   console.log(
