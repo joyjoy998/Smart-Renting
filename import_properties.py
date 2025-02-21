@@ -1,6 +1,8 @@
+from dotenv import load_dotenv
 import os
 import json
 import psycopg2
+load_dotenv(".env.local") 
 
 DB_HOST = os.environ.get("POSTGRES_HOST")
 DB_NAME = os.environ.get("POSTGRES_DATABASE")
