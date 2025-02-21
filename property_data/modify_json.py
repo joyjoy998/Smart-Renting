@@ -2,63 +2,75 @@ import json
 import re
 
 def process_record(record):
-    # 1. 将地址字段合并到 address 中，并从原记录中移除
-    address = {
-        "street": record.pop("street", ""),
-        "suburb": record.pop("suburb", ""),
-        "state": record.pop("state", ""),
-        "postcode": record.pop("postcode", "")
-    }
-    record["address"] = address
+    """
+    处理单条房源记录，将其字段名和数据格式改成与数据库 schema 一致。
+    """
 
-    # 2. weeklyRent 处理：先移除逗号，再提取数字并转换为整数
-    weekly_rent_str = record.get("weeklyRent", "")
-    weekly_rent_str = weekly_rent_str.replace(",", "")  # 例如 "$1,400" -> "$1400"
-    rent_match = re.search(r'\d+', weekly_rent_str)
+    # 1. 地址相关字段
+    street = record.get("street", "").strip()
+    suburb = record.get("suburb", "").strip()
+    state = record.get("state", "").strip()
+    postcode = record.get("postcode", "").strip()
+
+    # 2. weeklyRent -> weekly_rent
+    #    例如 "$1,400" -> "1400" -> float 或 int，这里选 float 方便兼容 decimal(10,2)
+    weekly_rent_str = record.get("weeklyRent", "").replace(",", "")
+    rent_match = re.search(r'\d+(\.\d+)?', weekly_rent_str)  # 支持带小数
     if rent_match:
-        record["weeklyRent"] = int(rent_match.group())
+        weekly_rent = float(rent_match.group())
     else:
-        record["weeklyRent"] = 0
+        weekly_rent = 0.0
 
-    # 3. 将 bedrooms, bathrooms, parkingSpaces 转为整数
-    for key in ["bedrooms", "bathrooms", "parkingSpaces"]:
-        try:
-            record[key] = int(record.get(key, "0"))
-        except ValueError:
-            record[key] = 0
-
-    # 4. propertyType 处理：如果包含 "/" 则拆分成数组，否则保持原字符串
-    property_type_str = record.get("propertyType", "").strip()
-    if "/" in property_type_str:
-        record["propertyType"] = [part.strip() for part in property_type_str.split("/") if part.strip()]
-    else:
-        record["propertyType"] = [property_type_str]
-
-    # 5. image 处理：如果值为空则存成空数组，否则包装成数组
+    # 3. photo (原 image)
+    #    如果原字段为空或不存在，则为 []
     image_value = record.get("image", "").strip()
     if image_value:
-        record["image"] = [image_value]
+        photo = [image_value]
     else:
-        record["image"] = []
+        photo = []
 
-    # 6. 重新构造记录，确保键的顺序：address 放第一，其后依次是 weeklyRent, image, bedrooms, bathrooms, parkingSpaces, propertyType
-    ordered_record = {
-        "address": record.get("address", {}),
-        "weeklyRent": record.get("weeklyRent", 0),
-        "image": record.get("image", []),
-        "bedrooms": record.get("bedrooms", 0),
-        "bathrooms": record.get("bathrooms", 0),
-        "parkingSpaces": record.get("parkingSpaces", 0),
-        "propertyType": record.get("propertyType", "")
+    # 4. bedrooms, bathrooms, parkingSpaces -> parking_spaces
+    try:
+        bedrooms = int(record.get("bedrooms", "0"))
+    except ValueError:
+        bedrooms = 0
+
+    try:
+        bathrooms = int(record.get("bathrooms", "0"))
+    except ValueError:
+        bathrooms = 0
+
+    try:
+        parking_spaces = int(record.get("parkingSpaces", "0"))
+    except ValueError:
+        parking_spaces = 0
+
+    # 5. propertyType -> property_type
+    #    不拆分，保留原字符串
+    property_type = record.get("propertyType", "").strip()
+
+    # 6. 构造新的字典，键名与数据库 schema 对应
+    new_record = {
+        "street": street,
+        "suburb": suburb,
+        "state": state,
+        "postcode": postcode,
+        "weekly_rent": weekly_rent,
+        "photo": photo,
+        "bedrooms": bedrooms,
+        "bathrooms": bathrooms,
+        "parking_spaces": parking_spaces,
+        "property_type": property_type
     }
-    return ordered_record
+
+    return new_record
 
 def main():
     # 读取原始 JSON 文件
     with open('parsed_properties.json', 'r', encoding='utf-8') as f:
         data = json.load(f)
 
-    # 对每条记录进行处理，并重构键的顺序
+    # 对每条记录进行处理
     new_data = [process_record(record) for record in data]
 
     # 将处理后的数据写入新的 JSON 文件
