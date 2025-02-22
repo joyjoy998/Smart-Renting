@@ -10,7 +10,7 @@ export function Header() {
     <header className="fixed top-0 w-full z-50 ">
       <div className="h-full flex items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          {/* <SearchBox /> */}
+          <SearchBox />
         </div>
 
         <div className="flex items-center gap-2">
