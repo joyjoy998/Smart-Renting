@@ -1,6 +1,6 @@
 import { supabase } from "./supabaseClient";
 
-// 获取所有房源
+// get all properties
 export const getAllProperties = async () => {
   const { data, error } = await supabase
     .from("properties")
@@ -9,7 +9,7 @@ export const getAllProperties = async () => {
   return data;
 };
 
-// 根据 ID 获取房源
+// get property by id
 export const getPropertyById = async (id: string) => {
   const { data, error } = await supabase
     .from("properties")
@@ -20,7 +20,7 @@ export const getPropertyById = async (id: string) => {
   return data;
 };
 
-// 插入新房源
+// insert a new property
 export const addProperty = async (property: any) => {
   const { data, error } = await supabase
     .from("properties")

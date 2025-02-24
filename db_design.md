@@ -1,59 +1,50 @@
-# design considerations
+# Choosing the Right Database
 
-> 如果项目数据主要是结构化的，并且需要支持复杂的关系查询、事务管理和数据完整性，建议采用关系型数据库（例如 PostgreSQL），并利用 JSONB 来存储少量非结构化数据。这也是 Supabase（你们目前项目中用到的后端服务）常用的方案。
+> If the project data is mainly structured and requires complex relational queries, transaction management, and data integrity, a relational database (e.g., PostgreSQL) is recommended. Supabase, which you are using, is built on PostgreSQL.
+>
+>If the data structure is highly flexible, changes frequently, and requires horizontal scaling while having simple query needs, then a NoSQL database (e.g., MongoDB) could be considered.
+>
+> For Smart Renting, a project involving properties, users, and POIs (Points of Interest) with well-defined attributes and complex relationships, a relational database (PostgreSQL) with JSONB support is the best choice.
 
-> 如果项目的数据结构非常灵活、变化频繁且对水平扩展有更高要求，且数据查询需求较简单，那么可以考虑非关系型数据库（比如 MongoDB）。不过，对于 smart renting 这样一个包含房源、用户、POI 等具有较为固定字段和复杂关系的数据项目来说，关系型数据库通常更适合。
 
-> 所以，综合考虑 smart renting 项目的需求，通常不需要专门使用 MongoDB 这类非关系型数据库；使用关系型数据库（如 PostgreSQL）并结合 JSONB 字段，既能满足数据灵活存储的需要，又能利用 SQL 的强大查询和数据约束能力。
+**Using JSONB in PostgreSQL**
 
+Q: Should we combine PostgreSQL with MongoDB for more flexibility?
 
-**关于使用 Postgres JSONB 数据类型的问题**
-问题描述：
-你提到项目中多个地方可能会使用 JSONB 数据，并担心如果只使用 Postgres（比如通过 Supabase）会不会导致查询非常复杂，是否需要结合 MongoDB 一起做项目。
+A: No, PostgreSQL's JSONB data type is powerful enough for semi-structured data storage.
 
-解答建议：
-1. Postgres 的 JSONB 功能
-* Postgres 的 JSONB 数据类型非常强大，支持灵活存储非结构化数据，同时也能使用索引（比如 GIN 索引）来提高查询性能。
-* 对于结构不固定或未来可能扩展的字段（例如 notes 字段或其他一些灵活配置），使用 JSONB 是一种非常合适的选择。
-
-2. 查询复杂性问题
-* 虽然 JSONB 查询语法相比传统 SQL 查询会稍微复杂一些，但对于大多数中小型项目来说，并不会构成太大问题。
-* 只要设计合理（比如尽量把经常查询的核心数据作为独立列存储，而将可选或扩展信息存入 JSONB），查询的复杂性和性能都是可控的。
-
-3. 是否需要结合 MongoDB
-* 如果项目整体数据量不大，而且大部分数据依然具有结构性，那么单纯使用 Postgres 就能满足需求。
-* 引入 MongoDB 会增加系统的复杂性（需要同步数据、维护两种数据库等），对于一个毕业设计项目来说通常没有必要。
-* 除非你有特别的非结构化数据存储需求或者希望展示混合数据库技术的能力，否则建议保持架构简单，使用 Postgres（例如 Supabase 提供的服务）即可。
-
-总结：
-对于你目前的项目，使用 Postgres 完全足够，而且 JSONB 数据类型可以满足灵活存储的需求，不会显著增加查询复杂性。没有必要同时引入 MongoDB，除非你预期未来会有大量非结构化数据存储需求。
-
+* JSONB allows flexible data storage and supports indexing (e.g., GIN index) for performance optimization.
+* Queries on JSONB can be slightly more complex than standard SQL queries, but for mid-sized projects, this is manageable.
+* If most of the project data is structured, sticking to PostgreSQL without MongoDB simplifies architecture and reduces system complexity.
 
 
 # tables 
-## users: to store user account info 
-根据 RFC 标准，一个完整的电子邮件地址最长为 254 个字符（包括 @ 符号等），通常使用 VARCHAR(255) 是一个常见且安全的选择，大部分项目和实际数据库设计中也普遍采用 VARCHAR(255) 来存储邮箱。
+## `users` Table: Store User Account Information
+* The `email` field uses `VARCHAR(255)`, as per the RFC standard for email addresses.
+* `user_id` is stored as `VARCHAR(50)` (e.g., from authentication services like Clerk).
 
 ```sql
 CREATE TABLE users (
-    user_id VARCHAR(50) PRIMARY KEY,       -- clerk传入
-    username VARCHAR(20) NOT NULL, 
+    user_id VARCHAR(50) PRIMARY KEY,       -- user ID from clerk
+    username VARCHAR(20) NOT NULL,         -- length may be adjusted
     email VARCHAR(255) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 ```
 
-## preferences: to store user preference
-* 每个用户将有 4 条记录，分别对应四个 preference 选项。
-* 可通过 weight 计算相对重要性，也可直接设置 preference_order 来明确排序。
-* 查询时可以对单个 preference 进行筛选、排序、聚合等操作；扩展性更好，未来增加新 preference 类型也更方便。
+## `user_preferences Table`: Store User Preferences
+* Each user will have four records, each representing a different preference type.
+* `weight` helps determine the importance of each preference.
+* `preference_order` can be used for explicit sorting.
+
 ```sql
 CREATE TABLE user_preferences (
     user_id VARCHAR(50) NOT NULL,
-    preference_type VARCHAR(50) NOT NULL,  -- 可限制为 'distance', 'price', 'amenity', 'neighborhood_safety'
-    weight NUMERIC(3,2) NOT NULL CHECK (weight >= 0 AND weight <= 1),
-    preference_order SMALLINT,             -- 可选，用于显式记录排序顺序（例如 1 表示最重要）
+    preference_type VARCHAR(50) NOT NULL
+      CHECK (preference_type IN ('distance', 'price', 'amenity', 'neighborhood_safety')),
+    weight NUMERIC(3,2) NOT NULL CHECK (weight >= 0 AND weight <= 1), 
+    preference_order SMALLINT,
     PRIMARY KEY (user_id, preference_type),
     CONSTRAINT fk_user_preferences_user FOREIGN KEY (user_id)
         REFERENCES users(user_id)
@@ -61,53 +52,62 @@ CREATE TABLE user_preferences (
 );
 ```
 
-## properties：to store property information
-这里将解析后的 address 对象拆分成了 street、suburb、state 和 postcode 四个字段，便于后续查询或索引。
-photo 和 property_type 均采用数组数据类型。
+## `properties` Table：Store Property Listings
+* The `address` object is split into 'street', 'suburb', 'state', 'postcode' for easier querying and indexing.
+* The `photo` field is an array (`TEXT[]`), allowing multiple images per property.
+* `property_type` is a single value (`TEXT`), assuming each property belongs to only one category.
+
 ```sql
 CREATE TABLE properties (
     property_id SERIAL PRIMARY KEY,
-    street VARCHAR(255) NOT NULL,
-    suburb VARCHAR(255) NOT NULL,
-    state VARCHAR(50) NOT NULL,
-    postcode VARCHAR(20) NOT NULL,
-    latitude DOUBLE PRECISION,               -- 使用 double precision 存储高精度经纬度
+    street TEXT NOT NULL,
+    suburb TEXT NOT NULL,
+    state TEXT NOT NULL
+      CHECK (state IN ('NSW', 'VIC', 'ACT', 'NT', 'WA', 'SA', 'QLD', 'TAS')),
+    postcode TEXT NOT NULL,
+    latitude DOUBLE PRECISION,
     longitude DOUBLE PRECISION,
     weekly_rent NUMERIC(10,2),
-    photo TEXT[] DEFAULT '{}',              -- 图片数组
+    photo TEXT[] DEFAULT '{}',
     bedrooms INT,
     bathrooms INT,
     parking_spaces INT,
-    property_type TEXT[],         -- 房屋类型数组
-    safety_score NUMERIC(3,2) NOT NULL CHECK (safety_score >= 0 AND safety_score <= 1),  -- 限制 0-1 分
+    property_type TEXT,
+    safety_score NUMERIC(3,2) NOT NULL CHECK (safety_score >= 0 AND safety_score <= 1),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 ```
 
 
-## poi_markers: to store POI information
+## `poi_markers`Table: Store Points of Interest (POI)
+* Stores user-defined locations like workplaces, gyms, schools, etc.
+* `photo` field supports multiple images.
+
 ```sql
 CREATE TABLE poi_markers (
     poi_id SERIAL PRIMARY KEY,
-    name VARCHAR(255),
-    category VARCHAR(50),   -- 如 'restaurant', 'school'（或用户自定义？）
-    street VARCHAR(255) NOT NULL,
-    suburb VARCHAR(255) NOT NULL,
-    state VARCHAR(50) NOT NULL,
-    postcode VARCHAR(20) NOT NULL,
+    name TEXT,
+    category TEXT,
+    street TEXT NOT NULL,
+    suburb TEXT NOT NULL,
+    state TEXT NOT NULL
+      CHECK (state IN ('NSW', 'VIC', 'ACT', 'NT', 'WA', 'SA', 'QLD', 'TAS')),
+    postcode TEXT NOT NULL,
     latitude DOUBLE PRECISION,
     longitude DOUBLE PRECISION,
-    photo TEXT[] DEFAULT '{}'          -- 新增图片数组列
+    photo TEXT[] DEFAULT '{}'
 );
 ```
 
-## saved_groups: to store user's single preference combination
-比如我们之前说一个人可能考虑在悉尼or卧龙岗租房，偏好不一样，就存成两组
+## `saved_groups` Table: Store User's Saved Search Configurations
+* A user may save multiple groups to compare listings in different areas.
+* The `group_name` is unique per user to prevent duplication.
+
 ```sql
 CREATE TABLE saved_groups (
     group_id SERIAL PRIMARY KEY,
     user_id VARCHAR(50) NOT NULL,
-    group_name VARCHAR(100) NOT NULL UNIQUE,  -- 全局唯一，如果用户没有输入名称，系统自动assgin一个随机名称
+    group_name TEXT NOT NULL UNIQUE,  
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_saved_groups_user FOREIGN KEY (user_id)
         REFERENCES users(user_id)
@@ -115,14 +115,16 @@ CREATE TABLE saved_groups (
 );
 ```
 
-## saved_pois: to store pois in each saved group
+## `saved_pois` Table: Store POIs in Each Saved Group
+* Each saved search group can contain multiple POIs.
+
 ```sql
 CREATE TABLE saved_pois (
     group_id INT NOT NULL,
     poi_id INT NOT NULL,
-    note TEXT,  -- 用户对该 POI 的个性化备注
+    note TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (group_id, poi_id),  -- 复合主键，确保在同一组中同一个 POI 只保存一次
+    PRIMARY KEY (group_id, poi_id),
     CONSTRAINT fk_saved_pois_group FOREIGN KEY (group_id)
         REFERENCES saved_groups(group_id)
         ON DELETE CASCADE,
@@ -132,14 +134,16 @@ CREATE TABLE saved_pois (
 );
 ```
 
-## saved_properties: to store properties in each saved group
+## `saved_properties` Table: Store Properties in Each Saved Group
+* Each saved search group can contain multiple properties.
+
 ```sql
 CREATE TABLE saved_properties (
     group_id INT NOT NULL,
     property_id INT NOT NULL,
-    note TEXT,  -- 用户对该房源的个性化备注
+    note TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (group_id, property_id),  -- 复合主键
+    PRIMARY KEY (group_id, property_id),
     CONSTRAINT fk_saved_properties_group FOREIGN KEY (group_id)
         REFERENCES saved_groups(group_id)
         ON DELETE CASCADE,
