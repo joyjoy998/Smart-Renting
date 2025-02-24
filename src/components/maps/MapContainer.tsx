@@ -27,14 +27,6 @@ export function MapContainer() {
   const { theme, resolvedTheme } = useTheme();
   const { location, error } = useUserLocation();
 
-  useEffect(() => {
-    setIsThemeChanging(true);
-    const timer = setTimeout(() => {
-      setIsThemeChanging(false);
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [theme, resolvedTheme]);
 
   if (!location && !error) {
     return <Loading />;
@@ -101,5 +93,6 @@ export function MapContainer() {
         </APIProvider>
       )}
     </>
+
   );
 }

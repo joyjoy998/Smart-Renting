@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { MenuButton } from "./MenuButton";
 import { Sidebar } from "../sidebar/Sidebar";
 import { useMap } from "@vis.gl/react-google-maps";
+
 import Autocomplete from "@mui/material/Autocomplete";
 import TextField from "@mui/material/TextField";
 import debounce from "lodash/debounce";
@@ -11,6 +12,7 @@ interface SearchBoxProps {
   onSearch?: (value: string) => void;
   onSelect?: (place: google.maps.places.PlaceResult) => void;
 }
+
 
 export const SearchBox: React.FC<SearchBoxProps> = ({ onSearch, onSelect }) => {
   const [options, setOptions] = useState<google.maps.places.PlaceResult[]>([]);
