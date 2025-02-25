@@ -2,7 +2,10 @@ from dotenv import load_dotenv
 import os
 import json
 import psycopg2
-load_dotenv("../.env.local") 
+
+env_path = os.path.join(os.path.dirname(__file__), "..", ".env.local")
+load_dotenv(env_path)
+json_file_path = os.path.join(os.path.dirname(__file__), "parsed_properties_modified.json")
 
 DB_HOST = os.environ.get("POSTGRES_HOST")
 DB_NAME = os.environ.get("POSTGRES_DATABASE")
@@ -25,8 +28,6 @@ def main():
     VALUES 
         (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
     """
-
-    json_file_path = "parsed_properties_modified.json"
 
     with open(json_file_path, 'r', encoding='utf-8') as f:
         data = json.load(f)

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/database/supabaseClient';
 
-// GET: 返回指定 user_id 的所有偏好记录
+// GET: retrieve all saved_groups records for a given user_id
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "user_id is required" }, { status: 400 });
     }
     const { data, error } = await supabase
-      .from("user_preferences")
+      .from("saved_groups")
       .select("*")
       .eq("user_id", userId);
     if (error) throw error;
@@ -20,32 +20,17 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// POST: 插入当前用户的一组偏好数据
-// 请求体示例：
-// {
-//   "user_id": "clrk_abc123",
-//   "preferences": [
-//      { "preference_type": "distance", "weight": 0.8, "preference_order": 1 },
-//      { "preference_type": "price", "weight": 0.6, "preference_order": 2 },
-//      { "preference_type": "amenity", "weight": 0.7, "preference_order": 3 },
-//      { "preference_type": "neighborhood_safety", "weight": 0.9, "preference_order": 4 }
-//   ]
-// }
+// POST: insert a new saved_groups record
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { user_id, preferences } = body;
-    if (!user_id || !preferences) {
-      return NextResponse.json({ error: "user_id and preferences are required" }, { status: 400 });
+    const { user_id, group_name } = body;
+    if (!user_id || !group_name) {
+      return NextResponse.json({ error: "user_id and group_name are required" }, { status: 400 });
     }
-    // 构造每一条记录都带上 user_id
-    const preferencesToInsert = preferences.map((pref: any) => ({
-      ...pref,
-      user_id
-    }));
     const { data, error } = await supabase
-      .from("user_preferences")
-      .insert(preferencesToInsert);
+      .from("saved_groups")
+      .insert([{ user_id, group_name }]);
     if (error) throw error;
     return NextResponse.json(data, { status: 201 });
   } catch (err) {
@@ -53,21 +38,21 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// PUT: 更新指定偏好，要求 URL 中有 user_id 和 preference_type 参数
+// PUT: update a saved_groups record, requires user_id and group_id in the URL
 export async function PUT(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get("user_id");
-    const preferenceType = searchParams.get("preference_type");
-    if (!userId || !preferenceType) {
-      return NextResponse.json({ error: "user_id and preference_type are required" }, { status: 400 });
+    const groupId = searchParams.get("group_id");
+    if (!userId || !groupId) {
+      return NextResponse.json({ error: "user_id and group_id are required" }, { status: 400 });
     }
     const body = await req.json();
     const { data, error } = await supabase
-      .from("user_preferences")
+      .from("saved_groups")
       .update(body)
       .eq("user_id", userId)
-      .eq("preference_type", preferenceType);
+      .eq("group_id", groupId);
     if (error) throw error;
     return NextResponse.json(data, { status: 200 });
   } catch (err) {
@@ -75,20 +60,20 @@ export async function PUT(req: NextRequest) {
   }
 }
 
-// DELETE: 删除指定偏好，要求 URL 中有 user_id 和 preference_type 参数
+// DELETE: delete a saved_groups record, requires user_id and group_id in the URL
 export async function DELETE(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get("user_id");
-    const preferenceType = searchParams.get("preference_type");
-    if (!userId || !preferenceType) {
-      return NextResponse.json({ error: "user_id and preference_type are required" }, { status: 400 });
+    const groupId = searchParams.get("group_id");
+    if (!userId || !groupId) {
+      return NextResponse.json({ error: "user_id and group_id are required" }, { status: 400 });
     }
     const { data, error } = await supabase
-      .from("user_preferences")
+      .from("saved_groups")
       .delete()
       .eq("user_id", userId)
-      .eq("preference_type", preferenceType);
+      .eq("group_id", groupId);
     if (error) throw error;
     return NextResponse.json(data, { status: 200 });
   } catch (err) {
