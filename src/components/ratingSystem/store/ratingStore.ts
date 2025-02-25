@@ -29,6 +29,7 @@ interface WeightConfig {
 }
 
 interface RatingState {
+  isOpen: boolean;
   properties: Property[];
   pois: POI[];
   selectedPOI: POI | null;
@@ -43,6 +44,7 @@ interface RatingState {
   totalScores: Record<string, number>;
   weightConfig: WeightConfig;
 
+  setOpen: (open: boolean) => void;
   setSelectedPOI: (poi: POI) => void;
   setTravelMode: (mode: TravelMode) => void;
   setDistanceScores: (scores: Record<string, number>) => void;
@@ -66,6 +68,7 @@ const defaultWeightConfig: WeightConfig = {
 };
 
 export const useRatingStore = create<RatingState>((set) => ({
+  isOpen: false,
   properties: propertiesData,
   pois: poisData,
   selectedPOI: null,
@@ -80,6 +83,7 @@ export const useRatingStore = create<RatingState>((set) => ({
   totalScores: {},
   weightConfig: defaultWeightConfig,
 
+  setOpen: (open) => set({ isOpen: open }),
   setSelectedPOI: (poi) => set({ selectedPOI: poi }),
   setTravelMode: (mode) => set({ travelMode: mode }),
   setDistanceScores: (scores) => set({ distanceScores: scores }),
