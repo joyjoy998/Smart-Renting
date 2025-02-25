@@ -1,7 +1,9 @@
 // components/sidebar/Sidebar.tsx
 "use client";
 
+import { useSettingsStore } from "@/stores/useSettingsStore";
 import { useSidebarStore } from "@/stores/useSidebarStore";
+import { useRatingStore } from "@/components/ratingSystem/store/ratingStore";
 import {
   X,
   BookmarkCheck,
@@ -11,13 +13,13 @@ import {
   Lightbulb,
   History,
   HelpCircle,
-  UserCog,
   LogOut,
   LogIn,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "../home/Logo";
 import { useAuthStore } from "@/stores/useAuthStore";
+import RatingReport from "../ratingSystem/ratingReport";
 
 export function Sidebar() {
   const { isOpen, setOpen } = useSidebarStore();
@@ -68,10 +70,17 @@ export function Sidebar() {
 
           {/* Main functional area for report generation, recommendation, and history management */}
           {/* <div className="p-4 border-t space-y-2"> */}
-          <button className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg">
+          <button
+            onClick={() => {
+              useRatingStore.getState().setOpen(true);
+              useSidebarStore.getState().setOpen(false);
+            }}
+            className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg"
+          >
             <FileText className="h-5 w-5" />
             <span>Report Generation</span>
           </button>
+          <RatingReport />
 
           <button className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg">
             <Lightbulb className="h-5 w-5" />
@@ -93,7 +102,13 @@ export function Sidebar() {
 
           {isAuthenticated ? (
             <>
-              <button className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg">
+              <button
+                onClick={() => {
+                  useSettingsStore.getState().setOpen(true);
+                  useSidebarStore.getState().setOpen(false);
+                }}
+                className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg"
+              >
                 <Settings className="h-5 w-5" />
                 <span>Settings</span>
               </button>
