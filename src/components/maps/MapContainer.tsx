@@ -17,27 +17,39 @@ import { useTheme } from "next-themes";
 import { useUserLocation } from "@/hooks/map/useUserLocation";
 import { MapContent } from "./MapContent";
 import { SettingsPopup } from "@/components/sidebar/SettingsPopup";
-import { usePlacesService } from "@/hooks/map/usePlacesService";
-import MapSeachBox from "./MapSeachBox";
-
+import { getPlaceDetail, usePlacesService } from "@/hooks/map/usePlacesService";
+import useMapStore from "@/stores/useMapStore";
 export function MapContainer() {
+  const placesSerivce = usePlacesService();
   const [isError, setIsError] = useState<string | null>(null);
   const [isLoaded, setIsLoaded] = useState<boolean>(true);
   const [isThemeChanging, setIsThemeChanging] = useState(false);
   const { theme, resolvedTheme } = useTheme();
   const { location, error } = useUserLocation();
-
-
+  const setCurrentInfoWindow = useMapStore.use.setCurrentInfoWindow();
+  const setCurrentGeometry = useMapStore.use.setCurrentGeometry();
   if (!location && !error) {
     return <Loading />;
   }
-
   return (
     <div style={{ width: "100%", height: "100vh", position: "relative" }}>
       <Map
         defaultCenter={MAPS_CONFIG.defaultCenter}
         defaultZoom={MAPS_CONFIG.defaultZoom}
         mapId={theme === "dark" ? GOOGLE_DARK_MAPS_ID : GOOGLE_LIGHT_MAPS_ID}
+        onClick={async (event) => {
+          console.log("event=========", event);
+          if (event.detail?.placeId) {
+            // Call event.stop() on the event to prevent the default info window from showing.
+            event.stop();
+            setCurrentGeometry(event.detail.latLng);
+            const detail = await getPlaceDetail(
+              placesSerivce,
+              event.detail.placeId
+            );
+            setCurrentInfoWindow(detail);
+          }
+        }}
         gestureHandling="greedy"
         fullscreenControl={false}
         keyboardShortcuts={false}

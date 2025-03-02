@@ -5,6 +5,7 @@ import { Sidebar } from "../sidebar/Sidebar";
 import { useMap } from "@vis.gl/react-google-maps";
 import { Autocomplete, debounce, TextField, Box } from "@mui/material";
 import { usePlacesService } from "@/hooks/map/usePlacesService";
+import useMapStore from "@/stores/useMapStore";
 
 interface SearchBoxProps {
   placeholder?: string;
@@ -18,6 +19,9 @@ export const SearchBox: React.FC<SearchBoxProps> = ({
   const [options, setOptions] = useState<google.maps.places.PlaceResult[]>([]);
   const places = usePlacesService();
   const [userLocation, setUserLocation] = useState<google.maps.LatLngLiteral>(); //用户当前位置
+
+  const setCurrentGeometry = useMapStore.use.setCurrentGeometry();
+  const setCurrentInfoWindow = useMapStore.use.setCurrentInfoWindow();
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -59,8 +63,8 @@ export const SearchBox: React.FC<SearchBoxProps> = ({
   };
 
   const handleSearch = debounce(async (value: string) => {
-    console.log("rest=======");
     const results = await textSearch(value);
+    console.log("rest=======", results);
     setOptions(results);
   }, 300);
 
@@ -70,13 +74,14 @@ export const SearchBox: React.FC<SearchBoxProps> = ({
     const input = form.elements.namedItem("search") as HTMLInputElement;
     onSearch?.(input.value);
   };
-
+  console.log("options========", options);
   return (
     <>
       <div className="absolute left-4 top-[0.5rem] w-full max-w-[280px] z-[1000]">
         <form onSubmit={handleSubmit} className="relative flex items-center">
           <div className="relative w-full">
             <Autocomplete
+              style={{ zIndex: 10000 }}
               size="small"
               getOptionLabel={(option) => option.name || "Unknow"}
               filterOptions={(x) => x}
@@ -86,7 +91,14 @@ export const SearchBox: React.FC<SearchBoxProps> = ({
               filterSelectedOptions
               // value={value}
               noOptionsText="No locations"
-              onChange={(event, value) => {}}
+              onChange={(event, value) => {
+                console.log("value=====", value);
+                setCurrentGeometry({
+                  lng: value?.geometry?.location?.lng()!,
+                  lat: value?.geometry?.location?.lat()!,
+                });
+                setCurrentInfoWindow(value);
+              }}
               onInputChange={(event, newInputValue) => {
                 if (newInputValue) {
                   handleSearch(newInputValue);
@@ -98,14 +110,14 @@ export const SearchBox: React.FC<SearchBoxProps> = ({
                 <TextField
                   className="bg-white"
                   {...params}
-                  slotProps={{
-                    input: {
-                      startAdornment: <MenuButton />,
-                      endAdornment: (
-                        <Search className="h-5 w-5 text-gray-400 -mr-6" />
-                      ),
-                    },
-                  }}
+                  // slotProps={{
+                  //   input: {
+                  //     startAdornment: <MenuButton />,
+                  //     endAdornment: (
+                  //       <Search className="h-5 w-5 text-gray-400 -mr-6" />
+                  //     ),
+                  //   },
+                  // }}
                   label="Search Google Maps"
                   fullWidth
                 />
