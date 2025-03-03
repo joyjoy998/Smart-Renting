@@ -45,6 +45,7 @@ CREATE TABLE properties (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+
 CREATE TABLE poi_markers (
     poi_id SERIAL PRIMARY KEY,
     name TEXT,
@@ -163,3 +164,14 @@ CREATE TRIGGER before_insert_saved_properties_safety_score
 BEFORE INSERT ON saved_properties
 FOR EACH ROW
 EXECUTE FUNCTION set_saved_properties_safety_score();
+
+
+
+-- =====================================================
+-- 6. create property vector table
+-- =====================================================
+CREATE TABLE property_vectors (
+    property_id INT PRIMARY KEY REFERENCES properties(property_id) ON DELETE CASCADE,
+    embedding vector(1024)
+);
+
