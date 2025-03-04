@@ -2,14 +2,7 @@
 import React from "react";
 import { AlertCircle } from "lucide-react";
 
-const ConfirmPopup = ({
-  isOpen,
-  message,
-  onConfirm,
-  onCancel,
-  confirmText = "Confirm",
-  cancelText = "Cancel",
-}) => {
+const ConfirmPopup = ({ isOpen, message, onConfirm, onCancel }) => {
   if (!isOpen) return null;
 
   return (
@@ -20,18 +13,18 @@ const ConfirmPopup = ({
           <h3 className="text-lg font-medium">Confirm Alert</h3>
         </div>
         <p className="mb-6 text-gray-700">{message}</p>
-        <div className="flex justify-end space-x-2">
+        <div className="flex justify-between space-x-2">
           <button
             className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100"
             onClick={onCancel}
           >
-            {cancelText}
+            Cancel
           </button>
           <button
             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
             onClick={onConfirm}
           >
-            {confirmText}
+            Confirm
           </button>
         </div>
       </div>

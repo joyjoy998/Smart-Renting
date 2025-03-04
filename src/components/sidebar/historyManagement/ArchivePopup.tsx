@@ -29,7 +29,9 @@ export const ArchivePopup = () => {
 
   const createNewArchive = () => {
     const now = new Date();
-    const dateString = now.toISOString().replace("T", " ").substring(0, 19);
+    const dateString = now
+      .toLocaleString("zh-CN", { hour12: false })
+      .replace(/\//g, "-");
     const newArchive = {
       id: archives.length > 0 ? Math.max(...archives.map((a) => a.id)) + 1 : 1,
       name: `Archive ${archives.length + 1}`,
@@ -121,13 +123,13 @@ export const ArchivePopup = () => {
   return (
     <>
       {/* 背景遮罩层，当打开ArchivePopup时显示 */}
-      {/* {isArchiveOpen && (
+      {isArchiveOpen && (
         <div
-          className="fixed inset-0 bg-black/30 transition-opacity z-[1003]"
+          className="fixed inset-0 bg-black/20 transition-opacity z-[1003]"
           onClick={() => setArchiveOpen(false)}
           aria-hidden="true"
         />
-      )} */}
+      )}
 
       {/* Archive弹出面板 */}
       <div
@@ -176,9 +178,10 @@ export const ArchivePopup = () => {
                 }`}
               >
                 <div className="flex items-center flex-1">
-                  <div className="w-10 h-10 mr-3 flex items-center justify-center border border-gray-300 rounded">
+                  {/* <div className="w-10 h-10 mr-3 flex items-center justify-center border border-gray-300 rounded">
                     <Image size={20} />
-                  </div>
+                  </div> */}
+                  {/* 考虑以后做缩略图时使用 */}
                   <div className="flex-1">
                     {editingId === archive.id ? (
                       <input
