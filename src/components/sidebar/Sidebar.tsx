@@ -26,6 +26,10 @@ import {
   SignedOut,
   SignOutButton,
 } from "@clerk/nextjs";
+import { ArchivePopup } from "./historyManagement/ArchivePopup";
+import { SettingsPopup } from "./SettingsPopup";
+import { useArchiveStore } from "@/stores/useArchiveStore";
+import { set } from "lodash";
 
 export function Sidebar() {
   const { isOpen, setOpen } = useSidebarStore();
@@ -36,7 +40,10 @@ export function Sidebar() {
       {isOpen && (
         <div
           className="fixed inset-0 bg-black/30 transition-opacity z-[1001]"
-          onClick={() => setOpen(false)}
+          onClick={() => {
+            setOpen(false);
+            useArchiveStore.getState().setArchiveOpen(false);
+          }}
           aria-hidden="true"
         />
       )}
@@ -91,11 +98,17 @@ export function Sidebar() {
             <Lightbulb className="h-5 w-5" />
             <span>Recommendation</span>
           </button>
-
-          <button className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg">
-            <History className="h-5 w-5" />
-            <span>History Management</span>
-          </button>
+          <SignedIn>
+            <button
+              className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg"
+              onClick={() => {
+                useArchiveStore.getState().setArchiveOpen(true);
+              }}
+            >
+              <History className="h-5 w-5" />
+              <span>History Management</span>
+            </button>
+          </SignedIn>
         </div>
 
         {/* Functional area for help, Settings and Login Logout */}
@@ -136,6 +149,8 @@ export function Sidebar() {
           </SignedOut>
         </div>
       </aside>
+      <ArchivePopup />
+      <SettingsPopup />
     </>
   );
 }

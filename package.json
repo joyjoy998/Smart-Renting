@@ -27,7 +27,7 @@
     "@react-google-maps/api": "^2.20.3",
     "@shadcn/ui": "^0.0.4",
     "@supabase/ssr": "^0.5.2",
-    "@supabase/supabase-js": "^2.47.11",
+    "@supabase/supabase-js": "^2.49.1",
     "@types/google-maps": "^3.2.6",
     "@vis.gl/react-google-maps": "latest",
     "autosuggest-highlight": "^3.3.4",
