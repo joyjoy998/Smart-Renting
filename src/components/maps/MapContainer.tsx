@@ -16,7 +16,6 @@ import Loading from "@/components/ui/Loading";
 import { useTheme } from "next-themes";
 import { useUserLocation } from "@/hooks/map/useUserLocation";
 import { MapContent } from "./MapContent";
-import { SettingsPopup } from "@/components/sidebar/SettingsPopup";
 import { usePlacesService } from "@/hooks/map/usePlacesService";
 import { SearchBox } from "../home/SearchBox";
 
@@ -26,7 +25,6 @@ export function MapContainer() {
   const [isThemeChanging, setIsThemeChanging] = useState(false);
   const { theme, resolvedTheme } = useTheme();
   const { location, error } = useUserLocation();
-
 
   if (!location && !error) {
     return <Loading />;
@@ -87,12 +85,10 @@ export function MapContainer() {
               }}
             >
               <MapContent />
-              <SettingsPopup />
             </Map>
           </div>
         </APIProvider>
       )}
     </>
-
   );
 }
