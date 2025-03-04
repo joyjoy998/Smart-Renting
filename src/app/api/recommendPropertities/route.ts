@@ -40,16 +40,16 @@ export async function GET(req: NextRequest) {
     // let group_id: string | null = "";
 
     // 2. USER WITH POI AND PROPERTIES
-    // let user_id: string | null = "3926f78e-942f-4f10-a21f-0ee28b7b7767";
-    //   let group_id: string | null = "1";
+    let user_id: string | null = "3926f78e-942f-4f10-a21f-0ee28b7b7767";
+    let group_id: string | null = "1";
 
     // 3. USER WITH POI NO PROPERTIES
     // let user_id: string | null = "11e084ab-9aa5-4117-90b1-e234b8dae1a7";
-    //   let group_id: string | null = "3";
+    // let group_id: string | null = "3";
 
     // 4. USER WITH PROPERTIES NO POI
-    let user_id: string | null = "55d178e0-77bc-4f51-8c43-5b61c8713ca8";
-    let group_id: string | null = "";
+    // let user_id: string | null = "55d178e0-77bc-4f51-8c43-5b61c8713ca8";
+    // let group_id: string | null = "5";
 
     // Validate user_id
     if (!user_id) {
