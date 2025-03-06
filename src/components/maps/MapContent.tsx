@@ -1,14 +1,61 @@
 import { useEffect, useState } from "react";
-import { useMap } from "@vis.gl/react-google-maps";
+import { AdvancedMarker, useMap } from "@vis.gl/react-google-maps";
 import { MAPS_CONFIG } from "@/lib/constants/mapConfigure";
 import { UserLocationMarker } from "./UserLocationMarker";
+import PropertyInfoWindow from "@/components/InfoWindow/InfoWindow";
+import useMapStore from "@/stores/useMapStore";
+import { getPlaceDetail, usePlacesService } from "@/hooks/map/usePlacesService";
 
 export function MapContent() {
   const map = useMap();
+  const placesSerivce = usePlacesService();
+  console.log("Google Map Instance:", map);
+
+  const currentInfoWindow = useMapStore.use.currentInfoWindow();
+  const currentGeometry = useMapStore.use.currentGeometry();
+  const clearCurrentInfo = useMapStore.use.clearCurrentInfo();
+  const setCurrentGeometry = useMapStore.use.setCurrentGeometry();
+  const setCurrentInfoWindow = useMapStore.use.setCurrentInfoWindow();
+
   const [userLocation, setUserLocation] = useState<google.maps.LatLngLiteral>(
     MAPS_CONFIG.defaultCenter
   );
 
+  console.log("currentInfoWindow========", currentInfoWindow);
+  console.log("currentGeometry========", currentGeometry);
+  // 新增：管理 InfoWindow 状态
+  const [selectedProperty, setSelectedProperty] = useState<{
+    id: string;
+    position: google.maps.LatLngLiteral;
+  } | null>(null);
+
+  // 假数据：用于测试 Marker 和 InfoWindow
+  const properties = [
+    {
+      id: "ChIJwRwoOAAPE2sRQJjb0-BQKms",
+      position: { lat: -34.397, lng: 150.644 },
+      price: "260",
+    },
+    {
+      id: "ChIJwRwoOAAPE2sRQJjb0-BQKms",
+      position: { lat: -33.8688, lng: 151.2093 },
+      price: "260",
+    },
+  ];
+  // 生成气泡框的 Marker Icon
+  const createPriceMarker = (price: string) => {
+    const svg = `
+      <svg width="90" height="50" xmlns="http://www.w3.org/2000/svg">
+        <!-- 使用 lucide-react 的 MessageCircle 形状 -->
+        <path d="M20 45 L30 35 H70 Q85 35 85 20 Q85 5 70 5 H20 Q5 5 5 20 Q5 35 20 35 Z"
+          fill="white" stroke="#ccc" stroke-width="2"/>
+        <text x="50%" y="55%" font-size="16" font-family="Arial" fill="black" text-anchor="middle" dominant-baseline="middle">
+          $${price}
+        </text>
+      </svg>
+    `;
+    return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+  };
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -31,6 +78,36 @@ export function MapContent() {
       );
     }
   }, [map]);
-
-  return <UserLocationMarker position={userLocation} />;
+  return (
+    <>
+      {/* 显示用户当前位置 */}
+      <UserLocationMarker position={userLocation} />
+      console.log("Rendering Marker at:", property.position);
+      {/* 当前选中的地址 Marker */}
+      {currentGeometry && <AdvancedMarker position={currentGeometry} />}
+      {properties.map((property) => (
+        <AdvancedMarker
+          key={property.id}
+          position={property.position}
+          onClick={async () => {
+            setCurrentGeometry(property.position);
+            const detail = await getPlaceDetail(placesSerivce, property.id);
+            setCurrentInfoWindow(detail);
+          }}
+        >
+          <img src={createPriceMarker(property.price)} alt="" />
+        </AdvancedMarker>
+      ))}
+      {/* 显示 InfoWindow */}
+      {!!currentInfoWindow && (
+        <PropertyInfoWindow
+          position={currentGeometry}
+          propertyId={currentInfoWindow.place_id}
+          onClose={() => {
+            clearCurrentInfo();
+          }}
+        />
+      )}
+    </>
+  );
 }
