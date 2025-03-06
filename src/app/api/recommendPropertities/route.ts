@@ -44,14 +44,14 @@ export async function GET(req: NextRequest) {
     // const user_id: string | null = "user2";
     // const group_id: string | null = "";
     // 2. USER WITH POI AND PROPERTIES
-    // const user_id: string | null = "user1";
-    // const group_id: string | null = "1";
+    const user_id: string | null = "user1";
+    const group_id: string | null = "1";
 
     // 3. USER WITH POI NO PROPERTIES
-    const user_id: string | null = "user4";
-    const group_id: string | null = "3";
-    const min_budget = "100"; // 最小预算
-    const max_budget = "200"; // 最大预算
+    // const user_id: string | null = "user4";
+    // const group_id: string | null = "3";
+    const min_budget = ""; // 最小预算
+    const max_budget = "600"; // 最大预算
 
     // 4. USER WITH PROPERTIES NO POI
     // const user_id: string | null = "user3";
