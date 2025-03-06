@@ -31,11 +31,11 @@ export async function GET(req: NextRequest) {
   try {
     const searchParams = req.nextUrl.searchParams;
 
-    // 解析查询参数
+    // Parse query parameters
     // const user_id = searchParams.get("user_id");
     // const group_id = searchParams.get("group_id");
-    // const min_budget = searchParams.get("min_budget"); // 最小预算
-    // const max_budget = searchParams.get("max_budget"); // 最大预算
+    // const min_budget = searchParams.get("min_budget");
+    // const max_budget = searchParams.get("max_budget");
     // let user_id: string | null = searchParams.get("user_id");
     // let group_id: string | null = searchParams.get("group_id");
 
@@ -44,20 +44,20 @@ export async function GET(req: NextRequest) {
     // const user_id: string | null = "user2";
     // const group_id: string | null = "";
     // 2. USER WITH POI AND PROPERTIES
-    const user_id: string | null = "user1";
-    const group_id: string | null = "1";
+    // const user_id: string | null = "user1";
+    // const group_id: string | null = "1";
 
     // 3. USER WITH POI NO PROPERTIES
-    // const user_id: string | null = "user4";
-    // const group_id: string | null = "3";
-    const min_budget = ""; // 最小预算
-    const max_budget = "600"; // 最大预算
+    const user_id: string | null = "user4";
+    const group_id: string | null = "3";
+    const min_budget = "";
+    const max_budget = "600";
 
     // 4. USER WITH PROPERTIES NO POI
     // const user_id: string | null = "user3";
     // const group_id: string | null = "5";
 
-    // 验证 user_id 是否存在
+    // check user_id existence
     if (!user_id) {
       console.error("user_id is required.");
       return NextResponse.json(
@@ -79,13 +79,13 @@ export async function GET(req: NextRequest) {
 
     let recommendedProperties: any[] = [];
 
-    // 如果 group_id 为空，返回所有房源
+    // if group_id is null return all properties
     if (!group_id || group_id.trim() === "") {
       console.warn(
         "No group_id provided, user has no marked POI or properties. Returning all listings."
       );
 
-      // 获取所有房源
+      // get all properties
       const { data: allProperties, error: allPropertiesError } = await supabase
         .from("properties")
         .select("*");
@@ -103,7 +103,7 @@ export async function GET(req: NextRequest) {
 
       recommendedProperties = allProperties;
     } else {
-      // 安全地将 group_id 转换为数字
+      // transform group_id to int
       const parsedGroupId = parseInt(group_id, 10);
       if (isNaN(parsedGroupId)) {
         console.error("Invalid group_id format, must be a number.");
@@ -113,7 +113,7 @@ export async function GET(req: NextRequest) {
         );
       }
 
-      // 验证 group_id 是否属于 user_id
+      // check whether the group_id belongs to  user_id
       const { data: groupCheck, error: groupCheckError } = await supabase
         .from("saved_groups")
         .select("group_id")
@@ -147,7 +147,7 @@ export async function GET(req: NextRequest) {
 
       console.log("Calling stored procedure recommend_properties_for_user...");
 
-      // 调用存储过程获取推荐房源
+      // call supabase function to get recommendation
       const { data: recommendedData, error: recommendError } =
         await supabase.rpc("recommend_properties_for_user", {
           user_id: user_id,
@@ -167,7 +167,6 @@ export async function GET(req: NextRequest) {
 
       console.log("Recommended property IDs:", recommendedData);
 
-      // 显式声明 recommendedData 的类型
       const recommendedDataTyped: Recommendation[] = recommendedData || [];
 
       if (!recommendedDataTyped.length) {
@@ -179,18 +178,18 @@ export async function GET(req: NextRequest) {
         });
       }
 
-      // 提取推荐结果中的房源ID
+      //extract property id from recommendation result
       let propertyIds: number[] = recommendedDataTyped.map(
         (item: Recommendation) => item.property_id
       );
 
-      // 获取完整的房源详情
+      // get detailed info from properties table
       let query = supabase
         .from("properties")
         .select("*")
         .in("property_id", propertyIds);
 
-      // 仅对 **仅标记 POI** 的用户群体应用 `budget` 过滤
+      // for users who marked poi only apply budget filter
       const isOnlyPOIUser = await supabase
         .from("saved_properties")
         .select("property_id")
@@ -219,7 +218,7 @@ export async function GET(req: NextRequest) {
 
       console.log("Property details fetched:", propertyDetails);
 
-      // 合并推荐分数
+      // merge final score to the result
       recommendedProperties = propertyDetails.map((property) => ({
         ...property,
         final_score:
@@ -228,7 +227,7 @@ export async function GET(req: NextRequest) {
           )?.final_score ?? 0,
       }));
 
-      // 重新排序
+      // sort final score desc
       recommendedProperties.sort(
         (a, b) => (b.final_score ?? 0) - (a.final_score ?? 0)
       );
