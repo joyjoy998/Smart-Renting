@@ -5,6 +5,7 @@ import { Header } from "@/components/home/Header";
 import { APIProvider } from "@vis.gl/react-google-maps";
 import { useState } from "react";
 import Loading from "@/components/ui/Loading";
+import RatingReport from "@/components/ratingSystem/ratingReport";
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -35,6 +36,7 @@ export default function Home() {
           </div>
         )}
         <MapContainer />
+        <RatingReport />
       </main>
     </APIProvider>
   );
