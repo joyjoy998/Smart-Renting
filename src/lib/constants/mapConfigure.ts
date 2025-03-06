@@ -1,4 +1,4 @@
-import type { MapsConfig } from "@/lib/types/mapsConfig";
+import type { MapsConfig } from "@/types/mapsConfig";
 
 export const MAPS_CONFIG: MapsConfig = {
   defaultCenter: {

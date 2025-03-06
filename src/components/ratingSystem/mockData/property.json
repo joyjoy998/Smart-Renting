@@ -1,0 +1,65 @@
+[
+  {
+    "property_property_id": "pro1",
+    "latitude": -34.41343795363178,
+    "longitude": 150.89543401216466,
+    "address": "2/40 Virginia Street, NORTH WOLLONGONG NSW 2500",
+    "bedrooms": 3,
+    "bathrooms": 1,
+    "parkingSpaces": 2,
+    "weeklyRent": 780,
+    "propertyType": "Unit",
+    "safetyScore": 0.84
+  },
+
+  {
+    "property_property_id": "pro2",
+    "latitude": -34.41254294496444,
+    "longitude": 150.8889119256573,
+    "address": "27 Porter Street, NORTH WOLLONGONG NSW 2500",
+    "bedrooms": 3,
+    "bathrooms": 1,
+    "parkingSpaces": 0,
+    "weeklyRent": 680,
+    "propertyType": "House",
+    "safetyScore": 0.24
+  },
+  {
+    "property_property_id": "pro3",
+    "latitude": -34.401131220721325,
+    "longitude": 150.89259085634313,
+    "address": "4/13-15 Soudan Street, FAIRY MEADOW NSW 2519",
+    "bedrooms": 3,
+    "bathrooms": 1,
+    "parkingSpaces": 1,
+    "weeklyRent": 585,
+    "propertyType": "Apartment",
+    "safetyScore": 0.66
+  },
+
+  {
+    "property_property_id": "pro4",
+    "latitude": -34.39382521000242,
+    "longitude": 150.8950397103133,
+    "address": "5/34 Daisy Street, FAIRY MEADOW NSW 2519",
+    "bedrooms": 2,
+    "bathrooms": 1,
+    "parkingSpaces": 1,
+    "weeklyRent": 520,
+    "propertyType": "Apartment",
+    "safetyScore": 0.56
+  },
+
+  {
+    "property_property_id": "pro5",
+    "latitude": -34.182058738778146,
+    "longitude": 150.99619048331903,
+    "address": "12 Old Farm Road, HELENSBURGH NSW 2508",
+    "bedrooms": 3,
+    "bathrooms": 1,
+    "parkingSpaces": 2,
+    "weeklyRent": 780,
+    "propertyType": "House",
+    "safetyScore": 0.99
+  }
+]

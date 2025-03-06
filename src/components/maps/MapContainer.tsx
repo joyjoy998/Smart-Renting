@@ -19,6 +19,9 @@ import { MapContent } from "./MapContent";
 import { SettingsPopup } from "@/components/sidebar/SettingsPopup";
 import { getPlaceDetail, usePlacesService } from "@/hooks/map/usePlacesService";
 import useMapStore from "@/stores/useMapStore";
+import { usePlacesService } from "@/hooks/map/usePlacesService";
+import { SearchBox } from "../home/SearchBox";
+
 export function MapContainer() {
   const placesSerivce = usePlacesService();
   const [isError, setIsError] = useState<string | null>(null);
