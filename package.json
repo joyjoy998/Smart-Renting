@@ -9,7 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@clerk/nextjs": "^6.9.6",
+    "@clerk/nextjs": "^6.12.1",
     "@emotion/cache": "^11.14.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
@@ -26,7 +26,8 @@
     "@radix-ui/react-tooltip": "^1.1.8",
     "@react-google-maps/api": "^2.20.3",
     "@shadcn/ui": "^0.0.4",
-    "@supabase/supabase-js": "^2.47.11",
+    "@supabase/ssr": "^0.5.2",
+    "@supabase/supabase-js": "^2.49.1",
     "@types/google-maps": "^3.2.6",
     "@vis.gl/react-google-maps": "latest",
     "autosuggest-highlight": "^3.3.4",

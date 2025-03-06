@@ -18,12 +18,21 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "../home/Logo";
-import { useAuthStore } from "@/stores/useAuthStore";
+// import { useAuthStore } from "@/stores/useAuthStore";
 import RatingReport from "../ratingSystem/ratingReport";
+import {
+  SignedIn,
+  SignInButton,
+  SignedOut,
+  SignOutButton,
+} from "@clerk/nextjs";
+import { ArchivePopup } from "./historyManagement/ArchivePopup";
+import { SettingsPopup } from "./SettingsPopup";
+import { useArchiveStore } from "@/stores/useArchiveStore";
+import { set } from "lodash";
 
 export function Sidebar() {
   const { isOpen, setOpen } = useSidebarStore();
-  const { isAuthenticated, signOut, signIn } = useAuthStore();
 
   return (
     <>
@@ -31,7 +40,10 @@ export function Sidebar() {
       {isOpen && (
         <div
           className="fixed inset-0 bg-black/30 transition-opacity z-[1001]"
-          onClick={() => setOpen(false)}
+          onClick={() => {
+            setOpen(false);
+            useArchiveStore.getState().setArchiveOpen(false);
+          }}
           aria-hidden="true"
         />
       )}
@@ -86,11 +98,17 @@ export function Sidebar() {
             <Lightbulb className="h-5 w-5" />
             <span>Recommendation</span>
           </button>
-
-          <button className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg">
-            <History className="h-5 w-5" />
-            <span>History Management</span>
-          </button>
+          <SignedIn>
+            <button
+              className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg"
+              onClick={() => {
+                useArchiveStore.getState().setArchiveOpen(true);
+              }}
+            >
+              <History className="h-5 w-5" />
+              <span>History Management</span>
+            </button>
+          </SignedIn>
         </div>
 
         {/* Functional area for help, Settings and Login Logout */}
@@ -100,38 +118,39 @@ export function Sidebar() {
             <span>Help/Guidance</span>
           </button>
 
-          {isAuthenticated ? (
-            <>
-              <button
-                onClick={() => {
-                  useSettingsStore.getState().setOpen(true);
-                  useSidebarStore.getState().setOpen(false);
-                }}
-                className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg"
-              >
-                <Settings className="h-5 w-5" />
-                <span>Settings</span>
-              </button>
+          {/* Settings and Login/Logout */}
+          <SignedIn>
+            <button
+              onClick={() => {
+                useSettingsStore.getState().setOpen(true);
+                useSidebarStore.getState().setOpen(false);
+              }}
+              className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg"
+            >
+              <Settings className="h-5 w-5" />
+              <span>Settings</span>
+            </button>
 
-              <button
-                onClick={signOut}
-                className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg text-red-500"
-              >
+            <SignOutButton>
+              <button className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg text-red-500">
                 <LogOut className="h-5 w-5" />
                 <span>Sign Out</span>
               </button>
-            </>
-          ) : (
-            <button
-              onClick={signIn}
-              className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg text-blue-500"
-            >
-              <LogIn className="h-5 w-5" />
-              <span>Sign In</span>
-            </button>
-          )}
+            </SignOutButton>
+          </SignedIn>
+
+          <SignedOut>
+            <SignInButton mode="modal">
+              <button className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg text-blue-500">
+                <LogIn className="h-5 w-5" />
+                <span>Sign In</span>
+              </button>
+            </SignInButton>
+          </SignedOut>
         </div>
       </aside>
+      <ArchivePopup />
+      <SettingsPopup />
     </>
   );
 }
