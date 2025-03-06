@@ -5,6 +5,7 @@ import { useSettingsStore } from "@/stores/useSettingsStore";
 import { usePreferencesStore } from "@/stores/usePreferencesStore";
 import { Button } from "@/components/ui/button";
 import { SliderWithPlusAndMinus } from "@/components/sidebar/preference/SliderWithPlusAndMinus";
+import UserBudget from "./UserBudget";
 
 export function SettingsPopup() {
   const { isOpen, setOpen } = useSettingsStore();
@@ -60,14 +61,25 @@ export function SettingsPopup() {
               </div>
             </div>
 
-            {/* Custom Habits Section */}
-            <div>
-              <h3 className="font-medium mb-4">Custom Habits</h3>
-              <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <input type="checkbox" id="notifications" />
-                  <label htmlFor="notifications">Enable Notifications</label>
+            {/* Custom Habits and Budget Section */}
+            <div className="flex flex-col gap-6">
+              {/* Custom Habits */}
+              <div>
+                <h3 className="font-medium mb-4">Custom Habits</h3>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <input type="checkbox" id="notifications" />
+                    <label htmlFor="notifications">Enable Notifications</label>
+                  </div>
                 </div>
+              </div>
+
+              {/* Divider Line */}
+              <div className="h-px bg-gray-300"></div>
+
+              {/* User Budget */}
+              <div>
+                <UserBudget />
               </div>
             </div>
           </div>
