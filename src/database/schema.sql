@@ -3,15 +3,14 @@
 -- =====================================================
 
 CREATE TABLE users (
-    user_id UUID PRIMARY KEY,       -- 来自 Clerk 的用户ID
+    user_id text PRIMARY KEY,       -- 来自 Clerk 的用户ID
     username VARCHAR(20) NOT NULL,         
     email VARCHAR(255) NOT NULL UNIQUE,
-    password_hash VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE user_preferences (
-    user_id UUID NOT NULL,
+    user_id text NOT NULL,
     preference_type VARCHAR(50) NOT NULL
       CHECK (preference_type IN ('distance', 'price', 'amenity', 'neighborhood_safety')),
     weight NUMERIC(3,2) NOT NULL CHECK (weight >= 0 AND weight <= 1), 
@@ -66,7 +65,7 @@ CREATE TABLE poi_markers (
 
 CREATE TABLE saved_groups (
     group_id SERIAL PRIMARY KEY,
-    user_id UUID NOT NULL,
+    user_id text NOT NULL,
     group_name TEXT NOT NULL UNIQUE,  
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_saved_groups_user FOREIGN KEY (user_id)
