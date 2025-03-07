@@ -7,7 +7,18 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { useRecommendationStore } from "@/stores/useRecommendationStore";
+import { useStarPropertyStore } from "@/stores/useStarPropertyStore"; // Import Zustand store for starred properties
 import { Button } from "@/components/ui/button";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Pagination } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
+import FavoriteButton from "./FavoriteButton";
+import { useRatingStore } from "@/components/ratingSystem/store/ratingStore";
+import { useSidebarStore } from "@/stores/useSidebarStore";
+
+const DEFAULT_IMAGE_URL = "/property-sample.png";
 
 const RecommendationPopup = () => {
   const {
@@ -17,17 +28,16 @@ const RecommendationPopup = () => {
     fetchRecommendations,
   } = useRecommendationStore();
 
-  // **user info**
-  const userId = "user3"; // Replace with actual user_id
-  const groupId = "5"; // Replace with actual group_id
+  const { starredProperties } = useStarPropertyStore(); // Retrieve starred properties
+  const hasStarredProperties = starredProperties.size > 0; // Check if at least one property is starred
 
-  // **budget**
+  const userId = "user3";
+  const groupId = "5";
   const minBudget = "";
   const maxBudget = "";
 
-  // **control loading status**
   const [showWarning, setShowWarning] = useState(false);
-  const [loading, setLoading] = useState(false); // add loading status
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (isRecommendationOpen) {
@@ -38,11 +48,9 @@ const RecommendationPopup = () => {
           toggleRecommendation();
         }, 2000);
       } else {
-        // loading start
         setLoading(true);
         fetchRecommendations(userId, groupId, minBudget, maxBudget).finally(
           () => {
-            // API calling finished,cancel loading
             setLoading(false);
           }
         );
@@ -52,58 +60,128 @@ const RecommendationPopup = () => {
 
   return (
     <Dialog open={isRecommendationOpen} onOpenChange={toggleRecommendation}>
-      <DialogContent
-        title="Recommended Properties"
-        aria-describedby="recommendation-description">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Recommended Properties</DialogTitle>
-          <DialogDescription id="recommendation-description">
+          <DialogDescription>
             {showWarning
               ? "Please select properties of interest on the map."
               : ""}
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4">
-          {/* warning */}
+
+        <div className="flex flex-col space-y-4">
           {showWarning ? (
             <p className="text-center text-red-400 font-bold">
               Please select properties of interest on the map.
             </p>
           ) : loading ? (
-            // **loading**
             <p className="text-center text-blue-400 font-bold">
               Loading recommendations...
             </p>
           ) : recommendedProperties.length > 0 ? (
-            // **show recommendation**
-            recommendedProperties.map((property) => (
-              <div
-                key={property.property_id}
-                className="border p-4 rounded-lg shadow-sm">
-                <h3 className="text-lg font-bold">
-                  {property.street}, {property.suburb}
-                </h3>
-                <p>Rent: ${property.weekly_rent} / week</p>
-                <p>
-                  Bedrooms: {property.bedrooms} | Bathrooms:{" "}
-                  {property.bathrooms} | Parking spaces:{" "}
-                  {property.parking_spaces}
-                </p>
-                <p>Safety Score: {property.safety_score}</p>
-                {property.final_score !== undefined && (
-                  <p>
-                    Recommendation Score: {property.final_score?.toFixed(2)}
-                  </p>
-                )}
-              </div>
-            ))
+            <div className="flex flex-col space-y-4">
+              {recommendedProperties.map((property) => {
+                const images =
+                  Array.isArray(property.photo) && property.photo.length > 0
+                    ? property.photo
+                    : [DEFAULT_IMAGE_URL];
+
+                return (
+                  <div
+                    key={property.property_id}
+                    className="flex border rounded-lg overflow-hidden shadow-md">
+                    {/* Left side image slider */}
+                    <div className="w-1/3 relative">
+                      <Swiper
+                        modules={[Navigation, Pagination]}
+                        navigation
+                        pagination={{ clickable: true }}
+                        className="h-full">
+                        {images.map((image, index) => (
+                          <SwiperSlide key={index}>
+                            <img
+                              src={image}
+                              alt={`${property.street}, ${property.suburb}`}
+                              className="w-full h-full max-h-48 object-cover rounded-lg aspect-[4/5]"
+                            />
+                          </SwiperSlide>
+                        ))}
+                      </Swiper>
+                    </div>
+
+                    {/* Right side property details */}
+                    <div className="w-2/3 p-4 flex flex-col justify-between">
+                      {/* Row 1 - Price & Favorite */}
+                      <div className="flex justify-between items-center">
+                        <p className="text-xl font-bold">
+                          ${property.weekly_rent} per week
+                        </p>
+                        <Button variant="ghost" className="flex items-center">
+                          <FavoriteButton propertyId={property.property_id} />
+                        </Button>
+                      </div>
+
+                      {/* Row 2 - Address */}
+                      <p className="text-gray-700 text-lg">
+                        {property.street}, {property.suburb}
+                      </p>
+
+                      {/* Row 3 - Property Details */}
+                      <div className="flex items-center space-x-4 text-gray-600 mt-2">
+                        <span>
+                          🛏 {property.bedrooms}{" "}
+                          {property.bedrooms === 1 ? "Bed" : "Beds"}
+                        </span>
+                        <span>
+                          🛁 {property.bathrooms}{" "}
+                          {property.bathrooms === 1 ? "Bath" : "Baths"}
+                        </span>
+                        <span>
+                          🚗 {property.parking_spaces}{" "}
+                          {property.parking_spaces === 1
+                            ? "Parking Space"
+                            : "Parking Spaces"}
+                        </span>
+                      </div>
+
+                      {/* Property Type */}
+                      <p className="text-gray-600 mt-2">
+                        {property.property_type}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           ) : (
-            // **no recommendation**
             <p className="text-center text-gray-500">
               No recommended properties available
             </p>
           )}
-          <Button onClick={toggleRecommendation}>Close</Button>
+
+          {/* Bottom button section */}
+          <div className="flex justify-between mt-4">
+            {/* Comparison Report button */}
+            <Button
+              className="w-1/2 ml-2"
+              onClick={() => {
+                useRatingStore.getState().setOpen(true); // Open Report Generation
+                useSidebarStore.getState().setOpen(false); // Close Sidebar
+                toggleRecommendation(); // Close RecommendationPopup
+              }}
+              disabled={!hasStarredProperties} // Only enabled if at least one property is starred
+            >
+              Comparison Report
+            </Button>
+            {/* Right side Close button */}
+            <Button
+              variant="outline"
+              className="w-1/2 ml-2"
+              onClick={toggleRecommendation}>
+              Close
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

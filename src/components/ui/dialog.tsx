@@ -19,7 +19,6 @@ export function Dialog({ open, onOpenChange, children }: DialogProps) {
 export function DialogTrigger({ children }: { children: React.ReactNode }) {
   return <DialogPrimitive.Trigger asChild>{children}</DialogPrimitive.Trigger>;
 }
-
 export function DialogContent({
   className,
   title,
@@ -27,17 +26,17 @@ export function DialogContent({
   children,
 }: {
   className?: string;
-  title: string;
+  title?: string;
   description?: string;
   children: React.ReactNode;
 }) {
   return (
     <DialogPrimitive.Portal>
       <DialogPrimitive.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
-      <div className="fixed inset-0 flex items-center justify-center p-4">
+      <div className="fixed inset-0 flex items-center justify-center p-4 z-[1002]">
         <DialogPrimitive.Content
           className={cn(
-            "bg-white p-6 rounded-lg shadow-lg w-full max-w-lg relative",
+            "bg-white p-6 rounded-lg shadow-lg w-full max-w-3xl relative",
             className
           )}
           aria-describedby={description ? "dialog-description" : undefined}>

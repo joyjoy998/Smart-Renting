@@ -13,6 +13,7 @@ interface Property {
   property_type: string;
   safety_score: number;
   final_score?: number;
+  photo?: string[];
 }
 
 interface RecommendationState {
