@@ -3,15 +3,16 @@
 -- =====================================================
 
 CREATE TABLE users (
-    user_id VARCHAR(50) PRIMARY KEY,       -- 来自 Clerk 的用户ID
+    user_id text PRIMARY KEY,       -- 来自 Clerk 的用户ID
     username VARCHAR(20) NOT NULL,         
     email VARCHAR(255) NOT NULL UNIQUE,
-    password_hash VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_sign_at TIMESTAMP,
+    delete_at TIMESTAMP DEFAULT NULL
 );
 
 CREATE TABLE user_preferences (
-    user_id VARCHAR(50) NOT NULL,
+    user_id text NOT NULL,
     preference_type VARCHAR(50) NOT NULL
       CHECK (preference_type IN ('distance', 'price', 'amenity', 'neighborhood_safety')),
     weight NUMERIC(3,2) NOT NULL CHECK (weight >= 0 AND weight <= 1), 
@@ -45,6 +46,7 @@ CREATE TABLE properties (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+
 CREATE TABLE poi_markers (
     poi_id SERIAL PRIMARY KEY,
     name TEXT,
@@ -65,7 +67,7 @@ CREATE TABLE poi_markers (
 
 CREATE TABLE saved_groups (
     group_id SERIAL PRIMARY KEY,
-    user_id VARCHAR(50) NOT NULL,
+    user_id text NOT NULL,
     group_name TEXT NOT NULL UNIQUE,  
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_saved_groups_user FOREIGN KEY (user_id)
@@ -163,3 +165,14 @@ CREATE TRIGGER before_insert_saved_properties_safety_score
 BEFORE INSERT ON saved_properties
 FOR EACH ROW
 EXECUTE FUNCTION set_saved_properties_safety_score();
+
+
+
+-- =====================================================
+-- 6. create property vector table
+-- =====================================================
+CREATE TABLE property_vectors (
+    property_id INT PRIMARY KEY REFERENCES properties(property_id) ON DELETE CASCADE,
+    embedding vector(1024)
+);
+
