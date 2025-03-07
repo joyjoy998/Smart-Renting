@@ -10,6 +10,21 @@ export function usePlacesService() {
   
       setPlacesService(new placesLibrary.PlacesService(map));
     }, [placesLibrary, map]);
-  
+    
     return placesService;
   }
+
+
+export function getPlaceDetail(service, placeId) {
+  return new Promise((res) => {
+    service?.getDetails(
+      {
+        placeId,
+      },
+      (result: any) => {
+        res(result);
+      }
+    );
+  })
+ 
+}  

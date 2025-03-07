@@ -7,18 +7,35 @@ import Autocomplete from "@mui/material/Autocomplete";
 import TextField from "@mui/material/TextField";
 import debounce from "lodash/debounce";
 import { usePlacesService } from "@/hooks/map/usePlacesService";
+import useMapStore from "@/stores/useMapStore";
 
 interface SearchBoxProps {
   onSearch?: (value: string) => void;
   onSelect?: (place: google.maps.places.PlaceResult) => void;
 }
 
-
 export const SearchBox: React.FC<SearchBoxProps> = ({ onSearch, onSelect }) => {
   const [options, setOptions] = useState<google.maps.places.PlaceResult[]>([]);
   const places = usePlacesService();
-  const [userLocation, setUserLocation] = useState<google.maps.LatLngLiteral>();
+  const [userLocation, setUserLocation] = useState<google.maps.LatLngLiteral>(); //用户当前位置
 
+  const setCurrentGeometry = useMapStore.use.setCurrentGeometry();
+  const setCurrentInfoWindow = useMapStore.use.setCurrentInfoWindow();
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setUserLocation({ lat: latitude, lng: longitude }); // 设置用户位置
+        },
+        (error) => {
+          console.error("获取位置失败：", error);
+        }
+      );
+    } else {
+      console.error("浏览器不支持 Geolocation API");
+    }
+  }, []);
   const textSearch = (
     value: string,
     location?: any
@@ -45,6 +62,7 @@ export const SearchBox: React.FC<SearchBoxProps> = ({ onSearch, onSelect }) => {
 
   const handleSearch = debounce(async (value: string) => {
     const results = await textSearch(value);
+    console.log("rest=======", results);
     setOptions(results);
     onSearch?.(value);
   }, 300);
@@ -75,7 +93,6 @@ export const SearchBox: React.FC<SearchBoxProps> = ({ onSearch, onSelect }) => {
           </div>
           {/* Autocomplete 组件 */}
           <Autocomplete
-            size="small"
             sx={{
               width: 300,
             }}
@@ -84,16 +101,21 @@ export const SearchBox: React.FC<SearchBoxProps> = ({ onSearch, onSelect }) => {
               width: "100%",
               background: "transparent",
             }}
+            size="small"
             filterOptions={(x) => x}
             options={options}
             autoComplete
             includeInputInList
             filterSelectedOptions
+            // value={value}
             noOptionsText="No locations"
             onChange={(event, value) => {
-              if (value) {
-                onSelect?.(value);
-              }
+              console.log("value=====", value);
+              setCurrentGeometry({
+                lng: value?.geometry?.location?.lng()!,
+                lat: value?.geometry?.location?.lat()!,
+              });
+              setCurrentInfoWindow(value);
             }}
             onInputChange={(event, newInputValue) => {
               if (newInputValue) {
