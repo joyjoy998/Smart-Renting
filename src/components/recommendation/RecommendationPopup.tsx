@@ -18,7 +18,7 @@ import FavoriteButton from "./FavoriteButton";
 import { useRatingStore } from "@/components/ratingSystem/store/ratingStore";
 import { useSidebarStore } from "@/stores/useSidebarStore";
 
-const DEFAULT_IMAGE_URL = "/property-sample.png";
+const DEFAULT_IMAGE_URL = "/property-unavailable.png";
 
 const RecommendationPopup = () => {
   const {
