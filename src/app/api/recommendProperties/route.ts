@@ -32,10 +32,10 @@ export async function GET(req: NextRequest) {
     const searchParams = req.nextUrl.searchParams;
 
     // Parse query parameters
-    // const user_id = searchParams.get("user_id");
-    // const group_id = searchParams.get("group_id");
-    // const min_budget = searchParams.get("min_budget");
-    // const max_budget = searchParams.get("max_budget");
+    const user_id = searchParams.get("user_id");
+    const group_id = searchParams.get("group_id");
+    const min_budget = searchParams.get("min_budget");
+    const max_budget = searchParams.get("max_budget");
     // let user_id: string | null = searchParams.get("user_id");
     // let group_id: string | null = searchParams.get("group_id");
 
@@ -48,10 +48,10 @@ export async function GET(req: NextRequest) {
     // const group_id: string | null = "1";
 
     // 3. USER WITH POI NO PROPERTIES
-    const user_id: string | null = "user4";
-    const group_id: string | null = "3";
-    const min_budget = "";
-    const max_budget = "600";
+    // const user_id: string | null = "user4";
+    // const group_id: string | null = "3";
+    // const min_budget = "";
+    // const max_budget = "600";
 
     // 4. USER WITH PROPERTIES NO POI
     // const user_id: string | null = "user3";
