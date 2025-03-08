@@ -27,11 +27,12 @@ function isGoogleMapsLoaded(): boolean {
 }
 
 /**
- * 计算选定 POI 的行程时间和距离，并计算距离分数
- * @param selectedPOI 用户选择的 POI
- * @param travelMode 用户选择的交通方式（步行、驾车、公共交通）
- * @param properties 用户标记的房源列表
+ * calculate the travel time and distance of the selected POI, and calculate the distance score
+ * @param selectedPOI the POI selected by the user
+ * @param travelMode the mode of transportation selected by the user(walking/driving/public transportation)
+ * @param properties the properties marked by the user
  */
+
 export async function calculateDistanceScore(
   selectedPOI: POI,
   travelMode: TravelMode,
@@ -116,7 +117,6 @@ export async function calculateDistanceScore(
       }
     });
 
-    // 确保至少有一个有效的时间值
     const validTimes = Object.values(travelTimes).filter(
       (time) => time !== 9999
     );
@@ -137,7 +137,7 @@ export async function calculateDistanceScore(
         const time = travelTimes[propertyId];
 
         if (time === 9999) {
-          distanceScores[propertyId] = 0; // 无效路线得分为0
+          distanceScores[propertyId] = 0; //score for invalid routine is 0
         } else {
           distanceScores[propertyId] =
             1 - (time - minTime) / (maxTime - minTime);
@@ -151,7 +151,7 @@ export async function calculateDistanceScore(
   } catch (error) {
     console.error("Error calculating distance scores:", error);
 
-    // 设置默认值
+    // set default value
     properties.forEach((property) => {
       const propertyId = property.property_property_id;
       distanceScores[propertyId] = 0;

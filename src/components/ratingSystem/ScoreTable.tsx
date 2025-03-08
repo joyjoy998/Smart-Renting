@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useRatingStore } from "./store/ratingStore";
 import { calculateDistanceScore } from "./lib/distanceScore";
 import { calculatePriceScore } from "./lib/priceScore";
@@ -7,10 +7,12 @@ import { calculateAmenitiesScore } from "./lib/amenitiesScore";
 import { calculateTotalScore } from "./lib/finalScore";
 import POISelector from "./ui/POISelector";
 import TravelModeSelector from "./ui/TravelModeSelector";
-import DownloadReportButton from "./ui/DownloadReportButton";
-import SaveReportButton from "./ui/SaveReportButton";
 
 const ScoreTable = () => {
+  const [showDetails, setShowDetails] = useState<
+    Record<string | number, boolean>
+  >({});
+
   const {
     selectedPOI,
     travelMode,
@@ -54,8 +56,7 @@ const ScoreTable = () => {
     }
   }, [properties]);
 
-  // 格式化便利设施数量展示
-  const formatAmenitiesCounts = (propertyId: string) => {
+  const formatAmenitiesCounts = (propertyId: string | number) => {
     if (!amenitiesData[propertyId]) return "Loading...";
 
     const counts = [
@@ -69,8 +70,8 @@ const ScoreTable = () => {
     return counts.join(" | ");
   };
 
-  // 展示详细的便利设施数量的提示框
-  const getDetailedTooltip = (propertyId: string) => {
+  // display the detailed number of amenities of each category
+  const getDetailedTooltip = (propertyId: string | number) => {
     if (!amenitiesData[propertyId]) return "";
 
     return `
@@ -99,110 +100,150 @@ const ScoreTable = () => {
     calculateScores();
   }, [properties, selectedPOI, weightConfig]);
 
-  // 按总分排序的属性列表
+  // rank the properties descending
   const sortedProperties = useMemo(() => {
     if (Object.keys(totalScores).length === 0) return properties;
 
     return [...properties].sort((a, b) => {
       const scoreA = totalScores[a.property_property_id] || 0;
       const scoreB = totalScores[b.property_property_id] || 0;
-      return scoreB - scoreA; // 从高到低排序
+      return scoreB - scoreA;
     });
   }, [properties, totalScores]);
 
+  const toggleDetails = (propertyId: string | number) => {
+    setShowDetails((prev) => ({
+      ...prev,
+      [propertyId]: !prev[propertyId],
+    }));
+  };
+
   return (
     <div className="overflow-x-auto">
-      <table className="w-full border-collapse border border-gray-300">
+      <table className="w-full border-collapse border border-gray-300 table-fixed">
         <thead>
           <tr className="bg-gray-200">
-            <th className="p-2">🏠 Property</th>
-            <th className="p-2">📍 Location</th>
-            <th className="p-2">💰 Price</th>
-            <th className="p-2">🏚️ Layout</th>
-            <th className="p-2">
-              🚶 Distance To
-              <POISelector />
+            <th className="p-2 w-1/16">🏠 Property</th>
+            <th className="p-2 w-2/16">📍 Location</th>
+            <th className="p-2 w-1/16">💰 Price</th>
+            <th className="p-2 w-2/16">🏚️ Layout</th>
+            <th className="p-2 w-4/16 relative">
+              🚶 Distance
+              <div className="mt-1 w-full truncate">
+                <POISelector />
+              </div>
             </th>
-            <th className="p-2">
-              🕒 Travel Time <TravelModeSelector />
+            <th className="p-2 w-2/16 relative">
+              🕒 Travel Time
+              <div className="mt-1 w-full truncate">
+                <TravelModeSelector />
+              </div>
             </th>
-            <th className="p-2">🏪 Amenities (3km)</th>
-            <th className="p-2">🛡 Safety Score</th>
-            <th className="p-2">⭐ Total Score</th>
-            <th className="p-2">📏 Distance Score</th>
-            <th className="p-2">💰 Price Score</th>
-            <th className="p-2">🏪 Amenities Score</th>
+            <th className="p-2 w-2/16">🏪 Amenities</th>
+            <th className="p-2 w-2/16">⭐ Total Score</th>
           </tr>
         </thead>
         <tbody>
           {sortedProperties.map((property) => (
-            <tr key={property.property_property_id} className="border-t">
-              <td className="p-2">{property.property_property_id}</td>
-              <td className="p-2">{property.address}</td>
-              <td className="p-2">{property.weeklyRent}/week</td>
-              <th className="p-2">
-                🛏️ {property.bedrooms} 🚽 {property.bathrooms} 🚘
-                {property.parkingSpaces}
-              </th>
-              <td className="p-2">
-                {selectedPOI
-                  ? `${
-                      distances[property.property_property_id]?.toFixed(2) ||
-                      "N/A"
-                    } km`
-                  : "Please Select a POI"}
-              </td>
-              <td className="p-2">
-                {selectedPOI
-                  ? travelTimes[property.property_property_id] !== undefined
+            <React.Fragment key={property.property_property_id}>
+              <tr className="border-t hover:bg-gray-50">
+                <td className="p-2">{property.property_property_id}</td>
+                <td className="p-2 truncate" title={property.address}>
+                  {property.address}
+                </td>
+                <td className="p-2">${property.weeklyRent}/wk</td>
+                <td className="p-2">
+                  🛏️ {property.bedrooms} 🚽 {property.bathrooms} 🚘{" "}
+                  {property.parkingSpaces}
+                </td>
+                <td className="p-2">
+                  {selectedPOI
+                    ? `${
+                        distances[property.property_property_id]?.toFixed(2) ||
+                        "N/A"
+                      } km`
+                    : "Select POI"}
+                </td>
+                <td className="p-2">
+                  {selectedPOI &&
+                  travelTimes[property.property_property_id] !== undefined
                     ? `${Math.floor(
                         travelTimes[property.property_property_id] / 60
                       )} min ${Math.round(
                         travelTimes[property.property_property_id] % 60
                       )} s`
-                    : "N/A"
-                  : ""}
-              </td>
+                    : "N/A"}
+                </td>
+                <td
+                  className="p-2 truncate"
+                  title={getDetailedTooltip(property.property_property_id)}
+                >
+                  {formatAmenitiesCounts(property.property_property_id)}
+                </td>
+                <td className="p-2 ">
+                  <div className="flex justify-between items-center">
+                    <span className="text-lg">
+                      {totalScores[property.property_property_id]?.toFixed(1) ||
+                        "N/A"}
+                    </span>
 
-              <td
-                className="p-2"
-                title={getDetailedTooltip(property.property_property_id)}
-              >
-                {formatAmenitiesCounts(property.property_property_id)}
-              </td>
-
-              <td className="p-2">
-                {safetyScores[property.property_property_id]?.toFixed(2) ||
-                  "N/A"}
-              </td>
-
-              <td className="p-2 font-semibold">
-                {totalScores[property.property_property_id]?.toFixed(2) ||
-                  "N/A"}
-              </td>
-
-              <td className="p-2">
-                {distanceScores[property.property_property_id]?.toFixed(2) ||
-                  "N/A"}
-              </td>
-
-              <td className="p-2">
-                {priceScores[property.property_property_id]?.toFixed(2) ||
-                  "N/A"}
-              </td>
-
-              <td className="p-2">
-                {amenitiesScores[property.property_property_id]?.toFixed(2) ||
-                  "N/A"}
-              </td>
-            </tr>
+                    <button
+                      onClick={() =>
+                        toggleDetails(property.property_property_id)
+                      }
+                      className="text-xs text-blue-500 border border-blue-300 rounded px-2 py-1 inline-block"
+                    >
+                      {showDetails[property.property_property_id]
+                        ? "Hide"
+                        : "Details"}
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              {showDetails[property.property_property_id] && (
+                <tr className="bg-gray-100">
+                  <td colSpan={8} className="p-2">
+                    <div className="grid grid-cols-4 gap-4 p-2">
+                      <div className="flex flex-col items-center border rounded p-2 bg-white">
+                        <div className="font-semibold">🛡 Safety</div>
+                        <div className="text-lg font-bold">
+                          {safetyScores[property.property_property_id]?.toFixed(
+                            1
+                          ) || "N/A"}
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-center border rounded p-2 bg-white">
+                        <div className="font-semibold">📏 Distance</div>
+                        <div className="text-lg font-bold">
+                          {distanceScores[
+                            property.property_property_id
+                          ]?.toFixed(1) || "N/A"}
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-center border rounded p-2 bg-white">
+                        <div className="font-semibold">💰 Price</div>
+                        <div className="text-lg font-bold">
+                          {priceScores[property.property_property_id]?.toFixed(
+                            1
+                          ) || "N/A"}
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-center border rounded p-2 bg-white">
+                        <div className="font-semibold">🏪 Amenities</div>
+                        <div className="text-lg font-bold">
+                          {amenitiesScores[
+                            property.property_property_id
+                          ]?.toFixed(1) || "N/A"}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </React.Fragment>
           ))}
         </tbody>
       </table>
-      <div className="mt-4 flex justify-between">
-        <DownloadReportButton />
-        <SaveReportButton />
-      </div>
     </div>
   );
 };

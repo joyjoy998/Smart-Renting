@@ -1,4 +1,6 @@
 import { create } from "zustand";
+
+//mock data
 import poisData from "@/components/ratingSystem/mockData/poi-u1.json" assert { type: "json" };
 import propertiesData from "@/components/ratingSystem/mockData/property.json" assert { type: "json" };
 

@@ -7,7 +7,6 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 // Define Property type
-// Define Property type
 interface Property {
   property_id: number;
   street: string;

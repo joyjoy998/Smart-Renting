@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import NodeCache from "node-cache";
 
+//get google places API key from environment variables
 const GOOGLE_PLACES_API_KEY = process.env
   .NEXT_PUBLIC_GOOGLE_MAPS_API_KEY as string;
 if (!GOOGLE_PLACES_API_KEY) {
@@ -17,6 +18,8 @@ class PlacesAPIError extends Error {
   }
 }
 
+// mapping of amenity categories to google places API types
+// each category maps to multiple relevant place types
 const AMENITY_TYPES: Record<string, string[]> = {
   hospital: ["hospital", "doctor"],
   gym: ["gym", "fitness_center"],
@@ -49,6 +52,14 @@ interface PlacesApiResponse {
   error_message?: string;
 }
 
+/**
+ * Fetches nearby amenities for a given location
+ *
+ * @param lat - Latitude of the location
+ * @param lng - Longitude of the location
+ * @returns Object containing counts and details of nearby amenities by category
+ */
+
 async function fetchAmenities(lat: number, lng: number) {
   const cacheKey = `amenities_${lat}_${lng}`;
   const cachedData = cache.get(cacheKey);
@@ -60,6 +71,7 @@ async function fetchAmenities(lat: number, lng: number) {
 
   console.log(`Fetching Amenities Data for ${lat}, ${lng}...`);
 
+  // initialize results object with empty data for each category
   const results: Record<string, AmenityResult> = {
     hospital: { count: 0, places: [] },
     gym: { count: 0, places: [] },
@@ -68,6 +80,7 @@ async function fetchAmenities(lat: number, lng: number) {
     park: { count: 0, places: [] },
   };
 
+  // iterate through each category and its corresponding place types
   for (const [category, types] of Object.entries(AMENITY_TYPES)) {
     for (const type of types) {
       try {
@@ -90,6 +103,7 @@ async function fetchAmenities(lat: number, lng: number) {
         const data = (await response.json()) as PlacesApiResponse;
 
         if (data.status === "OK") {
+          // filter out duplicate places within the same category
           const newPlaces = data.results
             .filter((place) => {
               return !results[category].places.some(

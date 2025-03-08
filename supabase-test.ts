@@ -1,14 +1,15 @@
-// just to test read and write permissions for table properties in supabase
+/*
+this file is used to test read and write permissions for table properties in supabase
+please ignore this file
+*/
 import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
 
-// 加载环境变量
 dotenv.config({ path: ".env.local" });
 
 async function testSupabaseReadWrite() {
   console.log("Starting Supabase read-write test...");
 
-  // 获取环境变量
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 
@@ -23,11 +24,11 @@ async function testSupabaseReadWrite() {
   console.log(`Supabase URL: ${supabaseUrl}`);
   console.log(`Service Role Key: ${supabaseServiceKey.substring(0, 5)}...`);
 
-  // 创建 Supabase 客户端
+  // create Supabase client
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
   try {
-    // 步骤 1: 读取一条记录
+    // step1: read a record
     console.log("\nSTEP 1: Reading a record from properties table...");
     const { data: property, error: readError } = await supabase
       .from("properties")
@@ -62,6 +63,7 @@ async function testSupabaseReadWrite() {
       `\nWill modify field '${fieldToModify}' from '${originalValue}' to '${newValue}'`
     );
 
+    //step2:modify a record
     console.log(`\nSTEP 2: Modifying property ID: ${property.property_id}...`);
     const { error: updateError } = await supabase
       .from("properties")
@@ -77,6 +79,7 @@ async function testSupabaseReadWrite() {
       `Successfully updated field '${fieldToModify}' to '${newValue}'`
     );
 
+    //step3: verify the update
     console.log(`\nSTEP 3: Verifying update...`);
     const { data: updatedProperty, error: verifyError } = await supabase
       .from("properties")
@@ -93,6 +96,7 @@ async function testSupabaseReadWrite() {
       `Verification: field '${fieldToModify}' is now '${updatedProperty[fieldToModify]}'`
     );
 
+    //revert the field to original value
     console.log(
       `\nSTEP 4: Reverting field back to original value '${originalValue}'...`
     );
@@ -126,7 +130,7 @@ async function testSupabaseReadWrite() {
       `Final verification: field '${fieldToModify}' is now back to '${revertedProperty[fieldToModify]}'`
     );
 
-    console.log("\n✅ TEST COMPLETED SUCCESSFULLY");
+    console.log("\n TEST COMPLETED SUCCESSFULLY");
     console.log(
       "This confirms that your Service Role Key has both read and write permissions for the properties table."
     );
@@ -136,5 +140,5 @@ async function testSupabaseReadWrite() {
   }
 }
 
-// 执行测试
+// run test
 testSupabaseReadWrite();
