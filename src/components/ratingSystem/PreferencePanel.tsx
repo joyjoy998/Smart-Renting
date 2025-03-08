@@ -5,33 +5,27 @@ const PreferencePanel = () => {
   const { weightConfig, updateWeight } = useRatingStore();
 
   return (
-    <div className="grid grid-cols-1 gap-8">
-      <div>
-        <div className="space-y-4">
-          <SliderWithPlusAndMinus
-            label="Distance"
-            initialValue={weightConfig.distance}
-            onChange={(value: number) => updateWeight("distance", value)}
-          />
-          <SliderWithPlusAndMinus
-            label="Price"
-            initialValue={weightConfig.price}
-            onChange={(value: number) => updateWeight("price", value)}
-          />
-          <SliderWithPlusAndMinus
-            label="Neighborhood Safety"
-            initialValue={weightConfig.neighborhood_safety}
-            onChange={(value: number) =>
-              updateWeight("neighborhood_safety", value)
-            }
-          />
-          <SliderWithPlusAndMinus
-            label="Amenity"
-            initialValue={weightConfig.amenity}
-            onChange={(value: number) => updateWeight("amenity", value)}
-          />
-        </div>
-      </div>
+    <div className="grid grid-cols-2 gap-6">
+      <SliderWithPlusAndMinus
+        label="Distance"
+        initialValue={weightConfig.distance}
+        onChange={(value: number) => updateWeight("distance", value)}
+      />
+      <SliderWithPlusAndMinus
+        label="Price"
+        initialValue={weightConfig.price}
+        onChange={(value: number) => updateWeight("price", value)}
+      />
+      <SliderWithPlusAndMinus
+        label="Neighborhood Safety"
+        initialValue={weightConfig.neighborhood_safety}
+        onChange={(value: number) => updateWeight("neighborhood_safety", value)}
+      />
+      <SliderWithPlusAndMinus
+        label="Amenity"
+        initialValue={weightConfig.amenity}
+        onChange={(value: number) => updateWeight("amenity", value)}
+      />
     </div>
   );
 };

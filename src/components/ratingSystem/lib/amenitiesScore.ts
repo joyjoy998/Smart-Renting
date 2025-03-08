@@ -23,7 +23,7 @@ interface AmenityData {
   [key: string]: AmenityResult;
 }
 
-// 设施权重配置
+// define amenity weights
 const AMENITY_WEIGHTS: Record<string, number> = {
   hospital: 0.3,
   convenienceStore: 0.3,
@@ -41,20 +41,21 @@ const AMENITY_THRESHOLDS: Record<string, number> = {
 };
 
 /**
- * 计算单个设施类型的分数
- * @param count 设施数量
- * @param threshold 理想最大数量
- * @returns 0-1之间的分数
+ * calculate the score of a single amenity type
+ * @param count the number of amenities
+ * @param threshold ideal maximun number
+ * @returns  a score between 0-1
  */
+
 function calculateSingleAmenityScore(count: number, threshold: number): number {
-  // 使用改进的评分公式, 当数量达到阈值的 2/3 时，分数达到 0.8
-  // 当数量达到阈值时，分数达到 0.9, 之后增长变得缓慢
+  // when the count reaches 2/3 of the threshold, the score reaches 0.8
+  // when the count reaches threshold, the score reaches 0.9 and then the growth becomes slow
   const ratio = count / threshold;
   return Math.min(1, 1 / (1 + Math.exp(-5 * (ratio - 0.7))));
 }
 
 /**
- * 计算便利设施分数，并存入 store
+ * calculate the amenity score and store it
  */
 export async function calculateAmenitiesScore() {
   const { properties, setAmenitiesScores, setAmenitiesData } =
@@ -76,7 +77,6 @@ export async function calculateAmenitiesScore() {
       const data = (await response.json()) as AmenityData;
       amenitiesData[property.property_property_id] = data;
 
-      // 计算加权分数
       let weightedScore = 0;
       let totalWeight = 0;
 
@@ -92,7 +92,7 @@ export async function calculateAmenitiesScore() {
         );
       }
 
-      // 归一化权重
+      // normalize weights
       weightedScore = weightedScore / totalWeight;
       console.log(`Final weighted score: ${weightedScore.toFixed(2)}`);
 
@@ -107,7 +107,7 @@ export async function calculateAmenitiesScore() {
     }
   }
 
-  // 归一化分数
+  // normalize scores
   if (rawScores.length > 0) {
     const maxScore = Math.max(...rawScores);
     const minScore = Math.min(...rawScores);

@@ -1,4 +1,10 @@
-// this is the command line scripts for updating lat&lng data of properties
+/*
+this file is used to update lat&lng data of properties
+
+to update lat&lng data for new properties 
+run "npm run geocode" in your terminal
+*/
+
 import fetch from "node-fetch";
 import dotenv from "dotenv";
 
