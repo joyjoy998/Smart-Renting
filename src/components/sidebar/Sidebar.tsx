@@ -30,6 +30,8 @@ import { ArchivePopup } from "./historyManagement/ArchivePopup";
 import { SettingsPopup } from "./SettingsPopup";
 import { useArchiveStore } from "@/stores/useArchiveStore";
 import { set } from "lodash";
+import SavePoiModal from "./SavePoi";
+import SavedPropertyModal from "./SavedProperty";
 import RecommendationPopup from "@/components/recommendation/RecommendationPopup";
 import { useRecommendationStore } from "@/stores/useRecommendationStore";
 export function Sidebar() {
@@ -69,15 +71,9 @@ export function Sidebar() {
         </div>
 
         <div className="p-4 space-y-2">
-          <button className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg">
-            <BookmarkCheck className="h-5 w-5" />
-            <span>Saved POI</span>
-          </button>
+          <SavePoiModal></SavePoiModal>
 
-          <button className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg">
-            <MapPin className="h-5 w-5" />
-            <span>Saved Location</span>
-          </button>
+          <SavedPropertyModal></SavedPropertyModal>
           {/* </div> */}
 
           {/* Main functional area for report generation, recommendation, and history management */}

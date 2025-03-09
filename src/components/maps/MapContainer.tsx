@@ -20,9 +20,11 @@ import { SettingsPopup } from "@/components/sidebar/SettingsPopup";
 import { getPlaceDetail, usePlacesService } from "@/hooks/map/usePlacesService";
 import useMapStore from "@/stores/useMapStore";
 import { SearchBox } from "../home/SearchBox";
+import { geocode, useGeocoder } from "@/hooks/map/useGeocoder";
 
 export function MapContainer() {
   const placesSerivce = usePlacesService();
+  const gecoder = useGeocoder();
   const [isError, setIsError] = useState<string | null>(null);
   const [isLoaded, setIsLoaded] = useState<boolean>(true);
   const [isThemeChanging, setIsThemeChanging] = useState(false);
@@ -44,12 +46,30 @@ export function MapContainer() {
           if (event.detail?.placeId) {
             // Call event.stop() on the event to prevent the default info window from showing.
             event.stop();
-            setCurrentGeometry(event.detail.latLng);
             const detail = await getPlaceDetail(
-              placesSerivce,
+              placesSerivce!,
               event.detail.placeId
             );
+            setCurrentGeometry(event.detail.latLng);
+
             setCurrentInfoWindow(detail);
+          } else {
+            console.log("getplaceDetail==================");
+            if (event.detail.latLng && gecoder) {
+              const result = await geocode(gecoder, event.detail.latLng);
+              if (result) {
+                const detail = await getPlaceDetail(
+                  placesSerivce!,
+                  result.place_id
+                );
+                console.log("detail==========", detail);
+                setCurrentGeometry({
+                  lat: result?.geometry?.location.lat()!,
+                  lng: result?.geometry?.location.lng()!,
+                });
+                setCurrentInfoWindow(detail);
+              }
+            }
           }
         }}
         gestureHandling="greedy"
@@ -60,8 +80,8 @@ export function MapContainer() {
         scaleControl={true}
         streetViewControl={true}
         rotateControl={true}
-        minZoom={3}
-        maxZoom={18}
+        minZoom={0}
+        maxZoom={30}
         restriction={{
           latLngBounds: {
             north: 85,
