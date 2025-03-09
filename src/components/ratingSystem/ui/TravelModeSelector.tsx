@@ -8,15 +8,17 @@ const TravelModeSelector = () => {
   };
 
   return (
-    <select
-      className="border rounded px-2 py-1"
-      value={travelMode}
-      onChange={handleChange}
-    >
-      <option value="WALKING">🚶 Walking</option>
-      <option value="DRIVING">🚗 Driving</option>
-      <option value="TRANSIT">🚌 Public Transit</option>
-    </select>
+    <div className="relative w-full">
+      <select
+        className="w-full border rounded px-4 py-1 truncate appearance-none bg-white"
+        value={travelMode}
+        onChange={handleChange}
+      >
+        <option value="WALKING">Walking</option>
+        <option value="DRIVING">Driving</option>
+        <option value="TRANSIT">Public Transit</option>
+      </select>
+    </div>
   );
 };
 

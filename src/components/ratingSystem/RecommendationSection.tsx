@@ -1,9 +1,23 @@
+import React from "react";
+import { useRatingStore } from "@/components/ratingSystem/store/ratingStore";
+import { useRecommendationStore } from "@/stores/useRecommendationStore";
+
 const RecommendationSection = () => {
+  const { setOpen: setRatingOpen } = useRatingStore();
+  const { setOpen: setRecommendationOpen } = useRecommendationStore();
+
+  const handleViewRecommendations = () => {
+    setRatingOpen(false); // close RatingReport
+    setRecommendationOpen(true); // open RecommendationPopup
+  };
+
   return (
     <div className="border p-4 rounded-lg bg-gray-100 text-center">
-      <p className="text-gray-500">
-        🏡 Recommended properties will be displayed here...
-      </p>
+      <button
+        onClick={handleViewRecommendations}
+        className="mt-2 text-blue-500 underline hover:text-blue-700">
+        View Recommendations
+      </button>
     </div>
   );
 };

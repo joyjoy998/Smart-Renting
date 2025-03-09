@@ -10,7 +10,7 @@ interface Property {
 }
 
 /**
- * 计算 Price Score 并存入 ratingStore
+ * calculate price score and store in ratingStore
  */
 export function calculatePriceScore() {
   const { properties, setPriceScores } = useRatingStore.getState();
@@ -22,7 +22,6 @@ export function calculatePriceScore() {
 
   const priceScores: Record<string, number> = {};
 
-  // 计算调整后的价格（考虑卧室、卫生间、停车位）
   const adjustedPrices = properties.map(
     (p) =>
       p.weeklyRent /
@@ -40,7 +39,6 @@ export function calculatePriceScore() {
       (adjustedPrice - minAdjustedPrice) /
         (maxAdjustedPrice - minAdjustedPrice);
 
-    // 确保所有房源价格相同时，不会有 0 分
     if (maxAdjustedPrice === minAdjustedPrice) baseScore = 1;
 
     priceScores[property.property_property_id] = baseScore;

@@ -10,7 +10,10 @@ export async function GET(req: NextRequest) {
     if (error) throw error;
     return NextResponse.json(data, { status: 200 });
   } catch (err) {
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+    return NextResponse.json(
+      { error: (err as Error).message },
+      { status: 500 }
+    );
   }
 }
 
@@ -26,7 +29,10 @@ export async function POST(req: NextRequest) {
     if (error) throw error;
     return NextResponse.json(data, { status: 201 });
   } catch (err) {
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+    return NextResponse.json(
+      { error: (err as Error).message },
+      { status: 500 }
+    );
   }
 }
 
@@ -34,13 +40,17 @@ export async function POST(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   try {
     const adminSecret = req.headers.get("x-admin-secret");
-    if (adminSecret !== process.env.ADMIN_SECRET) { // get ADMIN_SECRET from Vercel "Environment Variables" and paste it in .env.local file
+    if (adminSecret !== process.env.ADMIN_SECRET) {
+      // get ADMIN_SECRET from Vercel "Environment Variables" and paste it in .env.local file
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     const { searchParams } = new URL(req.url);
     const propertyId = searchParams.get("property_id");
     if (!propertyId) {
-      return NextResponse.json({ error: "property_id is required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "property_id is required" },
+        { status: 400 }
+      );
     }
     const body = await req.json();
     const { data, error } = await supabase
@@ -50,7 +60,10 @@ export async function PUT(req: NextRequest) {
     if (error) throw error;
     return NextResponse.json(data, { status: 200 });
   } catch (err) {
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+    return NextResponse.json(
+      { error: (err as Error).message },
+      { status: 500 }
+    );
   }
 }
 
@@ -64,7 +77,10 @@ export async function DELETE(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const propertyId = searchParams.get("property_id");
     if (!propertyId) {
-      return NextResponse.json({ error: "property_id is required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "property_id is required" },
+        { status: 400 }
+      );
     }
     const { data, error } = await supabase
       .from("properties")
@@ -73,6 +89,9 @@ export async function DELETE(req: NextRequest) {
     if (error) throw error;
     return NextResponse.json(data, { status: 200 });
   } catch (err) {
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+    return NextResponse.json(
+      { error: (err as Error).message },
+      { status: 500 }
+    );
   }
 }
