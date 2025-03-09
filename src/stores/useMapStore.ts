@@ -18,7 +18,7 @@ const createSelectors = <S extends UseBoundStore<StoreApi<object>>>(
 
 
 type State = {
-  currentInfoWindow: any | null;
+  currentInfoWindow: google.maps.places.PlaceResult | null;
   currentGeometry: {lng: number; lat: number;} | null;
 }
 interface Action {

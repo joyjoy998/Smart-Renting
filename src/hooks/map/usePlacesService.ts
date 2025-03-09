@@ -15,7 +15,7 @@ export function usePlacesService() {
   }
 
 
-export function getPlaceDetail(service, placeId) {
+export function getPlaceDetail(service: google.maps.places.PlacesService, placeId): Promise<google.maps.places.PlaceResult> {
   return new Promise((res) => {
     service?.getDetails(
       {
@@ -27,4 +27,18 @@ export function getPlaceDetail(service, placeId) {
     );
   })
  
-}  
+} 
+
+export function nearbySearch(service: google.maps.places.PlacesService, options: google.maps.places.PlaceSearchRequest): Promise<google.maps.places.PlaceResult[]> {
+  return new Promise((res) => {
+    service?.nearbySearch(
+      options,
+      (result: any) => {
+        res(result);
+      }
+    );
+  })
+ 
+} 
+
+
