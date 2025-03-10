@@ -5,7 +5,7 @@ import psycopg2
 
 env_path = os.path.join(os.path.dirname(__file__), "..", ".env.local")
 load_dotenv(env_path)
-json_file_path = os.path.join(os.path.dirname(__file__), "parsed_properties_modified.json")
+json_file_path = os.path.join(os.path.dirname(__file__), "parsed_properties_wollongong.json")
 
 DB_HOST = os.environ.get("POSTGRES_HOST")
 DB_NAME = os.environ.get("POSTGRES_DATABASE")
