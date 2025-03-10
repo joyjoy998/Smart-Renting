@@ -176,3 +176,11 @@ CREATE TABLE property_vectors (
     embedding vector(1024)
 );
 
+-- =====================================================
+-- Add place_id column to properties and poi_markers to store Google Place ID
+-- =====================================================
+ALTER TABLE properties
+ADD COLUMN place_id TEXT;
+
+ALTER TABLE poi_markers
+ADD COLUMN place_id TEXT;
