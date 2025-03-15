@@ -5,11 +5,13 @@ import { useMap } from "@vis.gl/react-google-maps";
 import { Favorite, Add, Edit, Navigation } from "@mui/icons-material";
 import EditPropertyModal from "./EditPropertyt";
 import SavePoi from "./SavePoi";
+import { PropertyInfo } from "../maps/MapContent";
+import { Bath, Bed, Car, ParkingCircle } from "lucide-react";
 
 interface PropertyInfoWindowProps {
   position: google.maps.LatLngLiteral;
   onClose: () => void;
-  placeData: any; //✅  Google Places API 返回的数据
+  placeData: PropertyInfo; //✅  Google Places API 返回的数据
 }
 
 export const PropertyInfoWindow: React.FC<PropertyInfoWindowProps> = ({
@@ -25,14 +27,14 @@ export const PropertyInfoWindow: React.FC<PropertyInfoWindowProps> = ({
       onCloseClick={onClose}
       headerContent={placeData?.name}
     >
-      <Box className="info-window p-2 bg-white rounded-lg shadow-md">
+      <Box className="info-window p-2 bg-white rounded-lg shadow-md flex flex-col ">
         <Stack direction="row">
           <img
             src={placeData?.image}
             alt={placeData?.name}
-            width={200}
+            width={120}
             height={120}
-            className="rounded-md mr-4"
+            className="rounded-md mr-4 overflow h-32 w-32"
           />
           <div>
             <Typography variant="body1" className="font-bold mt-2">
@@ -42,108 +44,46 @@ export const PropertyInfoWindow: React.FC<PropertyInfoWindowProps> = ({
             {placeData?.address}
           </Typography> */}
 
-            {placeData?.propertyInfo?.price && (
+            {placeData?.savedProperty?.weekly_rent && (
               <Typography variant="h6" className="font-bold mt-2">
-                {placeData?.propertyInfo?.price}
+                Weekly Rent: {placeData?.savedProperty?.weekly_rent}
               </Typography>
             )}
-            {placeData?.propertyInfo?.details && (
-              <Typography variant="body2">
-                {placeData?.propertyInfo?.details}
-              </Typography>
-            )}
+            <div className="flex items-center">
+              {placeData?.savedProperty?.bedrooms && (
+                <>
+                  <Bed />
+                  <Typography variant="body2">
+                    : {placeData?.savedProperty?.bedrooms}
+                  </Typography>
+                </>
+              )}
+              {placeData?.savedProperty?.bathrooms && (
+                <>
+                  <Bath></Bath>
+                  <Typography variant="body2">
+                    {placeData?.savedProperty?.bathrooms}
+                  </Typography>
+                </>
+              )}
+              {placeData?.savedProperty?.parking_spaces && (
+                <>
+                  <Car></Car>
+                  <Typography variant="body2">
+                    {placeData?.savedProperty?.parking_spaces}
+                  </Typography>
+                </>
+              )}
+            </div>
           </div>
         </Stack>
+        <Box className="mt-2 flex justify-end gap-2">
+          <EditPropertyModal placeData={placeData}></EditPropertyModal>
 
-        <Box sx={{ "& > :not(style)": { m: 1 } }} className="mt-2">
-          <EditPropertyModal></EditPropertyModal>
-          <Button variant="outlined">Edit</Button>
-          <SavePoi />
+          <SavePoi placeData={placeData} />
         </Box>
       </Box>
     </InfoWindow>
   );
 };
-
-//   const map = useMap(); // ✅ 获取 Google Maps 实例
-//   console.log("InfoWindow map instance:", map);
-//   console.log("InfoWindow position:", position);
-//   console.log("InfoWindow placeData:", placeData); // 查看数据结构
-
-//   if (!map) {
-//     console.error("Error: Google Map instance is not available");
-//     return null; // 防止 `InfoWindow` 绑定失败时报错
-//   }
-//   //  处理 Google Places API 数据
-//   const placeData = {
-//     image: placeData?.photos?.[0]?.photo_reference
-//       ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${placeData.photos[0].photo_reference}&key=YOUR_GOOGLE_MAPS_API_KEY`
-//       : "/example.jpg", //  如果没有图片，显示默认图片
-//     name: placeData?.name || "Unknown Place",
-//     address: placeData?.formatted_address || "Address not available",
-//     price: "260", // 示例价格
-//     url: placeData?.url || "#",
-//     description:
-//       "A nice rental place with great amenities and a beautiful view.", // 示例描述
-//   };
-
-//   return (
-//     <InfoWindow
-//       position={position}
-//       // options={{
-//       //   map, // ✅ 显式绑定 `map`
-//       //   pixelOffset: new window.google.maps.Size(0, -30), // ✅ 让 InfoWindow 悬浮在 `Marker` 之上
-//       // }}
-//       pixelOffset={[0, -30]}
-//       onCloseClick={onClose}
-//     >
-//       <Box className="info-window p-2 bg-white rounded-lg shadow-md w-64">
-//         <Image
-//           src={placeData.image}
-//           alt={placeData.name}
-//           width={200}
-//           height={120}
-//           className="rounded-md"
-//         />
-
-//         {/* 🏡 房产名称 */}
-//         <Typography variant="h6" className="font-bold mt-2">
-//           {placeData.name}
-//         </Typography>
-//         {/* 📍 地址 */}
-//         <Typography variant="body2" color="textSecondary">
-//           {placeData.address}
-//         </Typography>
-//         {/* 🔗 访问 Google 地点详情 */}
-//         <Typography variant="body2">
-//           <a href={placeData.url} target="_blank" rel="noopener noreferrer">
-//             View on Google Maps
-//           </a>
-//         </Typography>
-
-//         <Typography variant="h6" className="font-bold mt-2">
-//           ${placeData.price}
-//         </Typography>
-
-//         <Typography variant="body2">{placeData.description}</Typography>
-//       </Box>
-//       <Box sx={{ "& > :not(style)": { m: 1 } }}>
-//         <Fab color="primary" aria-label="add">
-//           <Add />
-//         </Fab>
-//         <Fab color="secondary" aria-label="edit">
-//           <Edit />
-//         </Fab>
-//         <Fab variant="extended">
-//           <Navigation sx={{ mr: 1 }} />
-//           Navigate
-//         </Fab>
-//         <Fab disabled aria-label="like">
-//           <Favorite />
-//         </Fab>
-//       </Box>
-//     </InfoWindow>
-//   );
-// };
-
 export default PropertyInfoWindow;

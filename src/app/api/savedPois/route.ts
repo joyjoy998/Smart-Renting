@@ -4,21 +4,19 @@ import { supabase } from '@/database/supabaseClient';
 // GET: return  all saved_pois records for a given user_id
 // utilize the saved_groups relationship to filter
 export async function GET(req: NextRequest) {
-  try {
-    const { searchParams } = new URL(req.url);
-    const userId = searchParams.get("user_id");
-    if (!userId) {
-      return NextResponse.json({ error: "user_id is required" }, { status: 400 });
+    try {
+        const { data, error } = await supabase
+            .from('saved_pois')
+            .select('*');
+
+        if (error) {
+            return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+        }
+
+        return new Response(JSON.stringify(data), { status: 200 });
+    } catch (err) {
+        return new Response(JSON.stringify({ error: 'Internal server error', details: err.message }), { status: 500 });
     }
-    const { data, error } = await supabase
-      .from("saved_pois")
-      .select("*, saved_groups(user_id)")
-      .eq("saved_groups.user_id", userId);
-    if (error) throw error;
-    return NextResponse.json(data, { status: 200 });
-  } catch (err) {
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
-  }
 }
 
 // POST: insert a new saved_pois record
@@ -33,7 +31,7 @@ export async function POST(req: NextRequest) {
       .from("saved_pois")
       .insert([body]);
     if (error) throw error;
-    return NextResponse.json(data, { status: 201 });
+    return NextResponse.json(data, { status: 200 });
   } catch (err) {
     return NextResponse.json({ error: (err as Error).message }, { status: 500 });
   }
@@ -68,15 +66,16 @@ export async function DELETE(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const groupId = searchParams.get("group_id");
-    const savedPoiId = searchParams.get("saved_poi_id");
-    if (!groupId || !savedPoiId) {
-      return NextResponse.json({ error: "group_id and saved_poi_id are required" }, { status: 400 });
+    const placeId = searchParams.get("place_id");
+    console.log('check=======',groupId,placeId);
+    if (!groupId || !placeId) {
+      return NextResponse.json({ error: "group_id and place_id are required" }, { status: 400 });
     }
     const { data, error } = await supabase
       .from("saved_pois")
       .delete()
       .eq("group_id", groupId)
-      .eq("saved_poi_id", savedPoiId);
+      .eq("place_id", placeId);
     if (error) throw error;
     return NextResponse.json(data, { status: 200 });
   } catch (err) {
