@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/providers/theme/ThemeProvider";
 import { ThemeProvider as MaterialUIThemeProvider } from "@mui/material/styles";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
 import { ClerkProvider } from "@clerk/nextjs";
+import { SnackbarProvider, VariantType, useSnackbar } from "notistack";
 import theme from "../theme";
 const inter = Inter({ subsets: ["latin"] });
 
