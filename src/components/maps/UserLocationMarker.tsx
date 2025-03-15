@@ -5,6 +5,7 @@ interface UserLocationMarkerProps {
 }
 
 export function UserLocationMarker({ position }: UserLocationMarkerProps) {
+  console.log("position=======", position);
   return (
     <AdvancedMarker position={position}>
       <Pin

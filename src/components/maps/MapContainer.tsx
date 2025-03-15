@@ -29,12 +29,9 @@ export function MapContainer() {
   const [isLoaded, setIsLoaded] = useState<boolean>(true);
   const [isThemeChanging, setIsThemeChanging] = useState(false);
   const { theme, resolvedTheme } = useTheme();
-  const { location, error } = useUserLocation();
   const setCurrentInfoWindow = useMapStore.use.setCurrentInfoWindow();
   const setCurrentGeometry = useMapStore.use.setCurrentGeometry();
-  if (!location && !error) {
-    return <Loading />;
-  }
+
   return (
     <div style={{ width: "100%", height: "100vh", position: "relative" }}>
       <Map
@@ -54,7 +51,10 @@ export function MapContainer() {
 
             setCurrentInfoWindow(detail);
           } else {
-            console.log("getplaceDetail==================");
+            console.log(
+              "getplaceDetail==================",
+              event.detail.latLng && gecoder
+            );
             if (event.detail.latLng && gecoder) {
               const result = await geocode(gecoder, event.detail.latLng);
               if (result) {

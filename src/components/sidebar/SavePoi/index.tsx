@@ -15,8 +15,13 @@ import { useRequest } from "ahooks";
 import React, { PropsWithChildren } from "react";
 import { nearbySearch, usePlacesService } from "@/hooks/map/usePlacesService";
 import { useUserLocation } from "@/hooks/map/useUserLocation";
+import useSavedDataStore from "@/stores/useSavedData";
+import axios from "axios";
+import { PropertyInfo } from "../maps/MapContent";
 
-type Props = {};
+type Props = {
+  placeData: PropertyInfo;
+};
 
 const style = {
   position: "absolute",
@@ -31,36 +36,36 @@ const style = {
 };
 const SavePoiModal: React.FC<PropsWithChildren<Props>> = (props) => {
   const [open, setOpen] = React.useState(false);
+  const savedPois = useSavedDataStore.use.savedPois();
+  const setSavedPois = useSavedDataStore.use.setSavedPois();
+
+  console.log("savedpois-======", savedPois);
   const placeService = usePlacesService();
   const { location } = useUserLocation();
-  const { data, refresh } = useRequest(
-    async () => {
-      const res = await nearbySearch(placeService!, {
-        location: { lat: location!.lat, lng: location!.lng },
-        radius: 500,
-      });
-      console.log("res==========", res);
-      return res.map((item) => {
-        return {
-          name: item.name,
-          image: item.photos?.[0]?.getUrl(),
-          address: item.formatted_address,
-          placeId: item.place_id || "",
-        };
-      });
-    },
-    {
-      ready: !!placeService && !!location,
-    }
-  );
 
-  const handleRemoveSaved = (id: string) => {
-    console.log("removeId==========", id);
-    refresh();
+  const refreshData = () => {
+    axios.get("/api/savedPois").then((res) => {
+      if (res.status === 200) {
+        setSavedPois(res.data);
+      }
+    });
   };
+  const handleRemove = async (savedPoi) => {
+    const response = await axios.delete("/api/savedPois", {
+      params: {
+        group_id: savedPoi.group_id, // 确保 group_id 传递正确
+        place_id: savedPoi.place_id, // 使用 place_id  传递正确
+      },
+    });
+    if (response.status === 200) {
+      refreshData();
+    }
+  };
+
   const toggle = () => {
     setOpen(!open);
   };
+
   return (
     <div>
       <button
@@ -83,21 +88,21 @@ const SavePoiModal: React.FC<PropsWithChildren<Props>> = (props) => {
             </Typography>
             <div className="max-h-[800px] overflow-y-auto">
               <List>
-                {data?.map((item) => {
+                {savedPois?.map((item) => {
                   return (
                     <ListItem
                       secondaryAction={
                         <IconButton
                           edge="end"
                           aria-label="delete"
-                          onClick={() => handleRemoveSaved(item.placeId)}
+                          onClick={() => handleRemove(item)}
                         >
                           <DeleteIcon />
                         </IconButton>
                       }
                     >
                       <ListItemAvatar>
-                        <Avatar src={item.image}></Avatar>
+                        <Avatar src={item.photo?.[0]}></Avatar>
                       </ListItemAvatar>
                       <ListItemText primary={item.name} />
                     </ListItem>

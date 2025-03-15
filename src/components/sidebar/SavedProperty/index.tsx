@@ -15,8 +15,11 @@ import { useRequest } from "ahooks";
 import React, { PropsWithChildren } from "react";
 import { nearbySearch, usePlacesService } from "@/hooks/map/usePlacesService";
 import { useUserLocation } from "@/hooks/map/useUserLocation";
+import useSavedDataStore from "@/stores/useSavedData";
+import axios from "axios";
+import { PropertyInfo } from "../maps/MapContent";
 
-type Props = {};
+type Props = { placeData: PropertyInfo };
 
 const style = {
   position: "absolute",
@@ -31,33 +34,33 @@ const style = {
 };
 const SavedPropertyModal: React.FC<PropsWithChildren<Props>> = (props) => {
   const [open, setOpen] = React.useState(false);
+  const savedProperties = useSavedDataStore.use.savedProperties();
+  const setSavedProperties = useSavedDataStore.use.setSavedProperties();
+
+  console.log("savedpprperties-======", savedProperties);
+
   const placeService = usePlacesService();
   const { location } = useUserLocation();
-  const { data, refresh } = useRequest(
-    async () => {
-      const res = await nearbySearch(placeService!, {
-        location: { lat: location!.lat, lng: location!.lng },
-        radius: 500,
-      });
-      console.log("res==========", res);
-      return res.map((item) => {
-        return {
-          name: item.name,
-          image: item.photos?.[0]?.getUrl(),
-          address: item.formatted_address,
-          placeId: item.place_id || "",
-        };
-      });
-    },
-    {
-      ready: !!placeService && !!location,
-    }
-  );
 
-  const handleRemoveSaved = (id: string) => {
-    console.log("removeId==========", id);
-    refresh();
+  const refreshData = () => {
+    axios.get("/api/savedProperties").then((res) => {
+      if (res.status === 200) {
+        setSavedProperties(res.data);
+      }
+    });
   };
+  const handleRemoveSaved = async (savedProperties) => {
+    const response = await axios.delete("/api/savedProperties", {
+      params: {
+        group_id: savedProperties.group_id, // 确保 group_id 传递正确
+        place_id: savedProperties.place_id, // 使用 place_id  传递正确
+      },
+    });
+    if (response.status === 200) {
+      refreshData();
+    }
+  };
+
   const toggle = () => {
     setOpen(!open);
   };
@@ -68,7 +71,7 @@ const SavedPropertyModal: React.FC<PropsWithChildren<Props>> = (props) => {
         onClick={toggle}
       >
         <MapPin className="h-5 w-5" />
-        <span>Saved Location</span>
+        <span>Saved Property</span>
       </button>
       <Modal
         open={open}
@@ -79,27 +82,28 @@ const SavedPropertyModal: React.FC<PropsWithChildren<Props>> = (props) => {
         <Box sx={style}>
           <div>
             <Typography sx={{ mt: 2, mb: 2 }} variant="h6" component="div">
-              Saved Location
+              Saved Property
             </Typography>
             <div className="max-h-[800px] overflow-y-auto">
               <List>
-                {data?.map((item) => {
+                {savedProperties?.map((item) => {
                   return (
                     <ListItem
                       secondaryAction={
                         <IconButton
                           edge="end"
                           aria-label="delete"
-                          onClick={() => handleRemoveSaved(item.placeId)}
+                          onClick={() => handleRemoveSaved(item)}
                         >
                           <DeleteIcon />
                         </IconButton>
                       }
                     >
                       <ListItemAvatar>
-                        <Avatar src={item.image}></Avatar>
+                        <Avatar src={item.photo?.[0]}></Avatar>
                       </ListItemAvatar>
-                      <ListItemText primary={item.name} />
+                      {/* 后面要把street删掉用name */}
+                      <ListItemText primary={item.name || item.street} />
                     </ListItem>
                   );
                 })}
