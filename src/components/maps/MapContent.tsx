@@ -1,8 +1,9 @@
+"client";
 import { useEffect, useMemo, useState } from "react";
 import { AdvancedMarker, Pin, useMap } from "@vis.gl/react-google-maps";
 import { MAPS_CONFIG } from "@/lib/constants/mapConfigure";
 import { UserLocationMarker } from "./UserLocationMarker";
-import PropertyInfoWindow from "@/components/InfoWindow/InfoWindow";
+import PropertyInfoWindow from "@/components/infoWindow/InfoWindow";
 import useMapStore from "@/stores/useMapStore";
 import useSavedDataStore from "@/stores/useSavedData";
 import { House } from "lucide-react";
