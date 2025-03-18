@@ -12,7 +12,7 @@ export async function GET() {
   try {
     const { data, error } = await supabase
       .from("saved_groups")
-      .select("*")
+      .select("group_id, group_name, created_at")
       .eq("user_id", user.id);
 
     if (error) {

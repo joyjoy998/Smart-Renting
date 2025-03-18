@@ -17,7 +17,7 @@ export async function DELETE(req: NextRequest) {
         { status: 400 }
       );
     }
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from("saved_groups")
       .delete()
       .eq("group_id", groupId)
