@@ -8,6 +8,7 @@ import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
 import { ClerkProvider } from "@clerk/nextjs";
 import { SnackbarProvider, VariantType, useSnackbar } from "notistack";
 import theme from "../theme";
+import { InitializeApp } from "./InitializeApp";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
@@ -39,6 +40,7 @@ export default function RootLayout({
                 enableSystem
                 disableTransitionOnChange
               >
+                <InitializeApp />
                 {children}
               </ThemeProvider>
             </MaterialUIThemeProvider>

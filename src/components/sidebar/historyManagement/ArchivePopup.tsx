@@ -3,17 +3,14 @@ import React, { useState } from "react";
 import { X, Image } from "lucide-react";
 import ConfirmPopup from "./ConfirmPopup";
 import { useArchiveStore } from "@/stores/useArchiveStore";
+import { useGroupIdStore, useGroupStore } from "@/stores/useGroupStore";
 
 export const ArchivePopup = () => {
   const { isArchiveOpen, setArchiveOpen } = useArchiveStore();
-  const [archives, setArchives] = useState([
-    { id: 1, name: "Archive 1", date: "2024-12-08 16:31:01" },
-    // sample data
-  ]);
-  // 这里要写一个 useEffect 来加载档案列表
 
-  // 添加当前选中的存档ID状态
-  const [currentArchiveId, setCurrentArchiveId] = useState(null);
+  const { currentGroupId, setGroupId } = useGroupIdStore();
+
+  const { groups, setGroups } = useGroupStore();
 
   // 添加编辑状态
   const [editingId, setEditingId] = useState(null);
@@ -27,49 +24,40 @@ export const ArchivePopup = () => {
     targetId: null,
   });
 
-  const createNewArchive = () => {
+  const createNewGroup = () => {
     const now = new Date();
     const dateString = now
       .toLocaleString("zh-CN", { hour12: false })
       .replace(/\//g, "-");
-    const newArchive = {
-      id: archives.length > 0 ? Math.max(...archives.map((a) => a.id)) + 1 : 1,
-      name: `Archive ${archives.length + 1}`,
-      date: dateString,
-    };
-    setArchives([...archives, newArchive]);
+
     // 这里要用 API 对新档案进行创建
   };
 
-  const deleteArchive = (id) => {
-    setArchives(archives.filter((archive) => archive.id !== id));
-    if (currentArchiveId === id) {
-      setCurrentArchiveId(null);
-    }
+  const deleteGroup = (id: number) => {
     // 这里要用 API对档案进行删除
   };
 
-  const loadArchive = (id) => {
+  const loadGroup = (id: number) => {
     console.log(`Loading archive with ID: ${id}`);
-    setCurrentArchiveId(id);
+    setGroupId(id);
     // 这里要用 API 进行档案的加载
   };
 
   // 开始编辑存档名称
-  const startEditing = (archive) => {
-    setEditingId(archive.id);
-    setEditingName(archive.name);
+  const startEditing = (group) => {
+    setEditingId(group.id);
+    setEditingName(group.name);
   };
 
   // 保存编辑后的名称
-  const saveArchiveName = () => {
+  const saveGroupName = () => {
     if (editingId !== null) {
-      setArchives(
-        archives.map((archive) =>
-          archive.id === editingId ? { ...archive, name: editingName } : archive
-        )
-      );
-      setEditingId(null);
+      // setArchives(
+      //   archives.map((archive) =>
+      //     archive.id === editingId ? { ...archive, name: editingName } : archive
+      //   )
+      // );
+      // setEditingId(null);
       // 这里要用 API 对档案名称进行更新
     }
   };
@@ -77,27 +65,27 @@ export const ArchivePopup = () => {
   // 处理按下Enter键保存
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
-      saveArchiveName();
+      saveGroupName();
     }
   };
 
   // 确认删除存档
-  const confirmDeleteArchive = (id) => {
-    const archive = archives.find((a) => a.id === id);
+  const confirmDeleteGroup = (id: number) => {
+    const group = groups.find((group) => group.group_id === id);
     setConfirmPopup({
       isOpen: true,
-      message: `Are you sure to delete ${archive.name}?`,
+      message: `Are you sure to delete ${group.group_name}?`,
       action: "delete",
       targetId: id,
     });
   };
 
   // 确认加载存档
-  const confirmLoadArchive = (id) => {
-    const archive = archives.find((a) => a.id === id);
+  const confirmLoadGroup = (id: number) => {
+    const group = groups.find((group) => group.group_id === id);
     setConfirmPopup({
       isOpen: true,
-      message: `Are you sure to load ${archive.name}?`,
+      message: `Are you sure to load ${group.group_name}?`,
       action: "load",
       targetId: id,
     });
@@ -107,9 +95,9 @@ export const ArchivePopup = () => {
   const handleConfirm = () => {
     const { action, targetId } = confirmPopup;
     if (action === "delete") {
-      deleteArchive(targetId);
+      deleteGroup(targetId);
     } else if (action === "load") {
-      loadArchive(targetId);
+      loadGroup(targetId);
     }
     closeConfirmPopup();
   };
@@ -162,7 +150,7 @@ export const ArchivePopup = () => {
           <div className="p-4 border-b">
             <button
               className="w-full py-2 bg-green-500 text-white rounded hover:bg-green-600 transition"
-              onClick={createNewArchive}
+              onClick={createNewGroup}
             >
               New Archive
             </button>
@@ -170,11 +158,11 @@ export const ArchivePopup = () => {
 
           {/* 档案列表 */}
           <div className="divide-y flex-grow">
-            {archives.map((archive) => (
+            {groups.map((group) => (
               <div
-                key={archive.id}
+                key={group.group_id}
                 className={`flex items-center p-4 ${
-                  currentArchiveId === archive.id ? "bg-blue-50" : ""
+                  currentGroupId === group.group_id ? "bg-blue-50" : ""
                 }`}
               >
                 <div className="flex items-center flex-1">
@@ -183,46 +171,48 @@ export const ArchivePopup = () => {
                   </div> */}
                   {/* 考虑以后做缩略图时使用 */}
                   <div className="flex-1">
-                    {editingId === archive.id ? (
+                    {editingId === group.group_id ? (
                       <input
                         type="text"
                         className="w-full border border-gray-300 px-2 py-1 rounded"
                         value={editingName}
                         onChange={(e) => setEditingName(e.target.value)}
-                        onBlur={saveArchiveName}
+                        onBlur={saveGroupName}
                         onKeyDown={handleKeyDown}
                         autoFocus
                       />
                     ) : (
                       <div
                         className="font-medium cursor-pointer hover:text-blue-600"
-                        onClick={() => startEditing(archive)}
+                        onClick={() => startEditing(group)}
                       >
-                        {archive.name}
-                        {currentArchiveId === archive.id && (
+                        {group.group_name}
+                        {currentGroupId === group.group_id && (
                           <span className="ml-2 text-xs text-blue-600">
                             (Current)
                           </span>
                         )}
                       </div>
                     )}
-                    <div className="text-sm text-gray-500">{archive.date}</div>
+                    <div className="text-sm text-gray-500">
+                      {group.created_at}
+                    </div>
                   </div>
                 </div>
                 <div className="flex flex-col space-y-2">
                   <button
                     className={`px-3 py-1 text-sm ${
-                      currentArchiveId === archive.id
-                        ? "bg-blue-500"
+                      currentGroupId === group.group_id
+                        ? "bg-yellow-500"
                         : "bg-blue-600"
                     } text-white rounded hover:opacity-90 transition`}
-                    onClick={() => confirmLoadArchive(archive.id)}
+                    onClick={() => confirmLoadGroup(group.group_id)}
                   >
-                    {currentArchiveId === archive.id ? "Loaded" : "Load"}
+                    {currentGroupId === group.group_id ? "Loaded" : "Load"}
                   </button>
                   <button
                     className="px-3 py-1 text-sm bg-red-500 text-white rounded hover:opacity-90 transition"
-                    onClick={() => confirmDeleteArchive(archive.id)}
+                    onClick={() => confirmDeleteGroup(group.group_id)}
                   >
                     Delete
                   </button>

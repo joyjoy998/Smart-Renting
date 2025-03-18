@@ -12,6 +12,11 @@ interface PreferencesState {
   setPreference: (key: keyof Preferences, value: number) => void;
 }
 
+interface Budget {
+  budget: number;
+  setBudget: (budget: number) => void;
+}
+
 export const usePreferencesStore = create<PreferencesState>((set) => ({
   preferences: {
     distance: 1,
@@ -23,4 +28,9 @@ export const usePreferencesStore = create<PreferencesState>((set) => ({
     set((state) => ({
       preferences: { ...state.preferences, [key]: value },
     })),
+}));
+
+export const useBudgetStore = create<Budget>((set) => ({
+  budget: 500,
+  setBudget: (budget) => set({ budget }),
 }));
