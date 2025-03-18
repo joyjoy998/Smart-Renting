@@ -1,9 +1,9 @@
 -- =====================================================
--- 1. user account related tables
+-- user account related tables
 -- =====================================================
 
 CREATE TABLE users (
-    user_id text PRIMARY KEY,       -- 来自 Clerk 的用户ID
+    user_id TEXT PRIMARY KEY,       -- 来自 Clerk 的用户ID
     username VARCHAR(20) NOT NULL,         
     email VARCHAR(255) NOT NULL UNIQUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -12,7 +12,7 @@ CREATE TABLE users (
 );
 
 CREATE TABLE user_preferences (
-    user_id text NOT NULL,
+    user_id TEXT NOT NULL,
     preference_type VARCHAR(50) NOT NULL
       CHECK (preference_type IN ('distance', 'price', 'amenity', 'neighborhood_safety')),
     weight NUMERIC(3,2) NOT NULL CHECK (weight >= 0 AND weight <= 1), 
@@ -24,7 +24,7 @@ CREATE TABLE user_preferences (
 );
 
 -- =====================================================
--- 2. public data tables (properties and POI inserted by admin)
+-- public data tables (properties and POI inserted by admin)
 -- =====================================================
 
 CREATE TABLE properties (
@@ -43,7 +43,8 @@ CREATE TABLE properties (
     parking_spaces INT,
     property_type TEXT,  -- each property has only one type
     safety_score NUMERIC(3,2) NOT NULL CHECK (safety_score >= 0 AND safety_score <= 1),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    place_id TEXT -- Google Place ID
 );
 
 
@@ -58,16 +59,17 @@ CREATE TABLE poi_markers (
     postcode TEXT NOT NULL,
     latitude DOUBLE PRECISION,
     longitude DOUBLE PRECISION,
-    photo TEXT[] DEFAULT '{}'
+    photo TEXT[] DEFAULT '{}',
+    place_id TEXT -- Google Place ID
 );
 
 -- =====================================================
--- 3. user saved data tables
+-- user saved data tables
 -- =====================================================
 
 CREATE TABLE saved_groups (
     group_id SERIAL PRIMARY KEY,
-    user_id text NOT NULL,
+    user_id TEXT NOT NULL,
     group_name TEXT NOT NULL UNIQUE,  
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_saved_groups_user FOREIGN KEY (user_id)
@@ -95,10 +97,11 @@ CREATE TABLE saved_properties (
     safety_score NUMERIC(3,2) NOT NULL CHECK (safety_score >= 0 AND safety_score <= 1),
     note TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    place_id TEXT,
     CONSTRAINT fk_saved_properties_group FOREIGN KEY (group_id)
         REFERENCES saved_groups(group_id)
         ON DELETE CASCADE,
-    CONSTRAINT fk_saved_properties_property FOREIGN KEY (property_id)
+    CONSTRAINT fk_property_id FOREIGN KEY (property_id)
         REFERENCES properties(property_id)
         ON DELETE CASCADE
 );
@@ -119,16 +122,17 @@ CREATE TABLE saved_pois (
     photo TEXT[] DEFAULT '{}',
     note TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    place_id TEXT,
     CONSTRAINT fk_saved_pois_group FOREIGN KEY (group_id)
         REFERENCES saved_groups(group_id)
         ON DELETE CASCADE,
-    CONSTRAINT fk_saved_pois_poi FOREIGN KEY (poi_id)
+    CONSTRAINT fk_poi_id FOREIGN KEY (poi_id)
         REFERENCES poi_markers(poi_id)
         ON DELETE CASCADE
 );
 
 -- =====================================================
--- 4. crime data table
+-- crime data table
 -- =====================================================
 
 CREATE TABLE crime_data (
@@ -138,7 +142,7 @@ CREATE TABLE crime_data (
 );
 
 -- =====================================================
--- 5. triggers: set safety score for saved properties
+-- triggers: set safety score for saved properties
 -- =====================================================
 
 CREATE OR REPLACE FUNCTION public.set_saved_properties_safety_score()
@@ -169,10 +173,20 @@ EXECUTE FUNCTION set_saved_properties_safety_score();
 
 
 -- =====================================================
--- 6. create property vector table
+-- create property vector table
 -- =====================================================
 CREATE TABLE property_vectors (
     property_id INT PRIMARY KEY REFERENCES properties(property_id) ON DELETE CASCADE,
-    embedding vector(1024)
+    embedding vector(1024),
+    place_id TEXT
 );
 
+-- =====================================================
+-- Alter tables
+-- =====================================================
+
+-- update place_id in property_vectors
+UPDATE property_vectors v
+SET place_id = p.place_id
+FROM properties p
+WHERE v.property_id = p.property_id;
