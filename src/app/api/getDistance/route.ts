@@ -16,10 +16,8 @@ interface POI {
   address: string;
 }
 
-// 更新 TravelMode 枚举值
 type TravelMode = "DRIVE" | "BICYCLE" | "WALK" | "TWO_WHEELER" | "TRANSIT";
 
-// 映射函数，将我们内部的 TravelMode 映射到 Google API 的枚举值
 function mapTravelMode(mode: "WALKING" | "DRIVING" | "TRANSIT"): TravelMode {
   switch (mode) {
     case "WALKING":
@@ -36,11 +34,11 @@ function mapTravelMode(mode: "WALKING" | "DRIVING" | "TRANSIT"): TravelMode {
 interface RouteData {
   propertyId: string;
   distanceMeters: number;
-  duration: string; // 格式为 "Xs"，其中 X 是秒数
+  duration: string;
 }
 
 /**
- * 使用 Google Directions API v2 计算单个起点到终点的路线
+ * use Google Directions API v2 to calculate the route between two points
  */
 async function computeRoute(
   origin: string,

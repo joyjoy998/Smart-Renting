@@ -30,43 +30,9 @@ const ScoreTable = () => {
     weightConfig,
   } = useRatingStore();
 
-  // 添加测试函数，直接调用 API
-  const testDistanceApi = async () => {
-    if (!selectedPOI) {
-      console.error("No POI selected");
-      alert("Please select a POI first");
-      return;
-    }
-
-    setIsTestingApi(true);
-    console.log("Testing distance API with:", {
-      selectedPOI,
-      travelMode,
-      propertiesCount: properties.length,
-    });
-
-    try {
-      // 直接调用 API 路由
-      const response = await axios.post("/api/getDistance", {
-        selectedPOI,
-        travelMode,
-        properties,
-      });
-
-      console.log("API Response:", response.data);
-      alert(`API call successful. Check console for details.`);
-    } catch (error) {
-      console.error("API Test Error:", error);
-      alert(`API call failed: ${error}`);
-    } finally {
-      setIsTestingApi(false);
-    }
-  };
-
   // Distance Score
   useEffect(() => {
     if (selectedPOI && properties.length > 0) {
-      console.log("Effect triggered: calculateDistanceScore");
       calculateDistanceScore(selectedPOI, travelMode, properties);
     }
   }, [selectedPOI, travelMode, properties]);
@@ -156,16 +122,6 @@ const ScoreTable = () => {
 
   return (
     <div className="overflow-x-auto">
-      <div className="flex justify-between items-center mb-2">
-        <h3 className="text-lg font-semibold">Property Ratings</h3>
-        <button
-          onClick={testDistanceApi}
-          disabled={isTestingApi || !selectedPOI}
-          className="px-2 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600 disabled:bg-gray-400"
-        >
-          {isTestingApi ? "Testing..." : "Test Distance API"}
-        </button>
-      </div>
       <table className="w-full border-collapse border border-gray-300 table-fixed">
         <thead>
           <tr className="bg-gray-200">

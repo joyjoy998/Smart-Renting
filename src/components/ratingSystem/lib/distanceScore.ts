@@ -32,8 +32,6 @@ function durationToSeconds(duration: string): number {
   if (duration.endsWith("s")) {
     return parseInt(duration.slice(0, -1));
   }
-  // For ISO 8601 format, we'll need more complex parsing
-  // This is a simplified version assuming seconds
   return parseInt(duration.replace(/\D/g, ""));
 }
 
@@ -43,8 +41,6 @@ function durationToSeconds(duration: string): number {
  * @returns Object containing distance scores, travel times, and distances
  */
 function calculateScores(routes: RouteData[]) {
-  console.log("Calculating scores from routes:", routes);
-
   const distanceScores: Record<string, number> = {};
   const travelTimes: Record<string, number> = {};
   const distances: Record<string, number> = {};
@@ -54,12 +50,6 @@ function calculateScores(routes: RouteData[]) {
     const durationInSeconds = durationToSeconds(route.duration);
     travelTimes[route.propertyId] = durationInSeconds;
     distances[route.propertyId] = route.distanceMeters / 1000; // Convert to km
-
-    console.log(
-      `Property ${route.propertyId}: ${
-        route.distanceMeters / 1000
-      } km, ${durationInSeconds} seconds`
-    );
   });
 
   const validTimes = Object.values(travelTimes).filter((time) => time !== 9999);
@@ -75,10 +65,7 @@ function calculateScores(routes: RouteData[]) {
   const maxTime = Math.max(...validTimes, 1);
   const minTime = Math.min(...validTimes);
 
-  console.log(`Travel time range: min=${minTime}, max=${maxTime}`);
-
   if (maxTime === minTime) {
-    console.log("All travel times are equal, setting all scores to 1");
     routes.forEach((route) => {
       distanceScores[route.propertyId] = 1;
     });
@@ -91,12 +78,6 @@ function calculateScores(routes: RouteData[]) {
         distanceScores[route.propertyId] =
           1 - (time - minTime) / (maxTime - minTime);
       }
-
-      console.log(
-        `Property ${route.propertyId} score: ${
-          distanceScores[route.propertyId]
-        }`
-      );
     });
   }
 
@@ -129,19 +110,14 @@ export async function calculateDistanceScore(
   }
 
   try {
-    // 确保 POI 和 properties 对象有必要的字段，尤其是 address
     if (!selectedPOI.address) {
-      console.error("Selected POI has no address:", selectedPOI);
       throw new Error("Selected POI has no address");
     }
 
     const validProperties = properties.filter((p) => p.address);
     if (validProperties.length === 0) {
-      console.error("No properties with valid addresses found:", properties);
       throw new Error("No properties with valid addresses");
     }
-
-    console.log("Making API request to /api/getDistance");
 
     // Call the API route to get route data
     const response = await axios.post("/api/getDistance", {
@@ -150,48 +126,20 @@ export async function calculateDistanceScore(
       properties: validProperties,
     });
 
-    console.log("API response received:", response.data);
-
     const { routes } = response.data;
 
     if (!routes || routes.length === 0) {
-      console.error("No routes returned from API");
       throw new Error("No routes returned from API");
     }
 
     // Calculate scores based on the route data
     const { distanceScores, travelTimes, distances } = calculateScores(routes);
 
-    console.log("Final calculated values:", {
-      distanceScores,
-      travelTimes,
-      distances,
-    });
-
     // Update the store with the results
     setDistanceScores(distanceScores);
     setTravelTimes(travelTimes);
     setDistances(distances);
-
-    console.log("Store updated successfully");
   } catch (error) {
     console.error("Error calculating distance scores:", error);
-
-    // Set default values in case of error
-    const distanceScores: Record<string, number> = {};
-    const travelTimes: Record<string, number> = {};
-    const distances: Record<string, number> = {};
-
-    properties.forEach((property) => {
-      const propertyId = property.property_property_id;
-      distanceScores[propertyId] = 0;
-      travelTimes[propertyId] = 9999;
-      distances[propertyId] = 9999;
-    });
-
-    console.log("Setting default values due to error");
-    setDistanceScores(distanceScores);
-    setTravelTimes(travelTimes);
-    setDistances(distances);
   }
 }
