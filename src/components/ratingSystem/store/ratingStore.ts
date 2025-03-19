@@ -19,6 +19,10 @@ interface Property {
 interface POI {
   poi_id: string;
   address: string;
+  latitude?: number;
+  longitude?: number;
+  type?: string;
+  user_id?: string;
 }
 
 type TravelMode = "WALKING" | "DRIVING" | "TRANSIT";

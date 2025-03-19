@@ -1,43 +1,125 @@
 import { useRatingStore } from "../store/ratingStore";
+import axios from "axios";
 
 interface Property {
   property_property_id: string;
   address: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 interface POI {
   poi_id: string;
   address: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 type TravelMode = "WALKING" | "DRIVING" | "TRANSIT";
 
-declare global {
-  interface Window {
-    google: typeof google;
-  }
-}
-
-function isGoogleMapsLoaded(): boolean {
-  return !!(
-    typeof window !== "undefined" &&
-    window.google &&
-    window.google.maps
-  );
+interface RouteData {
+  propertyId: string;
+  distanceMeters: number;
+  duration: string;
 }
 
 /**
- * calculate the travel time and distance of the selected POI, and calculate the distance score
+ * Convert duration string to seconds
+ * @param duration Duration string in format "1200s" or "PT20M" (ISO 8601)
+ * @returns Duration in seconds
+ */
+function durationToSeconds(duration: string): number {
+  if (duration.endsWith("s")) {
+    return parseInt(duration.slice(0, -1));
+  }
+  // For ISO 8601 format, we'll need more complex parsing
+  // This is a simplified version assuming seconds
+  return parseInt(duration.replace(/\D/g, ""));
+}
+
+/**
+ * Calculate distance scores based on travel times
+ * @param routes Array of route data from Google API
+ * @returns Object containing distance scores, travel times, and distances
+ */
+function calculateScores(routes: RouteData[]) {
+  console.log("Calculating scores from routes:", routes);
+
+  const distanceScores: Record<string, number> = {};
+  const travelTimes: Record<string, number> = {};
+  const distances: Record<string, number> = {};
+
+  // Convert all durations to seconds and store in travelTimes
+  routes.forEach((route) => {
+    const durationInSeconds = durationToSeconds(route.duration);
+    travelTimes[route.propertyId] = durationInSeconds;
+    distances[route.propertyId] = route.distanceMeters / 1000; // Convert to km
+
+    console.log(
+      `Property ${route.propertyId}: ${
+        route.distanceMeters / 1000
+      } km, ${durationInSeconds} seconds`
+    );
+  });
+
+  const validTimes = Object.values(travelTimes).filter((time) => time !== 9999);
+
+  if (validTimes.length === 0) {
+    console.warn("No valid travel times found, setting all scores to 0");
+    routes.forEach((route) => {
+      distanceScores[route.propertyId] = 0;
+    });
+    return { distanceScores, travelTimes, distances };
+  }
+
+  const maxTime = Math.max(...validTimes, 1);
+  const minTime = Math.min(...validTimes);
+
+  console.log(`Travel time range: min=${minTime}, max=${maxTime}`);
+
+  if (maxTime === minTime) {
+    console.log("All travel times are equal, setting all scores to 1");
+    routes.forEach((route) => {
+      distanceScores[route.propertyId] = 1;
+    });
+  } else {
+    routes.forEach((route) => {
+      const time = travelTimes[route.propertyId];
+      if (time === 9999) {
+        distanceScores[route.propertyId] = 0; // score for invalid routine is 0
+      } else {
+        distanceScores[route.propertyId] =
+          1 - (time - minTime) / (maxTime - minTime);
+      }
+
+      console.log(
+        `Property ${route.propertyId} score: ${
+          distanceScores[route.propertyId]
+        }`
+      );
+    });
+  }
+
+  return { distanceScores, travelTimes, distances };
+}
+
+/**
+ * Calculate the travel time and distance of the selected POI, and calculate the distance score
  * @param selectedPOI the POI selected by the user
  * @param travelMode the mode of transportation selected by the user(walking/driving/public transportation)
  * @param properties the properties marked by the user
  */
-
 export async function calculateDistanceScore(
   selectedPOI: POI,
   travelMode: TravelMode,
   properties: Property[]
 ) {
+  console.log("calculateDistanceScore called with:", {
+    selectedPOI,
+    travelMode,
+    propertyCount: properties.length,
+  });
+
   const { setDistanceScores, setTravelTimes, setDistances } =
     useRatingStore.getState();
 
@@ -46,112 +128,60 @@ export async function calculateDistanceScore(
     return;
   }
 
-  if (!isGoogleMapsLoaded()) {
-    console.error("Google Maps API is not loaded");
-    return;
-  }
-
-  const validTravelModes = ["WALKING", "DRIVING", "TRANSIT"];
-  if (!validTravelModes.includes(travelMode)) {
-    console.error("Invalid travelMode value: ", travelMode);
-    return;
-  }
-
-  const distanceScores: Record<string, number> = {};
-  const travelTimes: Record<string, number> = {};
-  const distances: Record<string, number> = {};
-
   try {
-    const service = new window.google.maps.DistanceMatrixService();
-    const origins = properties.map((p) => p.address);
-    const destinations = [selectedPOI.address];
-
-    const matrixResponse =
-      await new Promise<google.maps.DistanceMatrixResponse>(
-        (resolve, reject) => {
-          service.getDistanceMatrix(
-            {
-              origins,
-              destinations,
-              travelMode: travelMode as google.maps.TravelMode,
-              unitSystem: google.maps.UnitSystem.METRIC,
-            },
-            (response, status) => {
-              if (status === "OK" && response) {
-                resolve(response);
-              } else {
-                reject(new Error(`Distance Matrix failed: ${status}`));
-              }
-            }
-          );
-        }
-      );
-
-    if (!matrixResponse || !matrixResponse.rows) {
-      throw new Error("Invalid response from Distance Matrix");
+    // 确保 POI 和 properties 对象有必要的字段，尤其是 address
+    if (!selectedPOI.address) {
+      console.error("Selected POI has no address:", selectedPOI);
+      throw new Error("Selected POI has no address");
     }
 
-    properties.forEach((property, index) => {
-      const row = matrixResponse.rows[index];
-      if (!row || !row.elements || !row.elements[0]) {
-        console.warn(`No data for property ${property.property_property_id}`);
-        distances[property.property_property_id] = 9999;
-        travelTimes[property.property_property_id] = 9999;
-        return;
-      }
+    const validProperties = properties.filter((p) => p.address);
+    if (validProperties.length === 0) {
+      console.error("No properties with valid addresses found:", properties);
+      throw new Error("No properties with valid addresses");
+    }
 
-      const element = row.elements[0];
+    console.log("Making API request to /api/getDistance");
 
-      if (element.status === "OK" && element.distance && element.duration) {
-        const distanceInKm = element.distance.value / 1000;
-        const durationInSeconds = element.duration.value;
-
-        distances[property.property_property_id] = distanceInKm;
-        travelTimes[property.property_property_id] = durationInSeconds;
-      } else {
-        console.warn(
-          `Invalid travel data for ${property.property_property_id}: ${element.status}`
-        );
-        distances[property.property_property_id] = 9999;
-        travelTimes[property.property_property_id] = 9999;
-      }
+    // Call the API route to get route data
+    const response = await axios.post("/api/getDistance", {
+      selectedPOI,
+      travelMode,
+      properties: validProperties,
     });
 
-    const validTimes = Object.values(travelTimes).filter(
-      (time) => time !== 9999
-    );
-    if (validTimes.length === 0) {
-      throw new Error("No valid travel times calculated");
+    console.log("API response received:", response.data);
+
+    const { routes } = response.data;
+
+    if (!routes || routes.length === 0) {
+      console.error("No routes returned from API");
+      throw new Error("No routes returned from API");
     }
 
-    const maxTime = Math.max(...validTimes, 1);
-    const minTime = Math.min(...validTimes);
+    // Calculate scores based on the route data
+    const { distanceScores, travelTimes, distances } = calculateScores(routes);
 
-    if (maxTime === minTime) {
-      properties.forEach((property) => {
-        distanceScores[property.property_property_id] = 1;
-      });
-    } else {
-      properties.forEach((property) => {
-        const propertyId = property.property_property_id;
-        const time = travelTimes[propertyId];
+    console.log("Final calculated values:", {
+      distanceScores,
+      travelTimes,
+      distances,
+    });
 
-        if (time === 9999) {
-          distanceScores[propertyId] = 0; //score for invalid routine is 0
-        } else {
-          distanceScores[propertyId] =
-            1 - (time - minTime) / (maxTime - minTime);
-        }
-      });
-    }
-
+    // Update the store with the results
     setDistanceScores(distanceScores);
     setTravelTimes(travelTimes);
     setDistances(distances);
+
+    console.log("Store updated successfully");
   } catch (error) {
     console.error("Error calculating distance scores:", error);
 
-    // set default value
+    // Set default values in case of error
+    const distanceScores: Record<string, number> = {};
+    const travelTimes: Record<string, number> = {};
+    const distances: Record<string, number> = {};
+
     properties.forEach((property) => {
       const propertyId = property.property_property_id;
       distanceScores[propertyId] = 0;
@@ -159,6 +189,7 @@ export async function calculateDistanceScore(
       distances[propertyId] = 9999;
     });
 
+    console.log("Setting default values due to error");
     setDistanceScores(distanceScores);
     setTravelTimes(travelTimes);
     setDistances(distances);
