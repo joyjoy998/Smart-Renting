@@ -36,7 +36,7 @@ export function DialogContent({
       <div className="fixed inset-0 flex items-center justify-center p-4 z-[1002]">
         <DialogPrimitive.Content
           className={cn(
-            "bg-white p-6 rounded-lg shadow-lg w-full max-w-3xl relative",
+            "bg-white p-6 rounded-lg shadow-lg w-full max-w-[90vw] sm:max-w-md md:max-w-lg lg:max-w-2xl xl:max-w-4xl max-h-[90vh] overflow-y-auto relative",
             className
           )}
           aria-describedby={description ? "dialog-description" : undefined}>
