@@ -191,13 +191,28 @@ export async function GET(req: NextRequest) {
         .in("property_id", propertyIds);
 
       // for users who marked poi only apply budget filter
-      const isOnlyPOIUser = await supabase
-        .from("saved_properties")
-        .select("property_id")
-        .eq("group_id", parsedGroupId)
-        .limit(1);
+      const { data: markedProperties, error: markedPropertiesError } =
+        await supabase
+          .from("saved_properties")
+          .select("saved_property_id")
+          .eq("group_id", parsedGroupId)
+          .limit(1);
 
-      if (isOnlyPOIUser.data?.length === 0) {
+      if (markedPropertiesError) {
+        console.error(
+          "Error checking marked properties:",
+          markedPropertiesError.message
+        );
+        return NextResponse.json(
+          { success: false, error: markedPropertiesError.message },
+          { status: 500 }
+        );
+      }
+
+      const isOnlyPOIUser = !markedProperties || markedProperties.length === 0;
+
+      //
+      if (isOnlyPOIUser) {
         if (min_budget)
           query = query.gte("weekly_rent", parseFloat(min_budget));
         if (max_budget)

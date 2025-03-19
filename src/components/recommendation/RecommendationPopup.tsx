@@ -18,7 +18,8 @@ import FavoriteButton from "./FavoriteButton";
 import { useRatingStore } from "@/components/ratingSystem/store/ratingStore";
 import { useSidebarStore } from "@/stores/useSidebarStore";
 import { useBudgetStore } from "@/stores/useSettingsStore";
-
+import { useGroupIdStore } from "@/stores/useGroupStore";
+import { useUser } from "@clerk/nextjs";
 const DEFAULT_IMAGE_URL = "/property-unavailable.png";
 
 const RecommendationPopup = () => {
@@ -31,9 +32,10 @@ const RecommendationPopup = () => {
 
   const { starredProperties } = useStarPropertyStore(); // Retrieve starred properties
   const hasStarredProperties = starredProperties.size > 0; // Check if at least one property is starred
-
-  const userId = "user4";
-  const groupId = "3";
+  const { user } = useUser(); // Clerk 提供的 Hook
+  const userId = user?.id ?? null;
+  const { currentGroupId } = useGroupIdStore();
+  const groupId = currentGroupId;
   const { minPrice, maxPrice } = useBudgetStore();
 
   const [showWarning, setShowWarning] = useState(false);

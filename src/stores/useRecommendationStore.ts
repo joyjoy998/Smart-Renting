@@ -1,3 +1,4 @@
+import { LargeNumberLike } from "crypto";
 import { create } from "zustand";
 
 interface Property {
@@ -23,7 +24,7 @@ interface RecommendationState {
   setOpen: (open: boolean) => void;
   fetchRecommendations: (
     userId: string,
-    groupId: string,
+    groupId: number | null,
     minPrice?: number,
     maxPrice?: number
   ) => Promise<void>;
@@ -37,7 +38,7 @@ export const useRecommendationStore = create<RecommendationState>((set) => ({
   setOpen: (open) => set({ isRecommendationOpen: open }),
   fetchRecommendations: async (
     userId: string,
-    groupId: string,
+    groupId: number | null,
     minPrice?: number,
     maxPrice?: number
   ) => {
