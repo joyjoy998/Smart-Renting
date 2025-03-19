@@ -7,13 +7,11 @@ import { calculateAmenitiesScore } from "./lib/amenitiesScore";
 import { calculateTotalScore } from "./lib/finalScore";
 import POISelector from "./ui/POISelector";
 import TravelModeSelector from "./ui/TravelModeSelector";
-import axios from "axios";
 
 const ScoreTable = () => {
   const [showDetails, setShowDetails] = useState<
     Record<string | number, boolean>
   >({});
-  const [isTestingApi, setIsTestingApi] = useState(false);
 
   const {
     selectedPOI,
