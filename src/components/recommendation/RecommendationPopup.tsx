@@ -17,6 +17,7 @@ import "swiper/css/pagination";
 import FavoriteButton from "./FavoriteButton";
 import { useRatingStore } from "@/components/ratingSystem/store/ratingStore";
 import { useSidebarStore } from "@/stores/useSidebarStore";
+import { useBudgetStore } from "@/stores/useSettingsStore";
 
 const DEFAULT_IMAGE_URL = "/property-unavailable.png";
 
@@ -31,10 +32,9 @@ const RecommendationPopup = () => {
   const { starredProperties } = useStarPropertyStore(); // Retrieve starred properties
   const hasStarredProperties = starredProperties.size > 0; // Check if at least one property is starred
 
-  const userId = "user3";
-  const groupId = "5";
-  const minBudget = "";
-  const maxBudget = "";
+  const userId = "user4";
+  const groupId = "3";
+  const { minPrice, maxPrice } = useBudgetStore();
 
   const [showWarning, setShowWarning] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -49,7 +49,7 @@ const RecommendationPopup = () => {
         }, 2000);
       } else {
         setLoading(true);
-        fetchRecommendations(userId, groupId, minBudget, maxBudget).finally(
+        fetchRecommendations(userId, groupId, minPrice, maxPrice).finally(
           () => {
             setLoading(false);
           }
