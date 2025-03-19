@@ -1,3 +1,4 @@
+import { LargeNumberLike } from "crypto";
 import { create } from "zustand";
 
 interface Property {
@@ -23,9 +24,9 @@ interface RecommendationState {
   setOpen: (open: boolean) => void;
   fetchRecommendations: (
     userId: string,
-    groupId: string,
-    minBudget?: string,
-    maxBudget?: string
+    groupId: number | null,
+    minPrice?: number,
+    maxPrice?: number
   ) => Promise<void>;
 }
 
@@ -37,15 +38,15 @@ export const useRecommendationStore = create<RecommendationState>((set) => ({
   setOpen: (open) => set({ isRecommendationOpen: open }),
   fetchRecommendations: async (
     userId: string,
-    groupId: string,
-    minBudget?: string,
-    maxBudget?: string
+    groupId: number | null,
+    minPrice?: number,
+    maxPrice?: number
   ) => {
     try {
       let url = `/api/recommendProperties?user_id=${userId}&group_id=${groupId}`;
 
-      if (minBudget) url += `&min_budget=${minBudget}`;
-      if (maxBudget) url += `&max_budget=${maxBudget}`;
+      if (minPrice) url += `&min_budget=${minPrice}`;
+      if (maxPrice) url += `&max_budget=${maxPrice}`;
 
       const response = await fetch(url);
       const data = await response.json();

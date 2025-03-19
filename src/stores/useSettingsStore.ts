@@ -18,7 +18,7 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
 }));
 
 export const useBudgetStore = create<BudgetStore>((set) => ({
-  minPrice: 250,
+  minPrice: 200,
   maxPrice: 600,
   setMinPrice: (price) => set((state) => ({ ...state, minPrice: price })),
   setMaxPrice: (price) => set((state) => ({ ...state, maxPrice: price })),
