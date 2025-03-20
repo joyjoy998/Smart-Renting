@@ -31,7 +31,12 @@ const UserBudget: React.FC = () => {
   }, [minPrice, maxPrice]);
 
   const updateSlider = () => {
-    if (!rangeRef.current || !minThumbRef.current || !maxThumbRef.current)
+    if (
+      !rangeRef.current ||
+      !minThumbRef.current ||
+      !maxThumbRef.current ||
+      !sliderRef.current
+    )
       return;
 
     const rangeWidth = sliderRef.current.offsetWidth;
