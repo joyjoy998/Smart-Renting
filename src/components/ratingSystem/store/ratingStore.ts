@@ -1,8 +1,9 @@
 import { create } from "zustand";
+import { fetchLatestGroupData } from "@/database/ratingSystemQueries";
 
 //mock data
-import poisData from "@/components/ratingSystem/mockData/poi-u1.json" assert { type: "json" };
-import propertiesData from "@/components/ratingSystem/mockData/property.json" assert { type: "json" };
+//import poisData from "@/components/ratingSystem/mockData/poi-u1.json" assert { type: "json" };
+//import propertiesData from "@/components/ratingSystem/mockData/property.json" assert { type: "json" };
 
 interface Property {
   property_property_id: string;
@@ -49,6 +50,9 @@ interface RatingState {
   amenitiesData: Record<string, any>;
   totalScores: Record<string, number>;
   weightConfig: WeightConfig;
+  isLoading: boolean;
+  error: string | null;
+  currentGroup: any | null;
 
   setOpen: (open: boolean) => void;
   setSelectedPOI: (poi: POI) => void;
@@ -64,6 +68,7 @@ interface RatingState {
   setTotalScores: (scores: Record<string, number>) => void;
   setWeightConfig: (config: WeightConfig) => void;
   updateWeight: (key: keyof WeightConfig, value: number) => void;
+  loadData: () => Promise<void>;
 }
 
 const defaultWeightConfig: WeightConfig = {
@@ -73,10 +78,66 @@ const defaultWeightConfig: WeightConfig = {
   amenity: 0.5,
 };
 
-export const useRatingStore = create<RatingState>((set) => ({
+const mapPropertyFromDB = (dbProperty: any): Property => {
+  return {
+    property_property_id: dbProperty.saved_property_id.toString(),
+    latitude: dbProperty.latitude || 0,
+    longitude: dbProperty.longitude || 0,
+    address: `${dbProperty.street}, ${dbProperty.suburb}, ${dbProperty.state} ${dbProperty.postcode}`,
+    bedrooms: dbProperty.bedrooms || 0,
+    bathrooms: dbProperty.bathrooms || 0,
+    parkingSpaces: dbProperty.parking_spaces || 0,
+    weeklyRent: dbProperty.weekly_rent || 0,
+    safetyScore: dbProperty.safety_score || 0,
+  };
+};
+
+const mapPOIFromDB = (dbPOI: any): POI => {
+  return {
+    poi_id: dbPOI.saved_poi_id.toString(),
+    address: `${dbPOI.street}, ${dbPOI.suburb}, ${dbPOI.state} ${dbPOI.postcode}`,
+    latitude: dbPOI.latitude,
+    longitude: dbPOI.longitude,
+    type: dbPOI.category,
+    user_id: dbPOI.user_id,
+  };
+};
+
+const mapPreferencesToWeightConfig = (
+  preferences: any[] | null
+): WeightConfig => {
+  if (!preferences || preferences.length === 0) {
+    return defaultWeightConfig;
+  }
+
+  const weightConfig: Partial<WeightConfig> = {};
+
+  preferences.forEach((pref) => {
+    if (pref.preference_type === "distance") {
+      weightConfig.distance = pref.weight;
+    } else if (pref.preference_type === "price") {
+      weightConfig.price = pref.weight;
+    } else if (pref.preference_type === "neighborhood_safety") {
+      weightConfig.neighborhood_safety = pref.weight;
+    } else if (pref.preference_type === "amenity") {
+      weightConfig.amenity = pref.weight;
+    }
+  });
+
+  return {
+    distance: weightConfig.distance || defaultWeightConfig.distance,
+    price: weightConfig.price || defaultWeightConfig.price,
+    neighborhood_safety:
+      weightConfig.neighborhood_safety ||
+      defaultWeightConfig.neighborhood_safety,
+    amenity: weightConfig.amenity || defaultWeightConfig.amenity,
+  };
+};
+
+export const useRatingStore = create<RatingState>((set, get) => ({
   isOpen: false,
-  properties: propertiesData,
-  pois: poisData,
+  properties: [],
+  pois: [],
   selectedPOI: null,
   travelMode: "WALKING",
   distanceScores: {},
@@ -88,6 +149,9 @@ export const useRatingStore = create<RatingState>((set) => ({
   amenitiesData: {},
   totalScores: {},
   weightConfig: defaultWeightConfig,
+  isLoading: false,
+  error: null,
+  currentGroup: null,
 
   setOpen: (open) => set({ isOpen: open }),
   setSelectedPOI: (poi) => set({ selectedPOI: poi }),
@@ -109,4 +173,51 @@ export const useRatingStore = create<RatingState>((set) => ({
         [key]: value,
       },
     })),
+
+  loadData: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const { group, properties, pois, preferences } =
+        await fetchLatestGroupData();
+
+      if (!group) {
+        set({
+          isLoading: false,
+          error: "No group data found",
+          properties: [],
+          pois: [],
+          currentGroup: null,
+          weightConfig: defaultWeightConfig,
+        });
+        return;
+      }
+
+      const mappedProperties = properties.map(mapPropertyFromDB);
+      const mappedPOIs = pois.map(mapPOIFromDB);
+      const weightConfig = mapPreferencesToWeightConfig(preferences);
+
+      set({
+        isLoading: false,
+        properties: mappedProperties,
+        pois: mappedPOIs,
+        currentGroup: group,
+        weightConfig: weightConfig,
+        selectedPOI: null,
+        distanceScores: {},
+        travelTimes: {},
+        distances: {},
+        priceScores: {},
+        safetyScores: {},
+        amenitiesScores: {},
+        amenitiesData: {},
+        totalScores: {},
+      });
+    } catch (error) {
+      console.error("Error loading data:", error);
+      set({
+        isLoading: false,
+        error: error instanceof Error ? error.message : "Failed to load data",
+      });
+    }
+  },
 }));

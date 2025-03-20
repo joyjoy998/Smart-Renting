@@ -3,10 +3,6 @@ import { useRatingStore } from "../store/ratingStore";
 interface Property {
   property_property_id: string;
   address: string;
-  bedrooms: number;
-  bathrooms: number;
-  parkingSpaces: number;
-  weeklyRent: number;
   safetyScore: number;
 }
 

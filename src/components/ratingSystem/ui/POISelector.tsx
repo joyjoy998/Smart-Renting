@@ -3,11 +3,9 @@ import { useRatingStore } from "../store/ratingStore";
 const POISelector = () => {
   const { pois, selectedPOI, setSelectedPOI } = useRatingStore();
 
-  // 简化的变更处理器，直接设置选中的 POI
   const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const poi = pois.find((p) => p.poi_id === event.target.value);
     if (poi) {
-      console.log("Selected POI:", poi);
       setSelectedPOI(poi);
     }
   };
