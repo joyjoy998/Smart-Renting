@@ -72,7 +72,6 @@ const SavePoi = (props: Props) => {
 
     const payload = {
       saved_poi_id: Math.floor(Math.random() * 1000000), // ✅ Ensure this exists
-      group_id: groupId, // ✅ 添加 group_id
       place_id: placeData?.place_id,
       name: placeData?.name,
       street: addressParts[0],

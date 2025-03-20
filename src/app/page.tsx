@@ -10,6 +10,7 @@ import { useAuth } from "@clerk/nextjs";
 import axios from "axios";
 import useSavedDataStore from "@/stores/useSavedData";
 import { SnackbarProvider } from "notistack";
+import { useGroupIdStore } from "@/stores/useGroupStore";
 
 export default function Home() {
   const userInfo = useAuth();
@@ -17,22 +18,39 @@ export default function Home() {
   const savedProperties = useSavedDataStore.use.savedProperties();
   const setSavedPois = useSavedDataStore.use.setSavedPois();
   const setSavedProperties = useSavedDataStore.use.setSavedProperties();
+  const properties = useSavedDataStore.use.properties();
+  const setProperties = useSavedDataStore.use.setProperties();
+  const currentGroupId = useGroupIdStore((state) => state.currentGroupId);
 
   const [person, setPerson] = useState("Alice");
   const [bio, setBio] = useState(null);
-
   useEffect(() => {
-    axios.get("/api/savedProperties").then((res) => {
+    axios.get("/api/properties").then((res) => {
       if (res.status === 200) {
-        setSavedProperties(res.data);
-      }
-    });
-    axios.get("/api/savedPois").then((res) => {
-      if (res.status === 200) {
-        setSavedPois(res.data);
+        //TODO: 临时取前100个，后续优化代讨论
+        setProperties(res.data?.slice(0, 100));
       }
     });
   }, []);
+  useEffect(() => {
+    if (userInfo.userId && currentGroupId) {
+      axios.defaults.params = {
+        user_id: userInfo.userId,
+        group_id: currentGroupId,
+      };
+      axios.get("/api/savedProperties").then((res) => {
+        if (res.status === 200) {
+          setSavedProperties(res.data);
+        }
+      });
+
+      axios.get("/api/savedPois").then((res) => {
+        if (res.status === 200) {
+          setSavedPois(res.data);
+        }
+      });
+    }
+  }, [currentGroupId, userInfo.userId]);
   console.log("savedProperties=======", savedProperties);
   console.log("savedPois=======", savedPois);
   const [isLoading, setIsLoading] = useState<boolean>(true);

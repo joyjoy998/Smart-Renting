@@ -86,7 +86,6 @@ const EditPropertyModal: React.FC<PropsWithChildren<Props>> = (props) => {
       saved_property_id:
         placeData?.savedProperty?.saved_property_id ||
         Math.floor(Math.random() * 1000000),
-      group_id: 5, // ✅ 确保 `saved_groups` 里有 `group_id = 1`
       street: addressParts[0],
       suburb: suburb,
       state: state,
@@ -100,8 +99,8 @@ const EditPropertyModal: React.FC<PropsWithChildren<Props>> = (props) => {
       parking_spaces: values.parking_spaces, // ✅ 必须是 `INT`
       property_type: "Apartment",
       safety_score: values.safety_score || 0, // ✅ 必须在 `0.00 - 1.00` 之间
-      note: "Great location!",
-      created_at: new Date().toISOString(), // ✅ 必须是 `TIMESTAMP`
+      // note: "Great location!",
+      // created_at: new Date().toISOString(), // ✅ 必须是 `TIMESTAMP`
       place_id: placeData?.placeId || "", // ✅ Ensure this exists
     };
 
@@ -155,7 +154,7 @@ const EditPropertyModal: React.FC<PropsWithChildren<Props>> = (props) => {
     }
   };
 
-  if (!!placeData?.savedPoi) {
+  if (!!placeData?.savedPoi || !placeData?.group_id) {
     return null;
   }
 

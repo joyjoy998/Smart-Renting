@@ -2,10 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/database/supabaseClient';
 
 export async function GET(req: Request): Promise<Response> {
+  const { searchParams } = new URL(req.url);
+  const groupId = searchParams.get("group_id");
   try {
     const { data, error } = await supabase
         .from('saved_properties')
-        .select('*');
+        .select('*')
+        .eq("group_id", groupId);
 
     if (error) {
         return new Response(JSON.stringify({ error: error.message }), { status: 500 });
@@ -19,6 +22,8 @@ export async function GET(req: Request): Promise<Response> {
 // POST: insert a new saved_properties record.
 // Request body must include group_id and other property details
 export async function POST(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const groupId = searchParams.get("group_id");
   try {
      // ✅ 检查请求体是否为空
      if (!req.body) {
@@ -35,12 +40,12 @@ export async function POST(req: NextRequest) {
     // const body = await req.json();
     // console.log('body=======', body);
 
-    if (!body.group_id) {
+    if (!groupId) {
       return NextResponse.json({ error: "group_id is required" }, { status: 400 });
     }
     const { data, error } = await supabase
       .from("saved_properties")
-      .insert([body]);
+      .insert([{...body, group_id: groupId}]);
 
     if (error){
       console.error("❌ Supabase 错误:", error);  // ✅ 这里打印完整的错误信息
@@ -57,6 +62,8 @@ export async function POST(req: NextRequest) {
 // PUT: update a saved_properties record.
 // Request URL must include group_id and saved_property_id
 export async function PUT(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const groupId = searchParams.get("group_id");
   try {
     // ✅ 检查请求体是否为空
     if (!req.body) {
@@ -71,7 +78,7 @@ export async function PUT(req: NextRequest) {
     console.log("📌 解析后的数据:", body);
 
     // ✅ 检查必须参数
-    if (!body.group_id || !body.saved_property_id) {
+    if (!groupId || !body.saved_property_id) {
       return NextResponse.json(
         { error: "group_id 和 saved_property_id 是必须的" },
         { status: 400 }
@@ -82,7 +89,7 @@ export async function PUT(req: NextRequest) {
     const { data, error } = await supabase
       .from("saved_properties") // 目标表
       .update(body) // 仅更新请求体中提供的字段
-      .eq("group_id", body.group_id)
+      .eq("group_id", groupId)
       .eq("saved_property_id", body.saved_property_id);
 
       console.log('check========',data, error)
