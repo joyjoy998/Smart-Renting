@@ -7,15 +7,18 @@ import {
 } from "@/database/queries";
 
 export const fetchLatestGroupData = async () => {
-  const { user } = useAuthStore();
+  const user = useAuthStore.getState().user;
 
   if (!user) {
     console.error("User not authenticated");
-    return { group: null, properties: [], pois: [], preferences: null };
+    //return { group: null, properties: [], pois: [], preferences: null };
   }
 
   try {
-    const groups = await getSavedGroupsByUser(user.id);
+    //test
+    const userId = "user1";
+
+    const groups = await getSavedGroupsByUser(userId);
     if (groups.length === 0) {
       return { group: null, properties: [], pois: [], preferences: null };
     }
@@ -26,17 +29,17 @@ export const fetchLatestGroupData = async () => {
     );
     const latestGroup = sortedGroups[0];
 
-    const allProperties = await getSavedPropertiesByUser(user.id);
+    const allProperties = await getSavedPropertiesByUser(userId);
     const groupProperties = allProperties.filter(
       (property) => property.group_id === latestGroup.group_id
     );
 
-    const allPois = await getSavedPOIsByUser(user.id);
+    const allPois = await getSavedPOIsByUser(userId);
     const groupPois = allPois.filter(
       (poi) => poi.group_id === latestGroup.group_id
     );
 
-    const preferences = await getUserPreferences(user.id);
+    const preferences = await getUserPreferences(userId);
 
     return {
       group: latestGroup,

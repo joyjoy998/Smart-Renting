@@ -153,7 +153,13 @@ export const useRatingStore = create<RatingState>((set, get) => ({
   error: null,
   currentGroup: null,
 
-  setOpen: (open) => set({ isOpen: open }),
+  setOpen: (open) => {
+    set({ isOpen: open });
+    if (open && get().properties.length === 0 && !get().isLoading) {
+      get().loadData();
+    }
+  },
+
   setSelectedPOI: (poi) => set({ selectedPOI: poi }),
   setTravelMode: (mode) => set({ travelMode: mode }),
   setDistanceScores: (scores) => set({ distanceScores: scores }),
