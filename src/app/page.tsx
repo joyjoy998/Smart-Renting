@@ -34,6 +34,7 @@ export default function Home() {
   }, []);
   useEffect(() => {
     if (userInfo.userId && currentGroupId) {
+      //groupid 读取
       axios.defaults.params = {
         user_id: userInfo.userId,
         group_id: currentGroupId,

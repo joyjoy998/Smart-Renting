@@ -53,7 +53,6 @@ const SavePoi = (props: Props) => {
   const handleSelectType = async (type: string) => {
     setAnchorEl(null); // 关闭菜单
     // 假设从 props 获取 group_id，或者使用默认值 1
-    const groupId = props.groupId || 1; // 确保 group_id 传递正确
     console.log("PlaceData=====", placeData);
     const addressParts = placeData?.address?.split(", ") || [];
     const suburb =

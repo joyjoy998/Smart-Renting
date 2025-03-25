@@ -96,7 +96,7 @@ export function MapContent() {
       {currentGeometry && <AdvancedMarker position={currentGeometry} />}
 
       {allProperties?.map((property, index) => (
-        <PropertyMarker property={property}>
+        <PropertyMarker property={property} key={property.place_id}>
           <Badge
             badgeContent={property.weekly_rent}
             color="primary"
@@ -111,7 +111,7 @@ export function MapContent() {
         </PropertyMarker>
       ))}
       {savedPois?.map((property, index) => (
-        <PropertyMarker property={property}>
+        <PropertyMarker property={property} key={property.saved_poi_id}>
           <FavoriteRoundedIcon sx={{ color: red[400] }} fontSize="large" />
         </PropertyMarker>
       ))}

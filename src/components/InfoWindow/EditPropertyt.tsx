@@ -25,6 +25,7 @@ import { useForm, Controller } from "react-hook-form";
 import useSavedDataStore from "@/stores/useSavedData";
 import { PropertyInfo } from "../maps/MapContent";
 import { useSnackbar } from "notistack";
+import { divide } from "lodash";
 type Props = {
   placeData: PropertyInfo;
 };
@@ -154,7 +155,10 @@ const EditPropertyModal: React.FC<PropsWithChildren<Props>> = (props) => {
     }
   };
 
-  if (!!placeData?.savedPoi || !placeData?.group_id) {
+  if (
+    !!placeData?.savedPoi ||
+    (placeData?.savedProperty && !placeData?.savedProperty.group_id)
+  ) {
     return null;
   }
 
@@ -201,7 +205,9 @@ const EditPropertyModal: React.FC<PropsWithChildren<Props>> = (props) => {
                 name="placeId"
                 control={control}
                 defaultValue={placeData?.placeId}
-                render={() => null}
+                render={() => {
+                  return <></>;
+                }}
               />
               <Controller
                 name="weekly_rent"
