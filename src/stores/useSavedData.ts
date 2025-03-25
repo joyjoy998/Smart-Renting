@@ -18,18 +18,23 @@ const createSelectors = <S extends UseBoundStore<StoreApi<object>>>(
 
 
 type State = {
-  savedPois: google.maps.places.PlaceResult[] | null;
-  savedProperties: google.maps.places.PlaceResult[]  | null;
+  savedPois: google.maps.places.PlaceResult[];
+  savedProperties: google.maps.places.PlaceResult[];
+  properties: google.maps.places.PlaceResult[];
+
 }
 interface Action {
   setSavedPois: (savedPois: State['savedPois']) => void
   setSavedProperties: (savedProperties: State['savedProperties']) => void
+  setProperties: (savedProperties: State['properties']) => void
 }
 
 const useSavedDataStore = createSelectors(create<State & Action>()((set) => ({
-  savedPois: null,
-  savedProperties: null,
+  savedPois: [],
+  properties: [],
+  savedProperties: [],
   setSavedPois: (value: any) => set(() => ({ savedPois: value })),
+  setProperties: (value: any) => set(() => ({ properties: value })),
   setSavedProperties: (value: any) => set(() => ({ savedProperties: value }))
 })))
 

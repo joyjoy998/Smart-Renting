@@ -53,7 +53,6 @@ const SavePoi = (props: Props) => {
   const handleSelectType = async (type: string) => {
     setAnchorEl(null); // 关闭菜单
     // 假设从 props 获取 group_id，或者使用默认值 1
-    const groupId = props.groupId || 1; // 确保 group_id 传递正确
     console.log("PlaceData=====", placeData);
     const addressParts = placeData?.address?.split(", ") || [];
     const suburb =
@@ -72,7 +71,6 @@ const SavePoi = (props: Props) => {
 
     const payload = {
       saved_poi_id: Math.floor(Math.random() * 1000000), // ✅ Ensure this exists
-      group_id: groupId, // ✅ 添加 group_id
       place_id: placeData?.place_id,
       name: placeData?.name,
       street: addressParts[0],

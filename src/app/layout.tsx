@@ -16,6 +16,8 @@ export const metadata: Metadata = {
   description: "Explore locations with our interactive map application",
 };
 
+
+
 const roboto = Roboto({
   weight: ["300", "400", "500", "700"],
   subsets: ["latin"],
