@@ -15,6 +15,16 @@ const PropertyMarker: React.FC<PropsWithChildren<Props>> = (props) => {
   const setCurrentGeometry = useMapStore.use.setCurrentGeometry();
   const setCurrentInfoWindow = useMapStore.use.setCurrentInfoWindow();
   const property = props.property;
+
+  if (
+    !property ||
+    typeof property.latitude !== "number" ||
+    typeof property.longitude !== "number"
+  ) {
+    console.warn("Invalid property coordinates:", property);
+    return null;
+  }
+
   // @ts-ignore
   const latLng = { lat: property?.latitude, lng: property?.longitude };
   return (

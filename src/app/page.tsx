@@ -10,6 +10,7 @@ import { useAuth } from "@clerk/nextjs";
 import axios from "axios";
 import useSavedDataStore from "@/stores/useSavedData";
 import { SnackbarProvider } from "notistack";
+import GroupSelector from "@/components/ratingSystem/GroupSelector";
 
 export default function Home() {
   const userInfo = useAuth();
@@ -65,6 +66,7 @@ export default function Home() {
           )}
 
           <MapContainer />
+          <GroupSelector />
           <RatingReport />
         </main>
       </APIProvider>

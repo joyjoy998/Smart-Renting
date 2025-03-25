@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { fetchLatestGroupData } from "@/database/ratingSystemQueries";
+import { fetchGroupRatingData } from "@/services/ratingService";
 
 //mock data
 //import poisData from "@/components/ratingSystem/mockData/poi-u1.json" assert { type: "json" };
@@ -180,11 +180,12 @@ export const useRatingStore = create<RatingState>((set, get) => ({
       },
     })),
 
-  loadData: async () => {
+  loadData: async (groupData?: any) => {
     set({ isLoading: true, error: null });
     try {
-      const { group, properties, pois, preferences } =
-        await fetchLatestGroupData();
+      let data;
+      data = await fetchGroupRatingData(groupData);
+      const { group, properties, pois, preferences } = data;
 
       if (!group) {
         set({

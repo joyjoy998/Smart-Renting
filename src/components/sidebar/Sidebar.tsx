@@ -34,6 +34,9 @@ import SavePoiModal from "./SavePoi";
 import SavedPropertyModal from "./SavedProperty";
 import RecommendationPopup from "@/components/recommendation/RecommendationPopup";
 import { useRecommendationStore } from "@/stores/useRecommendationStore";
+import GroupSelector from "@/components/ratingSystem/GroupSelector";
+import { useState } from "react";
+
 export function Sidebar() {
   const { isOpen, setOpen } = useSidebarStore();
 
