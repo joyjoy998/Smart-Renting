@@ -36,6 +36,7 @@ import RecommendationPopup from "@/components/recommendation/RecommendationPopup
 import { useRecommendationStore } from "@/stores/useRecommendationStore";
 import GroupSelector from "@/components/ratingSystem/GroupSelector";
 import { useState } from "react";
+import { useGroupSelectorStore } from "../ratingSystem/store/useGroupSelectorStore";
 
 export function Sidebar() {
   const { isOpen, setOpen } = useSidebarStore();
@@ -84,15 +85,15 @@ export function Sidebar() {
           {/* <div className="p-4 border-t space-y-2"> */}
           <button
             onClick={() => {
-              useRatingStore.getState().setOpen(true);
               useSidebarStore.getState().setOpen(false);
+              useRatingStore.getState().setOpen(false);
+              useGroupSelectorStore.getState().setOpen(true);
             }}
             className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg"
           >
             <FileText className="h-5 w-5" />
             <span>Comparison Report</span>
           </button>
-          <RatingReport />
 
           <button
             className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg"

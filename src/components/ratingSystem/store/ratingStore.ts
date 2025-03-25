@@ -20,6 +20,7 @@ interface Property {
 interface POI {
   poi_id: string;
   address: string;
+  name: string;
   latitude?: number;
   longitude?: number;
   type?: string;
@@ -96,6 +97,7 @@ const mapPOIFromDB = (dbPOI: any): POI => {
   return {
     poi_id: dbPOI.saved_poi_id.toString(),
     address: `${dbPOI.street}, ${dbPOI.suburb}, ${dbPOI.state} ${dbPOI.postcode}`,
+    name: dbPOI.name,
     latitude: dbPOI.latitude,
     longitude: dbPOI.longitude,
     type: dbPOI.category,
@@ -185,6 +187,7 @@ export const useRatingStore = create<RatingState>((set, get) => ({
     try {
       let data;
       data = await fetchGroupRatingData(groupData);
+      console.log(data);
       const { group, properties, pois, preferences } = data;
 
       if (!group) {

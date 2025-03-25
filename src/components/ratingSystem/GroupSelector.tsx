@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useRatingStore } from "./store/ratingStore";
-import Link from "next/link";
-import RatingReport from "./ratingReport";
+import { useGroupSelectorStore } from "./store/useGroupSelectorStore";
 
 interface SavedGroup {
   group_id: number;
@@ -16,6 +15,7 @@ export default function GroupSelector() {
   const [error, setError] = useState<string | null>(null);
   const [showReport, setShowReport] = useState(false);
   const { loadData } = useRatingStore();
+  const [showInsufficientData, setShowInsufficientData] = useState(false);
 
   useEffect(() => {
     const fetchGroups = async () => {
@@ -63,8 +63,16 @@ export default function GroupSelector() {
 
         const result = await response.json();
         if (result.success) {
+          const { properties, pois } = result.data;
+
+          if (properties.length < 2 || pois.length < 1) {
+            setShowInsufficientData(true);
+            return;
+          }
+
           await loadData(result.data);
-          setShowReport(true);
+          useRatingStore.getState().setOpen(true);
+          useGroupSelectorStore.getState().setOpen(false);
         } else {
           setError("Failed to load group data");
         }
@@ -107,11 +115,6 @@ export default function GroupSelector() {
           You don't have any saved property groups yet. Please create a group
           first.
         </p>
-        <Link href="/map">
-          <span className="mt-4 inline-block px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700">
-            Go to Map
-          </span>
-        </Link>
       </div>
     );
   }
@@ -168,7 +171,7 @@ export default function GroupSelector() {
           disabled={!selectedGroupId}
           className={`px-6 py-3 rounded-lg font-medium transition-all ${
             selectedGroupId
-              ? "bg-blue-600 text-white hover:bg-blue-700"
+              ? "bg-gray-800 text-white hover:bg-gray-900"
               : "bg-gray-300 text-gray-500 cursor-not-allowed"
           }`}
         >
@@ -176,10 +179,24 @@ export default function GroupSelector() {
         </button>
       </div>
 
-      {/* RatingReport组件会在这里显示 */}
-      {showReport && selectedGroupId && (
-        <div className="mt-8">
-          <RatingReport />
+      {showInsufficientData && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[2000]">
+          <div className="bg-white p-8 rounded-lg shadow-lg max-w-md">
+            <h2 className="text-xl font-semibold mb-4">Insufficient Data</h2>
+            <p className="text-gray-700 mb-6">
+              Your selected group doesn't have enough properties or POIs to
+              generate a report. Please ensure at least{" "}
+              <strong>2 properties</strong> and <strong>1 POI</strong>.
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowInsufficientData(false)}
+                className="px-4 py-2 border rounded-md"
+              >
+                Close
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
