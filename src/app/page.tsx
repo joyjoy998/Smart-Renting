@@ -10,6 +10,8 @@ import { useAuth } from "@clerk/nextjs";
 import axios from "axios";
 import useSavedDataStore from "@/stores/useSavedData";
 import { SnackbarProvider } from "notistack";
+import GroupSelector from "@/components/ratingSystem/GroupSelector";
+import { useGroupSelectorStore } from "@/components/ratingSystem/store/useGroupSelectorStore";
 
 export default function Home() {
   const userInfo = useAuth();
@@ -20,6 +22,8 @@ export default function Home() {
 
   const [person, setPerson] = useState("Alice");
   const [bio, setBio] = useState(null);
+  const { isOpen: groupSelectorOpen, setOpen: setGroupSelectorOpen } =
+    useGroupSelectorStore();
 
   useEffect(() => {
     axios.get("/api/savedProperties").then((res) => {
@@ -65,6 +69,22 @@ export default function Home() {
           )}
 
           <MapContainer />
+          {groupSelectorOpen && (
+            <div className="fixed inset-0 z-[1500] bg-black/30 flex items-center justify-center">
+              <div
+                className="bg-white rounded-lg p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto relative"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button
+                  className="absolute top-2 right-2"
+                  onClick={() => setGroupSelectorOpen(false)}
+                >
+                  ✕
+                </button>
+                <GroupSelector />
+              </div>
+            </div>
+          )}
           <RatingReport />
         </main>
       </APIProvider>

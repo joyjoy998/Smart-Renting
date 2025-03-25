@@ -34,6 +34,10 @@ import SavePoiModal from "./SavePoi";
 import SavedPropertyModal from "./SavedProperty";
 import RecommendationPopup from "@/components/recommendation/RecommendationPopup";
 import { useRecommendationStore } from "@/stores/useRecommendationStore";
+import GroupSelector from "@/components/ratingSystem/GroupSelector";
+import { useState } from "react";
+import { useGroupSelectorStore } from "../ratingSystem/store/useGroupSelectorStore";
+
 export function Sidebar() {
   const { isOpen, setOpen } = useSidebarStore();
 
@@ -60,7 +64,8 @@ export function Sidebar() {
           z-[1002]
           flex flex-col
           ${isOpen ? "translate-x-0" : "-translate-x-full"}
-        `}>
+        `}
+      >
         <div className="p-4 border-b">
           <div className="flex items-center justify-between mb-4 ">
             <Logo />
@@ -80,20 +85,22 @@ export function Sidebar() {
           {/* <div className="p-4 border-t space-y-2"> */}
           <button
             onClick={() => {
-              useRatingStore.getState().setOpen(true);
               useSidebarStore.getState().setOpen(false);
+              useRatingStore.getState().setOpen(false);
+              useGroupSelectorStore.getState().setOpen(true);
             }}
-            className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg">
+            className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg"
+          >
             <FileText className="h-5 w-5" />
-            <span>Report Generation</span>
+            <span>Comparison Report</span>
           </button>
-          <RatingReport />
 
           <button
             className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg"
             onClick={() => {
               useRecommendationStore.getState().setOpen(true);
-            }}>
+            }}
+          >
             <Lightbulb className="h-5 w-5" />
             <span>Recommendation</span>
           </button>
@@ -104,7 +111,8 @@ export function Sidebar() {
               className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg"
               onClick={() => {
                 useArchiveStore.getState().setArchiveOpen(true);
-              }}>
+              }}
+            >
               <History className="h-5 w-5" />
               <span>History Management</span>
             </button>
@@ -125,7 +133,8 @@ export function Sidebar() {
                 useSettingsStore.getState().setOpen(true);
                 useSidebarStore.getState().setOpen(false);
               }}
-              className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg">
+              className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg"
+            >
               <Settings className="h-5 w-5" />
               <span>Settings</span>
             </button>

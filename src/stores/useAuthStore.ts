@@ -11,7 +11,7 @@ interface User {
 interface AuthStore {
   user: User | null;
   isAuthenticated: boolean;
-  signIn: () => void;
+  signIn: (user: User) => void;
   signOut: () => void;
 }
 
@@ -20,7 +20,7 @@ export const useAuthStore = create<AuthStore>()(
     (set) => ({
       user: null,
       isAuthenticated: false,
-      signIn: () => set({ user: null, isAuthenticated: true }),
+      signIn: (user: User) => set({ user, isAuthenticated: true }),
       signOut: () => set({ user: null, isAuthenticated: false }),
     }),
     {
