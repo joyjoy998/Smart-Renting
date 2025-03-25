@@ -5,10 +5,6 @@ interface Property {
   latitude: number;
   longitude: number;
   address: string;
-  bedrooms: number;
-  bathrooms: number;
-  parkingSpaces: number;
-  weeklyRent: number;
 }
 
 interface AmenityResult {
@@ -65,6 +61,14 @@ export async function calculateAmenitiesScore() {
   const rawScores: number[] = [];
 
   for (const property of properties) {
+    if (!property.latitude || !property.longitude) {
+      console.warn(
+        `Property ${property.property_property_id} has invalid coordinates (lat: ${property.latitude}, lng: ${property.longitude})`
+      );
+      amenitiesScores[property.property_property_id] = 0;
+      continue;
+    }
+
     try {
       const response = await fetch(
         `/api/getAmenities?lat=${property.latitude}&lng=${property.longitude}`

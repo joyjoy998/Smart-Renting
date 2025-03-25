@@ -8,9 +8,7 @@ import { supabase } from "./supabaseClient";
  ============================ */
 // Get all public properties
 export const getAllProperties = async () => {
-  const { data, error } = await supabase
-    .from("properties")
-    .select("*");
+  const { data, error } = await supabase.from("properties").select("*");
   if (error) throw error;
   return data;
 };
@@ -28,9 +26,7 @@ export const getPropertyById = async (id: string) => {
 
 // Insert a new property (for admin use)
 export const addProperty = async (property: any) => {
-  const { data, error } = await supabase
-    .from("properties")
-    .insert([property]);
+  const { data, error } = await supabase.from("properties").insert([property]);
   if (error) throw error;
   return data;
 };
@@ -63,9 +59,7 @@ export const deleteProperty = async (id: string) => {
  ============================ */
 // Get all public POIs
 export const getAllPOIs = async () => {
-  const { data, error } = await supabase
-    .from("poi_markers")
-    .select("*");
+  const { data, error } = await supabase.from("poi_markers").select("*");
   if (error) throw error;
   return data;
 };
@@ -83,9 +77,7 @@ export const getPOIById = async (id: string) => {
 
 // Insert a new POI (for admin use)
 export const addPOI = async (poi: any) => {
-  const { data, error } = await supabase
-    .from("poi_markers")
-    .insert([poi]);
+  const { data, error } = await supabase.from("poi_markers").insert([poi]);
   if (error) throw error;
   return data;
 };
@@ -126,17 +118,22 @@ export const getUserPreferences = async (userId: string) => {
 
 // Insert a set of preferences for a user (insert multiple records at once)
 // Request body should contain the user_id and an array of preferences.
-export const addUserPreferences = async (userId: string, preferences: any[]) => {
+export const addUserPreferences = async (
+  userId: string,
+  preferences: any[]
+) => {
   const prefs = preferences.map((pref) => ({ ...pref, user_id: userId }));
-  const { data, error } = await supabase
-    .from("user_preferences")
-    .insert(prefs);
+  const { data, error } = await supabase.from("user_preferences").insert(prefs);
   if (error) throw error;
   return data;
 };
 
 // Update a specific user preference by preference_type
-export const updateUserPreference = async (userId: string, preferenceType: string, updates: any) => {
+export const updateUserPreference = async (
+  userId: string,
+  preferenceType: string,
+  updates: any
+) => {
   const { data, error } = await supabase
     .from("user_preferences")
     .update(updates)
@@ -147,7 +144,10 @@ export const updateUserPreference = async (userId: string, preferenceType: strin
 };
 
 // Delete a specific user preference by preference_type
-export const deleteUserPreference = async (userId: string, preferenceType: string) => {
+export const deleteUserPreference = async (
+  userId: string,
+  preferenceType: string
+) => {
   const { data, error } = await supabase
     .from("user_preferences")
     .delete()
@@ -172,9 +172,7 @@ export const getSavedGroupsByUser = async (userId: string) => {
 
 // Insert a new saved group
 export const addSavedGroup = async (group: any) => {
-  const { data, error } = await supabase
-    .from("saved_groups")
-    .insert([group]);
+  const { data, error } = await supabase.from("saved_groups").insert([group]);
   if (error) throw error;
   return data;
 };
@@ -223,7 +221,10 @@ export const addSavedProperty = async (property: any) => {
 };
 
 // Update a saved property record by saved_property_id
-export const updateSavedProperty = async (savedPropertyId: string, updates: any) => {
+export const updateSavedProperty = async (
+  savedPropertyId: string,
+  updates: any
+) => {
   const { data, error } = await supabase
     .from("saved_properties")
     .update(updates)
@@ -258,9 +259,7 @@ export const getSavedPOIsByUser = async (userId: string) => {
 
 // Insert a new saved POI record
 export const addSavedPOI = async (poi: any) => {
-  const { data, error } = await supabase
-    .from("saved_pois")
-    .insert([poi]);
+  const { data, error } = await supabase.from("saved_pois").insert([poi]);
   if (error) throw error;
   return data;
 };
@@ -290,9 +289,7 @@ export const deleteSavedPOI = async (savedPoiId: string) => {
  ============================ */
 // Get all crime data records
 export const getCrimeData = async () => {
-  const { data, error } = await supabase
-    .from("crime_data")
-    .select("*");
+  const { data, error } = await supabase.from("crime_data").select("*");
   if (error) throw error;
   return data;
 };
