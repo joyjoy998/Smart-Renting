@@ -1,4 +1,3 @@
-// /components/RecommendationPopup.tsx
 import React, { useEffect, useState } from "react";
 import {
   Dialog,
@@ -42,6 +41,8 @@ const RecommendationPopup = () => {
 
   const [showWarning, setShowWarning] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(0);
+  const ITEMS_PER_PAGE = 5;
 
   useEffect(() => {
     if (isRecommendationOpen) {
@@ -53,7 +54,7 @@ const RecommendationPopup = () => {
         }, 2000);
       } else {
         setLoading(true);
-        fetchRecommendations(userId, groupId, minPrice, maxPrice).finally(
+        fetchRecommendations(userId, groupId, minPrice, maxPrice, 0).finally(
           () => {
             setLoading(false);
           }
@@ -61,6 +62,21 @@ const RecommendationPopup = () => {
       }
     }
   }, [isRecommendationOpen, fetchRecommendations]);
+
+  // Get only the current page's properties
+  const currentPageProperties = recommendedProperties.slice(
+    page * ITEMS_PER_PAGE,
+    page * ITEMS_PER_PAGE + ITEMS_PER_PAGE
+  );
+
+  const handleNext = () => {
+    setPage((prev) => {
+      const nextPage = prev + 1;
+      const maxPage =
+        Math.ceil(recommendedProperties.length / ITEMS_PER_PAGE) - 1;
+      return Math.min(nextPage, maxPage);
+    });
+  };
 
   return (
     <Dialog open={isRecommendationOpen} onOpenChange={toggleRecommendation}>
@@ -85,7 +101,7 @@ const RecommendationPopup = () => {
             </p>
           ) : recommendedProperties.length > 0 ? (
             <div className="flex flex-col space-y-4">
-              {recommendedProperties.map((property) => {
+              {currentPageProperties.map((property) => {
                 const images =
                   Array.isArray(property.photo) && property.photo.length > 0
                     ? property.photo
@@ -180,12 +196,12 @@ const RecommendationPopup = () => {
             >
               Comparison Report
             </Button>
-            <Button
-              variant="outline"
-              className="w-1/2 ml-2"
-              onClick={toggleRecommendation}>
-              Close
-            </Button>
+
+            {recommendedProperties.length > (page + 1) * ITEMS_PER_PAGE && (
+              <Button className="w-1/2" onClick={handleNext}>
+                Next Page
+              </Button>
+            )}
           </div>
         </div>
       </DialogContent>
