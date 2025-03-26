@@ -191,8 +191,9 @@ LIMIT CASE
          AND NOT EXISTS (SELECT 1 FROM user_custom_properties)
          AND NOT EXISTS (SELECT 1 FROM user_pois)
     THEN (SELECT COUNT(*) FROM properties)
-    ELSE 5
+    ELSE 50
 END;
 
 
 $$;
+

@@ -1,22 +1,6 @@
 import { LargeNumberLike } from "crypto";
 import { create } from "zustand";
-
-interface Property {
-  property_id: number;
-  street: string;
-  suburb: string;
-  state: string;
-  postcode: string;
-  weekly_rent: number;
-  bedrooms: number;
-  bathrooms: number;
-  parking_spaces: number;
-  property_type: string;
-  safety_score: number;
-  final_score?: number;
-  photo?: string[];
-}
-
+import { Property } from "@/types/property";
 interface RecommendationState {
   isRecommendationOpen: boolean;
   recommendedProperties: Property[];

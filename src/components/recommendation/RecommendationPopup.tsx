@@ -7,7 +7,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { useRecommendationStore } from "@/stores/useRecommendationStore";
-import { useStarPropertyStore } from "@/stores/useStarPropertyStore";
+import useSavedDataStore from "@/stores/useSavedData";
 import { Button } from "@/components/ui/button";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
@@ -31,8 +31,8 @@ const RecommendationPopup = () => {
     fetchRecommendations,
   } = useRecommendationStore();
 
-  const { starredProperties } = useStarPropertyStore();
-  const hasStarredProperties = starredProperties.size > 0;
+  const savedProperties = useSavedDataStore.use.savedProperties();
+  const hasStarredProperties = savedProperties.length > 0;
   const { user } = useUser();
   const userId = user?.id ?? null;
   const { currentGroupId } = useGroupIdStore();
@@ -138,12 +138,10 @@ const RecommendationPopup = () => {
                         <p className="text-xl font-bold">
                           ${property.weekly_rent} per week
                         </p>
-                        <Button variant="ghost" className="flex items-center">
-                          <FavoriteButton
-                            propertyId={property.property_id}
-                            placeData={property} // Pass placeData
-                          />
-                        </Button>
+                        <FavoriteButton
+                          propertyId={property.property_id}
+                          placeData={property}
+                        />
                       </div>
 
                       {/* Row 2 - Address */}

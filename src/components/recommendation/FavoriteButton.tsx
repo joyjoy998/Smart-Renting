@@ -1,10 +1,10 @@
-// /components/FavoriteButton.tsx
 import { Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useStarPropertyStore } from "@/stores/useStarPropertyStore";
 import axios from "axios";
 import { useSnackbar } from "notistack";
-import { useGroupIdStore } from "@/stores/useGroupStore"; // 导入获取group_id的store
+import { useGroupIdStore } from "@/stores/useGroupStore";
+import useSavedDataStore from "@/stores/useSavedData";
+import type { Property } from "@/types/property";
 
 const FavoriteButton = ({
   propertyId,
@@ -13,37 +13,37 @@ const FavoriteButton = ({
   propertyId: string | number;
   placeData: any;
 }) => {
-  const { starredProperties, toggleStar } = useStarPropertyStore();
-  const isStarred = starredProperties.has(String(propertyId)); // 转换成字符串存储
-  const { enqueueSnackbar } = useSnackbar(); // 使用Snackbar来显示通知
+  const savedProperties = useSavedDataStore.use.savedProperties();
+  const isStarred = savedProperties.some(
+    (p) => p.place_id === placeData.place_id
+  );
+  const { enqueueSnackbar } = useSnackbar();
 
-  // 从状态管理中获取当前用户的group_id
-  const { currentGroupId } = useGroupIdStore(); // 使用您的group_id store
-  const groupId = currentGroupId; // 获取当前的group_id
+  const { currentGroupId } = useGroupIdStore();
+  const groupId = currentGroupId;
+
+  const setSavedProperties = useSavedDataStore.use.setSavedProperties();
 
   const handleToggleStar = async () => {
-    toggleStar(String(propertyId)); // 更新本地状态
-
     if (!isStarred) {
-      // 如果当前未收藏，则进行保存操作
-      const payload = {
-        saved_property_id: Math.floor(Math.random() * 1000000), // 生成一个随机的ID
-        group_id: groupId, // 使用当前group_id
-        property_id: propertyId, // 保存的系统房源ID
-        street: placeData.street, // 从placeData获取街道信息
-        suburb: placeData.suburb, // 从placeData获取市区信息
-        state: placeData.state, // 从placeData获取州信息
-        postcode: placeData.postcode, // 从placeData获取邮政编码
-        latitude: placeData.latitude, // 从placeData获取纬度
-        longitude: placeData.longitude, // 从placeData获取经度
-        weekly_rent: placeData.weekly_rent, // 从placeData获取每周租金
-        photo: placeData.photo || [], // 从placeData获取照片数组
-        bedrooms: placeData.bedrooms, // 从placeData获取卧室数量
-        bathrooms: placeData.bathrooms, // 从placeData获取浴室数量
-        parking_spaces: placeData.parking_spaces, // 从placeData获取停车位数量
-        property_type: placeData.property_type || "Unknown", // 从placeData获取房产类型
-        safety_score: placeData.safety_score || 0, // 从placeData获取安全评分
-        place_id: placeData.place_id || "", // 确保存在place_id
+      const payload: Property = {
+        saved_property_id: Math.floor(Math.random() * 1000000),
+        group_id: groupId,
+        property_id: propertyId,
+        street: placeData.street,
+        suburb: placeData.suburb,
+        state: placeData.state,
+        postcode: placeData.postcode,
+        latitude: placeData.latitude,
+        longitude: placeData.longitude,
+        weekly_rent: placeData.weekly_rent,
+        photo: placeData.photo || [],
+        bedrooms: placeData.bedrooms,
+        bathrooms: placeData.bathrooms,
+        parking_spaces: placeData.parking_spaces,
+        property_type: placeData.property_type || "Unknown",
+        safety_score: placeData.safety_score || 0,
+        place_id: placeData.place_id || "",
       };
 
       try {
@@ -52,13 +52,18 @@ const FavoriteButton = ({
           enqueueSnackbar("Property saved successfully", {
             variant: "success",
           });
+
+          setSavedProperties([
+            ...useSavedDataStore.getState().savedProperties,
+            payload,
+          ]);
         }
       } catch (error) {
         console.error("Error saving property:", error);
         enqueueSnackbar("Failed to save property", { variant: "error" });
       }
     } else {
-      // 如果当前已收藏，则进行删除操作
+      // if stared, remove
       try {
         console.log(
           "Deleting property with groupId:",
@@ -68,14 +73,20 @@ const FavoriteButton = ({
         );
         const response = await axios.delete("/api/savedProperties", {
           params: {
-            group_id: groupId, // 使用当前group_id
-            property_id: propertyId, // 使用property_id进行删除
+            group_id: groupId,
+            property_id: propertyId,
           },
         });
         if (response.status === 200) {
           enqueueSnackbar("Property removed successfully", {
             variant: "success",
           });
+
+          setSavedProperties(
+            useSavedDataStore
+              .getState()
+              .savedProperties.filter((p) => p.place_id !== placeData.place_id)
+          );
         }
       } catch (error) {
         console.error("Error removing property:", error);
