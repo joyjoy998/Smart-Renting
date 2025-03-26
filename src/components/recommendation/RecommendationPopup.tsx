@@ -46,6 +46,7 @@ const RecommendationPopup = () => {
 
   useEffect(() => {
     if (isRecommendationOpen) {
+      setPage(0);
       if (!userId || !groupId) {
         setShowWarning(true);
         setTimeout(() => {
@@ -54,7 +55,7 @@ const RecommendationPopup = () => {
         }, 2000);
       } else {
         setLoading(true);
-        fetchRecommendations(userId, groupId, minPrice, maxPrice, 0).finally(
+        fetchRecommendations(userId, groupId, minPrice, maxPrice).finally(
           () => {
             setLoading(false);
           }

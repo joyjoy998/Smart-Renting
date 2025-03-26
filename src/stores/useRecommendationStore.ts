@@ -42,8 +42,7 @@ export const useRecommendationStore = create<RecommendationState>()(
       userId: string,
       groupId: number | null,
       minPrice?: number,
-      maxPrice?: number,
-      page: number = 0
+      maxPrice?: number
     ) => {
       try {
         let url = `/api/recommendProperties?user_id=${userId}&group_id=${groupId}`;
@@ -55,16 +54,7 @@ export const useRecommendationStore = create<RecommendationState>()(
         const data = await response.json();
 
         if (data.success) {
-          if (page === 0) {
-            //initial load
-            set({ recommendedProperties: data.recommended_properties });
-          } else {
-            // load more
-            const prev = get().recommendedProperties;
-            set({
-              recommendedProperties: [...prev, ...data.recommended_properties],
-            });
-          }
+          set({ recommendedProperties: data.recommended_properties });
         } else {
           console.error("Failed to get recommendation:", data.error);
         }
