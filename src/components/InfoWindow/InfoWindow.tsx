@@ -7,6 +7,7 @@ import EditPropertyModal from "./EditPropertyt";
 import SavePoi from "./SavePoi";
 import { PropertyInfo } from "../maps/MapContent";
 import { Bath, Bed, Car, ParkingCircle } from "lucide-react";
+import { handleShowRoutesToPOIs } from "@/lib/routeDisplayHelpers";
 
 interface PropertyInfoWindowProps {
   position: google.maps.LatLngLiteral;
@@ -21,6 +22,7 @@ export const PropertyInfoWindow: React.FC<PropertyInfoWindowProps> = ({
 }) => {
   const toggleSavedPoi = () => {};
   const toggleSaveProperty = () => {};
+
   return (
     <InfoWindow
       position={position}
@@ -81,6 +83,17 @@ export const PropertyInfoWindow: React.FC<PropertyInfoWindowProps> = ({
           <EditPropertyModal placeData={placeData}></EditPropertyModal>
 
           <SavePoi placeData={placeData} />
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<Navigation />}
+            onClick={() =>
+              placeData?.savedProperty &&
+              handleShowRoutesToPOIs(placeData.savedProperty)
+            }
+          >
+            Show Routes
+          </Button>
         </Box>
       </Box>
     </InfoWindow>

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import PreferencePanel from "./PreferencePanel";
 import ScoreTable from "./ScoreTable";
 import RecommendationSection from "./RecommendationSection";
-import { useRatingStore } from "@/components/ratingSystem/store/ratingStore";
+import { useRatingStore } from "@/stores/ratingStore";
 
 const RatingReport = () => {
   const { isOpen, setOpen } = useRatingStore();
@@ -55,7 +55,6 @@ const RatingReport = () => {
             <Button variant="outline" onClick={() => setOpen(false)}>
               Close
             </Button>
-            <Button>Save Report</Button>
           </div>
         </div>
       </div>

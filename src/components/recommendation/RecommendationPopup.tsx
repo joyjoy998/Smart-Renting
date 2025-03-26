@@ -15,7 +15,7 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import FavoriteButton from "./FavoriteButton";
-import { useRatingStore } from "@/components/ratingSystem/store/ratingStore";
+import { useRatingStore } from "@/stores/ratingStore";
 import { useSidebarStore } from "@/stores/useSidebarStore";
 import { useBudgetStore } from "@/stores/useSettingsStore";
 import { useGroupIdStore } from "@/stores/useGroupStore";
@@ -92,14 +92,16 @@ const RecommendationPopup = () => {
                 return (
                   <div
                     key={property.property_id}
-                    className="flex border rounded-lg overflow-hidden shadow-md">
+                    className="flex border rounded-lg overflow-hidden shadow-md"
+                  >
                     {/* Left side image slider */}
                     <div className="w-1/3 relative">
                       <Swiper
                         modules={[Navigation, Pagination]}
                         navigation
                         pagination={{ clickable: true }}
-                        className="h-full">
+                        className="h-full"
+                      >
                         {images.map((image, index) => (
                           <SwiperSlide key={index}>
                             <img
@@ -180,7 +182,8 @@ const RecommendationPopup = () => {
             <Button
               variant="outline"
               className="w-1/2 ml-2"
-              onClick={toggleRecommendation}>
+              onClick={toggleRecommendation}
+            >
               Close
             </Button>
           </div>

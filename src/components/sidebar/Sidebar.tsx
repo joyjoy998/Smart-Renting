@@ -3,7 +3,7 @@
 
 import { useSettingsStore } from "@/stores/useSettingsStore";
 import { useSidebarStore } from "@/stores/useSidebarStore";
-import { useRatingStore } from "@/components/ratingSystem/store/ratingStore";
+import { useRatingStore } from "@/stores/ratingStore";
 import {
   X,
   BookmarkCheck,
@@ -36,7 +36,8 @@ import RecommendationPopup from "@/components/recommendation/RecommendationPopup
 import { useRecommendationStore } from "@/stores/useRecommendationStore";
 import GroupSelector from "@/components/ratingSystem/GroupSelector";
 import { useState } from "react";
-import { useGroupSelectorStore } from "../ratingSystem/store/useGroupSelectorStore";
+import { useGroupSelectorStore } from "../../stores/useGroupSelectorStore";
+import Testbutton from "../Testbutton";
 
 export function Sidebar() {
   const { isOpen, setOpen } = useSidebarStore();

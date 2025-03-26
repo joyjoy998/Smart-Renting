@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useRatingStore } from "./store/ratingStore";
+import { useRatingStore } from "@/stores/ratingStore";
 import { calculateDistanceScore } from "./lib/distanceScore";
 import { calculatePriceScore } from "./lib/priceScore";
 import { loadSafetyScores } from "./lib/safetyScore";
 import { calculateAmenitiesScore } from "./lib/amenitiesScore";
 import { calculateTotalScore } from "./lib/finalScore";
-import POISelector from "./ui/POISelector";
-import TravelModeSelector from "./ui/TravelModeSelector";
+import POISelector from "./POISelector";
+import TravelModeSelector from "./TravelModeSelector";
 
 const ScoreTable = () => {
   const [showDetails, setShowDetails] = useState<

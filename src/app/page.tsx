@@ -12,8 +12,7 @@ import useSavedDataStore from "@/stores/useSavedData";
 import { SnackbarProvider } from "notistack";
 import { useGroupIdStore } from "@/stores/useGroupStore";
 import GroupSelector from "@/components/ratingSystem/GroupSelector";
-import { useGroupSelectorStore } from "@/components/ratingSystem/store/useGroupSelectorStore";
-
+import { useGroupSelectorStore } from "@/stores/useGroupSelectorStore";
 
 export default function Home() {
   const userInfo = useAuth();
