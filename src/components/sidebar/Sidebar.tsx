@@ -37,7 +37,6 @@ import { useRecommendationStore } from "@/stores/useRecommendationStore";
 import GroupSelector from "@/components/ratingSystem/GroupSelector";
 import { useState } from "react";
 import { useGroupSelectorStore } from "../../stores/useGroupSelectorStore";
-import Testbutton from "../Testbutton";
 
 export function Sidebar() {
   const { isOpen, setOpen } = useSidebarStore();

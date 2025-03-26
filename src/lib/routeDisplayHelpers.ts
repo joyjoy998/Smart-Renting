@@ -58,10 +58,14 @@ export const handleShowRoutesToPOIs = async (property: Property) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        property: { address: propertyAddress },
+        property: {
+          latitude: property.latitude,
+          longitude: property.longitude,
+        },
         pois: groupData.pois.map((poi: any) => ({
           poi_id: poi.saved_poi_id.toString(),
-          address: `${poi.street}, ${poi.suburb}, ${poi.state} ${poi.postcode}`,
+          latitude: poi.latitude,
+          longitude: poi.longitude,
         })),
         travelMode,
       }),

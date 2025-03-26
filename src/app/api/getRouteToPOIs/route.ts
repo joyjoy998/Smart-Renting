@@ -6,12 +6,14 @@ if (!GOOGLE_MAPS_API_KEY) {
 }
 
 interface Property {
-  address: string;
+  latitude: number;
+  longitude: number;
 }
 
 interface POI {
   poi_id: string;
-  address: string;
+  latitude: number;
+  longitude: number;
 }
 
 interface RouteResult {
@@ -44,7 +46,7 @@ export async function POST(req: NextRequest) {
       travelMode: "DRIVING" | "WALKING" | "TRANSIT";
     };
 
-    if (!property?.address || !pois || pois.length === 0) {
+    if (!property || !pois || pois.length === 0) {
       return NextResponse.json(
         { error: "Missing property address or POIs" },
         { status: 400 }
@@ -56,8 +58,22 @@ export async function POST(req: NextRequest) {
 
     for (const poi of pois) {
       const requestBody: any = {
-        origin: { address: property.address },
-        destination: { address: poi.address },
+        origin: {
+          location: {
+            latLng: {
+              latitude: property.latitude,
+              longitude: property.longitude,
+            },
+          },
+        },
+        destination: {
+          location: {
+            latLng: {
+              latitude: poi.latitude,
+              longitude: poi.longitude,
+            },
+          },
+        },
         travelMode: googleTravelMode,
         languageCode: "en-US",
         units: "METRIC",
