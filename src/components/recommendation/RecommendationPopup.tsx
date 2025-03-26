@@ -1,3 +1,4 @@
+// /components/RecommendationPopup.tsx
 import React, { useEffect, useState } from "react";
 import {
   Dialog,
@@ -7,7 +8,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { useRecommendationStore } from "@/stores/useRecommendationStore";
-import { useStarPropertyStore } from "@/stores/useStarPropertyStore"; // Import Zustand store for starred properties
+import { useStarPropertyStore } from "@/stores/useStarPropertyStore";
 import { Button } from "@/components/ui/button";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
@@ -20,6 +21,7 @@ import { useSidebarStore } from "@/stores/useSidebarStore";
 import { useBudgetStore } from "@/stores/useSettingsStore";
 import { useGroupIdStore } from "@/stores/useGroupStore";
 import { useUser } from "@clerk/nextjs";
+
 const DEFAULT_IMAGE_URL = "/property-unavailable.png";
 
 const RecommendationPopup = () => {
@@ -30,9 +32,9 @@ const RecommendationPopup = () => {
     fetchRecommendations,
   } = useRecommendationStore();
 
-  const { starredProperties } = useStarPropertyStore(); // Retrieve starred properties
-  const hasStarredProperties = starredProperties.size > 0; // Check if at least one property is starred
-  const { user } = useUser(); // Clerk 提供的 Hook
+  const { starredProperties } = useStarPropertyStore();
+  const hasStarredProperties = starredProperties.size > 0;
+  const { user } = useUser();
   const userId = user?.id ?? null;
   const { currentGroupId } = useGroupIdStore();
   const groupId = currentGroupId;
@@ -120,7 +122,10 @@ const RecommendationPopup = () => {
                           ${property.weekly_rent} per week
                         </p>
                         <Button variant="ghost" className="flex items-center">
-                          <FavoriteButton propertyId={property.property_id} />
+                          <FavoriteButton
+                            propertyId={property.property_id}
+                            placeData={property} // Pass placeData
+                          />
                         </Button>
                       </div>
 
@@ -164,7 +169,6 @@ const RecommendationPopup = () => {
 
           {/* Bottom button section */}
           <div className="flex justify-between mt-4">
-            {/* Comparison Report button */}
             <Button
               className="w-1/2 ml-2"
               onClick={() => {
@@ -176,7 +180,6 @@ const RecommendationPopup = () => {
             >
               Comparison Report
             </Button>
-            {/* Right side Close button */}
             <Button
               variant="outline"
               className="w-1/2 ml-2"
