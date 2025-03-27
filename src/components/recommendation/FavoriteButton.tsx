@@ -9,16 +9,17 @@ import type { Property } from "@/types/property";
 const FavoriteButton = ({
   propertyId,
   placeData,
+  onFavorite,
 }: {
   propertyId: string | number;
   placeData: any;
+  onFavorite?: () => void;
 }) => {
   const savedProperties = useSavedDataStore.use.savedProperties();
   const isStarred = savedProperties.some(
     (p) => p.place_id === placeData.place_id
   );
   const { enqueueSnackbar } = useSnackbar();
-
   const { currentGroupId } = useGroupIdStore();
   const groupId = currentGroupId;
 
@@ -57,6 +58,10 @@ const FavoriteButton = ({
             ...useSavedDataStore.getState().savedProperties,
             payload,
           ]);
+
+          if (onFavorite) {
+            onFavorite();
+          }
         }
       } catch (error) {
         console.error("Error saving property:", error);

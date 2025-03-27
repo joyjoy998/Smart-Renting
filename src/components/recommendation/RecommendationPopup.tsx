@@ -43,6 +43,7 @@ const RecommendationPopup = () => {
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(0);
   const ITEMS_PER_PAGE = 5;
+  const [shouldRefetchOnNextPage, setShouldRefetchOnNextPage] = useState(false);
 
   useEffect(() => {
     if (isRecommendationOpen) {
@@ -70,7 +71,14 @@ const RecommendationPopup = () => {
     page * ITEMS_PER_PAGE + ITEMS_PER_PAGE
   );
 
-  const handleNext = () => {
+  const handleNext = async () => {
+    if (shouldRefetchOnNextPage) {
+      setLoading(true);
+      await fetchRecommendations(userId!, groupId!, minPrice, maxPrice);
+      setShouldRefetchOnNextPage(false);
+      setLoading(false);
+    }
+
     setPage((prev) => {
       const nextPage = prev + 1;
       const maxPage =
@@ -141,6 +149,7 @@ const RecommendationPopup = () => {
                         <FavoriteButton
                           propertyId={property.property_id}
                           placeData={property}
+                          onFavorite={() => setShouldRefetchOnNextPage(true)}
                         />
                       </div>
 
