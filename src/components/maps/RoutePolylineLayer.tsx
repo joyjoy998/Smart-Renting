@@ -3,11 +3,30 @@
 import { useMap, Marker, InfoWindow } from "@vis.gl/react-google-maps";
 import { useRatingStore } from "@/stores/ratingStore";
 import { useEffect, useRef } from "react";
+import { handleChangeTravelMode } from "@/lib/routeDisplayHelpers";
 
 export default function RoutePolylineLayer() {
+  const getModeIcon = (mode: "DRIVING" | "WALKING" | "TRANSIT") => {
+    switch (mode) {
+      case "WALKING":
+        return "🚶";
+      case "DRIVING":
+        return "🚗";
+      case "TRANSIT":
+        return "🚌";
+      default:
+        return "🚗";
+    }
+  };
+
   const map = useMap();
-  const { selectedPropertyForRoute, pois, routesToPOIs, currentGroup } =
-    useRatingStore();
+  const {
+    selectedPropertyForRoute,
+    pois,
+    routesToPOIs,
+    currentGroup,
+    travelMode,
+  } = useRatingStore();
   const polylinesRef = useRef<google.maps.Polyline[]>([]);
 
   useEffect(() => {
@@ -36,43 +55,58 @@ export default function RoutePolylineLayer() {
 
   if (!map || !selectedPropertyForRoute || !routesToPOIs.length) return null;
 
-  // 只显示当前组中的 POI
-  const currentPOIs = pois.filter(
-    (poi) => poi.user_id === currentGroup?.user_id
-  );
+  console.log(routesToPOIs);
 
   return (
     <>
-      {/* 渲染起点 property marker */}
+      {/* render origin property marker */}
       <Marker
         position={{
           lat: selectedPropertyForRoute.latitude,
           lng: selectedPropertyForRoute.longitude,
         }}
         title="Selected Property"
+        key="selected-property-marker"
       />
 
-      {/* 渲染终点 POI marker */}
+      {/* render destination POI marker */}
       {routesToPOIs.map((route) => {
-        const poi = currentPOIs.find((p) => p.poi_id === route.poiId);
-        if (!poi || !poi.latitude || !poi.longitude) return null;
+        const poi = pois.find((p) => p.poi_id === route.poiId);
+        if (!poi || !poi.latitude || !poi.longitude || !route.polylinePath)
+          return null;
+
+        const midIndex = Math.floor(route.polylinePath.length / 2);
+        const midPoint = route.polylinePath[midIndex];
 
         return (
           <>
-            <Marker
-              key={`marker-${route.poiId}`}
-              position={{ lat: poi.latitude, lng: poi.longitude }}
-              title={poi.name || "POI"}
-            />
-
             <InfoWindow
               position={{ lat: poi.latitude, lng: poi.longitude }}
-              pixelOffset={[0, -40]}
+              pixelOffset={[0, -20]}
+              key={`info-${route.poiId}`}
             >
-              <div className="p-2 text-sm">
-                <div>{poi.name}</div>
-                <div>
-                  {route.distanceText} / {route.durationText}
+              <div className="text-xs rounded-md text-gray-700 w-35">
+                <div className="flex flex-col items-center">
+                  <span className="font-medium">{poi.name}</span>
+                  <span className="font-medium">
+                    {getModeIcon(travelMode)} {route.durationText} /{" "}
+                    {route.distanceText}
+                  </span>
+                  <span className="flex gap-1 mt-1">
+                    {["WALKING", "DRIVING", "TRANSIT"].map((mode) => (
+                      <button
+                        key={mode}
+                        onClick={() => handleChangeTravelMode(mode as any)}
+                        className={`text-[10px] px-1.5 py-0.5 rounded border ${
+                          travelMode === mode
+                            ? "bg-blue-100 text-blue-600 border-blue-300"
+                            : "bg-white text-gray-500 border-gray-200"
+                        } hover:bg-blue-50`}
+                      >
+                        {getModeIcon(mode as any)}
+                      </button>
+                    ))}
+                  </span>
                 </div>
               </div>
             </InfoWindow>

@@ -13,8 +13,13 @@ interface Property {
 }
 
 export const handleShowRoutesToPOIs = async (property: Property) => {
-  const { loadData, travelMode, setSelectedPropertyForRoute, setRoutesToPOIs } =
-    useRatingStore.getState();
+  const {
+    loadData,
+    travelMode,
+    setTravelMode,
+    setSelectedPropertyForRoute,
+    setRoutesToPOIs,
+  } = useRatingStore.getState();
 
   try {
     const groupResponse = await fetch(
@@ -34,23 +39,8 @@ export const handleShowRoutesToPOIs = async (property: Property) => {
       return;
     }
 
-    const propertyAddress = `${property.street}, ${property.suburb}, ${property.state} ${property.postcode}`;
-    if (!propertyAddress || propertyAddress.includes("undefined")) {
-      console.error("Invalid property address");
-      return;
-    }
-
     await loadData(groupData);
     setSelectedPropertyForRoute(property);
-
-    /*  console.log("🚀 Request payload:", {
-      property: { address: propertyAddress },
-      pois: groupData.pois.map((poi: any) => ({
-        poi_id: poi.saved_poi_id.toString(),
-        address: `${poi.street}, ${poi.suburb}, ${poi.state} ${poi.postcode}`,
-      })),
-      travelMode,
-    }); */
 
     const routesResponse = await fetch("/api/getRouteToPOIs", {
       method: "POST",
@@ -89,6 +79,19 @@ export const handleShowRoutesToPOIs = async (property: Property) => {
   } catch (err) {
     console.error("handleShowRoutesToPOIsFromProperty error:", err);
   }
+};
+
+// Add utility for use inside <InfoWindow> to handle travel mode change
+export const handleChangeTravelMode = async (
+  newMode: "DRIVING" | "WALKING" | "TRANSIT"
+) => {
+  const store = useRatingStore.getState();
+  const selectedProperty = store.selectedPropertyForRoute;
+
+  if (!selectedProperty) return;
+
+  store.setTravelMode(newMode);
+  await handleShowRoutesToPOIs(selectedProperty);
 };
 
 /* export const TestButton = async () => {

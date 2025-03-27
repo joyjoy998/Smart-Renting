@@ -8,6 +8,7 @@ import SavePoi from "./SavePoi";
 import { PropertyInfo } from "../maps/MapContent";
 import { Bath, Bed, Car, ParkingCircle } from "lucide-react";
 import { handleShowRoutesToPOIs } from "@/lib/routeDisplayHelpers";
+import { useRatingStore } from "@/stores/ratingStore";
 
 interface PropertyInfoWindowProps {
   position: google.maps.LatLngLiteral;
@@ -20,6 +21,7 @@ export const PropertyInfoWindow: React.FC<PropertyInfoWindowProps> = ({
   onClose,
   placeData, // ✅ 传入 Google Places API 数据
 }) => {
+  const currentGroup = useRatingStore((state) => state.currentGroup);
   const toggleSavedPoi = () => {};
   const toggleSaveProperty = () => {};
 
@@ -83,17 +85,21 @@ export const PropertyInfoWindow: React.FC<PropertyInfoWindowProps> = ({
           <EditPropertyModal placeData={placeData}></EditPropertyModal>
 
           <SavePoi placeData={placeData} />
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<Navigation />}
-            onClick={() =>
-              placeData?.savedProperty &&
-              handleShowRoutesToPOIs(placeData.savedProperty)
-            }
-          >
-            Show Routes
-          </Button>
+          {placeData?.savedProperty &&
+            currentGroup &&
+            placeData.savedProperty.group_id === currentGroup.group_id && (
+              <Button
+                variant="contained"
+                color="primary"
+                startIcon={<Navigation />}
+                onClick={() => {
+                  handleShowRoutesToPOIs(placeData.savedProperty);
+                  onClose();
+                }}
+              >
+                Show Routes
+              </Button>
+            )}
         </Box>
       </Box>
     </InfoWindow>
