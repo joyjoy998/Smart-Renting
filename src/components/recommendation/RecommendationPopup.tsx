@@ -7,7 +7,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { useRecommendationStore } from "@/stores/useRecommendationStore";
-import { useStarPropertyStore } from "@/stores/useStarPropertyStore"; // Import Zustand store for starred properties
+import useSavedDataStore from "@/stores/useSavedData";
 import { Button } from "@/components/ui/button";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination } from "swiper/modules";
@@ -20,6 +20,7 @@ import { useSidebarStore } from "@/stores/useSidebarStore";
 import { useBudgetStore } from "@/stores/useSettingsStore";
 import { useGroupIdStore } from "@/stores/useGroupStore";
 import { useUser } from "@clerk/nextjs";
+
 const DEFAULT_IMAGE_URL = "/property-unavailable.png";
 
 const RecommendationPopup = () => {
@@ -30,9 +31,9 @@ const RecommendationPopup = () => {
     fetchRecommendations,
   } = useRecommendationStore();
 
-  const { starredProperties } = useStarPropertyStore(); // Retrieve starred properties
-  const hasStarredProperties = starredProperties.size > 0; // Check if at least one property is starred
-  const { user } = useUser(); // Clerk 提供的 Hook
+  const savedProperties = useSavedDataStore.use.savedProperties();
+  const hasStarredProperties = savedProperties.length > 0;
+  const { user } = useUser();
   const userId = user?.id ?? null;
   const { currentGroupId } = useGroupIdStore();
   const groupId = currentGroupId;
@@ -40,9 +41,13 @@ const RecommendationPopup = () => {
 
   const [showWarning, setShowWarning] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(0);
+  const ITEMS_PER_PAGE = 5;
+  const [shouldRefetchOnNextPage, setShouldRefetchOnNextPage] = useState(false);
 
   useEffect(() => {
     if (isRecommendationOpen) {
+      setPage(0);
       if (!userId || !groupId) {
         setShowWarning(true);
         setTimeout(() => {
@@ -59,6 +64,28 @@ const RecommendationPopup = () => {
       }
     }
   }, [isRecommendationOpen, fetchRecommendations]);
+
+  // Get only the current page's properties
+  const currentPageProperties = recommendedProperties.slice(
+    page * ITEMS_PER_PAGE,
+    page * ITEMS_PER_PAGE + ITEMS_PER_PAGE
+  );
+
+  const handleNext = async () => {
+    if (shouldRefetchOnNextPage) {
+      setLoading(true);
+      await fetchRecommendations(userId!, groupId!, minPrice, maxPrice);
+      setShouldRefetchOnNextPage(false);
+      setLoading(false);
+    }
+
+    setPage((prev) => {
+      const nextPage = prev + 1;
+      const maxPage =
+        Math.ceil(recommendedProperties.length / ITEMS_PER_PAGE) - 1;
+      return Math.min(nextPage, maxPage);
+    });
+  };
 
   return (
     <Dialog open={isRecommendationOpen} onOpenChange={toggleRecommendation}>
@@ -83,7 +110,7 @@ const RecommendationPopup = () => {
             </p>
           ) : recommendedProperties.length > 0 ? (
             <div className="flex flex-col space-y-4">
-              {recommendedProperties.map((property) => {
+              {currentPageProperties.map((property) => {
                 const images =
                   Array.isArray(property.photo) && property.photo.length > 0
                     ? property.photo
@@ -121,9 +148,11 @@ const RecommendationPopup = () => {
                         <p className="text-xl font-bold">
                           ${property.weekly_rent} per week
                         </p>
-                        <Button variant="ghost" className="flex items-center">
-                          <FavoriteButton propertyId={property.property_id} />
-                        </Button>
+                        <FavoriteButton
+                          propertyId={property.property_id}
+                          placeData={property}
+                          onFavorite={() => setShouldRefetchOnNextPage(true)}
+                        />
                       </div>
 
                       {/* Row 2 - Address */}
@@ -166,7 +195,6 @@ const RecommendationPopup = () => {
 
           {/* Bottom button section */}
           <div className="flex justify-between mt-4">
-            {/* Comparison Report button */}
             <Button
               className="w-1/2 ml-2"
               onClick={() => {
@@ -178,14 +206,11 @@ const RecommendationPopup = () => {
             >
               Comparison Report
             </Button>
-            {/* Right side Close button */}
-            <Button
-              variant="outline"
-              className="w-1/2 ml-2"
-              onClick={toggleRecommendation}
-            >
-              Close
-            </Button>
+            {recommendedProperties.length > (page + 1) * ITEMS_PER_PAGE && (
+              <Button className="w-1/2" onClick={handleNext}>
+                Next Page
+              </Button>
+            )}
           </div>
         </div>
       </DialogContent>

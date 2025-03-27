@@ -178,8 +178,16 @@ EXECUTE FUNCTION set_saved_properties_safety_score();
 CREATE TABLE property_vectors (
     property_id INT PRIMARY KEY REFERENCES properties(property_id) ON DELETE CASCADE,
     embedding vector(1024),
-    place_id TEXT
 );
+-- =====================================================
+-- create user property vector table
+-- =====================================================
+CREATE TABLE user_property_vectors (
+    place_id TEXT PRIMARY KEY REFERENCES saved_properties(place_id) ON DELETE CASCADE,
+    embedding vector(1024),
+);
+
+
 
 -- =====================================================
 -- Alter tables

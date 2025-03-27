@@ -1,23 +1,33 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/database/supabaseClient';
+import { NextRequest, NextResponse } from "next/server";
+import { supabase } from "@/database/supabaseClient";
 
 export async function GET(req: Request): Promise<Response> {
   const { searchParams } = new URL(req.url);
   const groupId = searchParams.get("group_id");
   try {
     const { data, error } = await supabase
-        .from('saved_properties')
-        .select('*')
-        .eq("group_id", groupId);
+      .from("saved_properties")
+      .select("*")
+      .eq("group_id", groupId);
 
     if (error) {
-        return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+      return new Response(JSON.stringify({ error: error.message }), {
+        status: 500,
+      });
     }
 
     return new Response(JSON.stringify(data), { status: 200 });
-} catch (err) {
-    return new Response(JSON.stringify({ error: 'Internal server error', details: err.message }), { status: 500 });
-}
+  } catch (err) {
+    // 类型断言为 Error 类型
+    const error = err as Error;
+    return new Response(
+      JSON.stringify({
+        error: "Internal server error",
+        details: error.message,
+      }),
+      { status: 500 }
+    );
+  }
 }
 // POST: insert a new saved_properties record.
 // Request body must include group_id and other property details
@@ -25,13 +35,16 @@ export async function POST(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const groupId = searchParams.get("group_id");
   try {
-     // ✅ 检查请求体是否为空
-     if (!req.body) {
-      return NextResponse.json({ error: "Request body is missing" }, { status: 400 });
+    // ✅ 检查请求体是否为空
+    if (!req.body) {
+      return NextResponse.json(
+        { error: "Request body is missing" },
+        { status: 400 }
+      );
     }
 
     // ✅ 解析 JSON，避免 `SyntaxError`
-    const text = await req.text(); 
+    const text = await req.text();
     console.log("📌 请求原始数据:", text);
 
     const body = JSON.parse(text); // 使用 JSON.parse() 处理
@@ -41,21 +54,33 @@ export async function POST(req: NextRequest) {
     // console.log('body=======', body);
 
     if (!groupId) {
-      return NextResponse.json({ error: "group_id is required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "group_id is required" },
+        { status: 400 }
+      );
     }
     const { data, error } = await supabase
       .from("saved_properties")
-      .insert([{...body, group_id: groupId}]);
+      .insert([{ ...body, group_id: groupId }]);
 
-    if (error){
-      console.error("❌ Supabase 错误:", error);  // ✅ 这里打印完整的错误信息
-      return NextResponse.json({ error: error.message, details: error }, { status: 500 });
+    if (error) {
+      console.error("❌ Supabase 错误:", error); // ✅ 这里打印完整的错误信息
+      return NextResponse.json(
+        { error: error.message, details: error },
+        { status: 500 }
+      );
     }
 
-    return NextResponse.json({ message: "房产成功保存", data }, { status: 200 });
+    return NextResponse.json(
+      { message: "房产成功保存", data },
+      { status: 200 }
+    );
   } catch (err) {
     console.error("❌ 服务器错误:", err);
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+    return NextResponse.json(
+      { error: (err as Error).message },
+      { status: 500 }
+    );
   }
 }
 
@@ -92,40 +117,69 @@ export async function PUT(req: NextRequest) {
       .eq("group_id", groupId)
       .eq("saved_property_id", body.saved_property_id);
 
-      console.log('check========',data, error)
+    console.log("check========", data, error);
     // ✅ 处理 Supabase 错误
     if (error) {
       console.error("❌ Supabase update error:", error);
-      return NextResponse.json({ error: error.message, details: error }, { status: 500 });
+      return NextResponse.json(
+        { error: error.message, details: error },
+        { status: 500 }
+      );
     }
 
     // ✅ 返回成功响应
-    return NextResponse.json({ message: "Property updated successfully", data }, { status: 200 });
+    return NextResponse.json(
+      { message: "Property updated successfully", data },
+      { status: 200 }
+    );
   } catch (err) {
     console.error("❌ Server error:", err);
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+    return NextResponse.json(
+      { error: (err as Error).message },
+      { status: 500 }
+    );
   }
 }
 
-// DELETE: delete a saved_properties record.
-// Request URL must include group_id and saved_property_id
+/// DELETE: delete a saved_properties record.
+// Request URL can include group_id and place_id OR group_id and property_id
 export async function DELETE(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const groupId = searchParams.get("group_id");
     const placeId = searchParams.get("place_id");
-    console.log('check=======',groupId,placeId);
-    if (!groupId || !placeId) {
-      return NextResponse.json({ error: "group_id and place_id are required" }, { status: 400 });
+    const propertyId = searchParams.get("property_id");
+
+    console.log("check=======", groupId, placeId, propertyId);
+
+    if (!groupId || (!placeId && !propertyId)) {
+      return NextResponse.json(
+        {
+          error: "group_id and either place_id or property_id are required",
+        },
+        { status: 400 }
+      );
     }
-    const { data, error } = await supabase
+
+    let query = supabase
       .from("saved_properties")
       .delete()
-      .eq("group_id", groupId)
-      .eq("place_id", placeId);
+      .eq("group_id", groupId);
+
+    if (placeId) {
+      query = query.eq("place_id", placeId);
+    } else if (propertyId) {
+      query = query.eq("property_id", propertyId);
+    }
+
+    const { data, error } = await query;
+
     if (error) throw error;
     return NextResponse.json(data, { status: 200 });
   } catch (err) {
-    return NextResponse.json({ error: (err as Error).message }, { status: 500 });
+    return NextResponse.json(
+      { error: (err as Error).message },
+      { status: 500 }
+    );
   }
 }
