@@ -26,6 +26,7 @@ import useSavedDataStore from "@/stores/useSavedData";
 import { PropertyInfo } from "../maps/MapContent";
 import { useSnackbar } from "notistack";
 import { divide } from "lodash";
+import { triggerVectorization } from "@/utils/vectorization";
 type Props = {
   placeData: PropertyInfo;
 };
@@ -51,10 +52,11 @@ const EditPropertyModal: React.FC<PropsWithChildren<Props>> = (props) => {
   } = useForm();
   console.log("placeData========", placeData);
   const [open, setOpen] = React.useState(false);
+
   const savedProperties = useSavedDataStore.use.savedProperties();
   const setSavedProperties = useSavedDataStore.use.setSavedProperties();
   const { enqueueSnackbar } = useSnackbar();
-
+  const [isProcessing, setIsProcessing] = React.useState(false);
   const toggle = () => {
     setOpen(!open);
   };
@@ -83,6 +85,7 @@ const EditPropertyModal: React.FC<PropsWithChildren<Props>> = (props) => {
   };
 
   const onSubmit = async (values: any) => {
+    setIsProcessing(true);
     const payload = {
       saved_property_id:
         placeData?.savedProperty?.saved_property_id ||
@@ -108,28 +111,48 @@ const EditPropertyModal: React.FC<PropsWithChildren<Props>> = (props) => {
     console.log("🚀 Sending Payload:", payload); // ✅ Debugging log
 
     try {
-      console.log();
+      let response;
+
       if (!!placeData?.savedProperty) {
-        const response = await axios.put("/api/savedProperties", payload);
-        if (response.status === 200) {
-          refreshData();
-          enqueueSnackbar("Update property successfully", {
-            variant: "success",
-          });
-        }
+        response = await axios.put("/api/savedProperties", payload);
       } else {
-        const response = await axios.post("/api/savedProperties", payload);
-        if (response.status === 200) {
-          refreshData();
-          enqueueSnackbar("Save property successfully", { variant: "success" });
-        }
-        console.log("✅ API Success:", response.data);
+        response = await axios.post("/api/savedProperties", payload);
       }
 
-      setOpen(false);
+      if (response.status === 200) {
+        refreshData();
+
+        // if place_id exists, vectorize properties
+        if (payload.place_id) {
+          try {
+            triggerVectorization(payload.place_id)
+              .then((result) => {
+                if (result && result.success) {
+                  console.log("✅ Vectorization successful:", result);
+                } else {
+                  console.warn("⚠️ Vectorization issues:", result);
+                }
+              })
+              .catch((error) => {
+                console.error("❌ Vectorization failed:", error);
+              });
+          } catch (vectorError) {
+            console.error("❌ Error triggering vectorization:", vectorError);
+          }
+        }
+
+        enqueueSnackbar(
+          !!placeData?.savedProperty
+            ? "Update property successfully"
+            : "Save property successfully",
+          { variant: "success" }
+        );
+
+        setOpen(false);
+      }
     } catch (error: any) {
       console.error("❌ API Request Failed:", error);
-      // 🔹 Log Detailed Error
+
       if (error.response) {
         console.log("📌 Response Status:", error.response.status);
         console.log("📌 Response Data:", error.response.data);
@@ -138,11 +161,16 @@ const EditPropertyModal: React.FC<PropsWithChildren<Props>> = (props) => {
       } else {
         console.log("📌 Request Setup Error:", error.message);
       }
-      alert(
-        `Error: ${error.response?.data?.message || "Something went wrong!"}`
+
+      enqueueSnackbar(
+        `Error: ${error.response?.data?.message || "Something went wrong!"}`,
+        { variant: "error" }
       );
+    } finally {
+      setIsProcessing(false);
     }
   };
+
   const handleRemove = async () => {
     const response = await axios.delete("/api/savedProperties", {
       params: {
@@ -173,8 +201,7 @@ const EditPropertyModal: React.FC<PropsWithChildren<Props>> = (props) => {
             variant="contained"
             color="error"
             className="flex-auto"
-            onClick={handleRemove}
-          >
+            onClick={handleRemove}>
             Delete Property
           </Button>
         )}
@@ -183,8 +210,7 @@ const EditPropertyModal: React.FC<PropsWithChildren<Props>> = (props) => {
         open={open}
         onClose={toggle}
         aria-labelledby="modal-modal-title"
-        aria-describedby="modal-modal-description"
-      >
+        aria-describedby="modal-modal-description">
         <Box sx={style}>
           <div>
             <Typography sx={{ mt: 2, mb: 2 }} variant="h6" component="div">
@@ -199,8 +225,7 @@ const EditPropertyModal: React.FC<PropsWithChildren<Props>> = (props) => {
                 flexDirection: "column",
                 gap: 2,
                 width: 300,
-              }}
-            >
+              }}>
               <Controller
                 name="placeId"
                 control={control}
