@@ -76,7 +76,7 @@ interface RatingState {
   setTotalScores: (scores: Record<string, number>) => void;
   setWeightConfig: (config: WeightConfig) => void;
   updateWeight: (key: keyof WeightConfig, value: number) => void;
-  loadData: () => Promise<void>;
+  loadData: (groupData?: any) => Promise<void>;
 }
 
 const defaultWeightConfig: WeightConfig = {

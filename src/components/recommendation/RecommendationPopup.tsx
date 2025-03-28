@@ -119,16 +119,14 @@ const RecommendationPopup = () => {
                 return (
                   <div
                     key={property.property_id}
-                    className="flex border rounded-lg overflow-hidden shadow-md"
-                  >
+                    className="flex border rounded-lg overflow-hidden shadow-md">
                     {/* Left side image slider */}
                     <div className="w-1/3 relative">
                       <Swiper
                         modules={[Navigation, Pagination]}
                         navigation
                         pagination={{ clickable: true }}
-                        className="h-full"
-                      >
+                        className="h-full">
                         {images.map((image, index) => (
                           <SwiperSlide key={index}>
                             <img
@@ -196,14 +194,27 @@ const RecommendationPopup = () => {
           {/* Bottom button section */}
           <div className="flex justify-between mt-4">
             <Button
-              className="w-1/2 ml-2"
-              onClick={() => {
-                useRatingStore.getState().setOpen(true); // Open Report Generation
-                useSidebarStore.getState().setOpen(false); // Close Sidebar
-                toggleRecommendation(); // Close RecommendationPopup
-              }}
-              disabled={!hasStarredProperties} // Only enabled if at least one property is starred
-            >
+              className="w-1/2"
+              onClick={async () => {
+                const { currentGroupId } = useRecommendationStore.getState();
+                if (!currentGroupId) {
+                  alert("Missing group ID");
+                  return;
+                }
+
+                const result = await fetch(
+                  `/api/getSavedGroupsByID?groupId=${currentGroupId}`
+                );
+                const data = await result.json();
+
+                if (data.success) {
+                  await useRatingStore.getState().loadData(data.data);
+                  useRatingStore.getState().setOpen(true);
+                  toggleRecommendation();
+                } else {
+                  alert("Failed to get group data");
+                }
+              }}>
               Comparison Report
             </Button>
             {recommendedProperties.length > (page + 1) * ITEMS_PER_PAGE && (

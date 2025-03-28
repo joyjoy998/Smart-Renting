@@ -1,14 +1,16 @@
 import { LargeNumberLike } from "crypto";
 import { create } from "zustand";
 import { Property } from "@/types/property";
+import { useGroupStore } from "./useGroupStore";
 interface RecommendationState {
   isRecommendationOpen: boolean;
   recommendedProperties: Property[];
+  currentGroupId: number | null;
   toggleRecommendation: () => void;
   setOpen: (open: boolean) => void;
   fetchRecommendations: (
     userId: string,
-    groupId: number | null,
+    currentGroupId: number | null,
     minPrice?: number,
     maxPrice?: number,
     page?: number
@@ -19,17 +21,18 @@ export const useRecommendationStore = create<RecommendationState>()(
   (set, get) => ({
     isRecommendationOpen: false,
     recommendedProperties: [],
+    currentGroupId: null,
     toggleRecommendation: () =>
       set((state) => ({ isRecommendationOpen: !state.isRecommendationOpen })),
     setOpen: (open) => set({ isRecommendationOpen: open }),
     fetchRecommendations: async (
       userId: string,
-      groupId: number | null,
+      currentGroupId: number | null,
       minPrice?: number,
       maxPrice?: number
     ) => {
       try {
-        let url = `/api/recommendProperties?user_id=${userId}&group_id=${groupId}`;
+        let url = `/api/recommendProperties?user_id=${userId}&group_id=${currentGroupId}`;
 
         if (minPrice) url += `&min_budget=${minPrice}`;
         if (maxPrice) url += `&max_budget=${maxPrice}`;
@@ -38,7 +41,10 @@ export const useRecommendationStore = create<RecommendationState>()(
         const data = await response.json();
 
         if (data.success) {
-          set({ recommendedProperties: data.recommended_properties });
+          set({
+            recommendedProperties: data.recommended_properties,
+            currentGroupId: currentGroupId,
+          });
         } else {
           console.error("Failed to get recommendation:", data.error);
         }
