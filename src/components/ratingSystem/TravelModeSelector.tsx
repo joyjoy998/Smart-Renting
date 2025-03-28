@@ -1,4 +1,4 @@
-import { useRatingStore } from "../store/ratingStore";
+import { useRatingStore } from "../../stores/ratingStore";
 
 const TravelModeSelector = () => {
   const { travelMode, setTravelMode } = useRatingStore();

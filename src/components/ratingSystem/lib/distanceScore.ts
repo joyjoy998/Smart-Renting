@@ -1,4 +1,4 @@
-import { useRatingStore } from "../store/ratingStore";
+import { useRatingStore } from "@/stores/ratingStore";
 import axios from "axios";
 
 interface Property {

@@ -14,6 +14,8 @@ import FavoriteRoundedIcon from "@mui/icons-material/FavoriteRounded";
 import HouseIcon from "@mui/icons-material/House";
 import { blue, green, red } from "@mui/material/colors";
 import { Badge, Popover, Tooltip } from "@mui/material";
+import RoutePolylineLayer from "@/components/maps/RoutePolylineLayer";
+
 export type PropertyInfo =
   | (google.maps.places.PlaceResult & {
       image?: string;
@@ -91,6 +93,7 @@ export function MapContent() {
   console.log("currentGeometry====", currentGeometry);
   return (
     <>
+      <RoutePolylineLayer />
       <UserLocationMarker position={userLocation} />
 
       {currentGeometry && <AdvancedMarker position={currentGeometry} />}

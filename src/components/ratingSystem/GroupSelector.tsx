@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { useRatingStore } from "./store/ratingStore";
-import { useGroupSelectorStore } from "./store/useGroupSelectorStore";
+import { useRatingStore } from "@/stores/ratingStore";
+import { useGroupSelectorStore } from "@/stores/useGroupSelectorStore";
 
 interface SavedGroup {
   group_id: number;
@@ -185,8 +185,10 @@ export default function GroupSelector() {
             <h2 className="text-xl font-semibold mb-4">Insufficient Data</h2>
             <p className="text-gray-700 mb-6">
               Your selected group doesn't have enough properties or POIs to
-              generate a report. Please ensure at least{" "}
-              <strong>2 properties</strong> and <strong>1 POI</strong>.
+              generate a report. <br />
+              <br />
+              Please ensure at least <strong>2 properties</strong> and{" "}
+              <strong>1 POI</strong>.
             </p>
             <div className="flex justify-end gap-2">
               <button

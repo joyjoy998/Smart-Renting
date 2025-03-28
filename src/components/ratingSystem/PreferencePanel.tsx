@@ -1,5 +1,5 @@
 import { SliderWithPlusAndMinus } from "@/components/sidebar/preference/SliderWithPlusAndMinus";
-import { useRatingStore } from "@/components/ratingSystem/store/ratingStore";
+import { useRatingStore } from "@/stores/ratingStore";
 
 const PreferencePanel = () => {
   const { weightConfig, updateWeight } = useRatingStore();

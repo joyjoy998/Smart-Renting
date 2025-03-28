@@ -1,4 +1,4 @@
-import { useRatingStore } from "../store/ratingStore";
+import { useRatingStore } from "@/stores/ratingStore";
 
 interface Property {
   property_property_id: string;

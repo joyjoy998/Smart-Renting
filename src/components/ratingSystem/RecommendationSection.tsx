@@ -1,5 +1,5 @@
 import React from "react";
-import { useRatingStore } from "@/components/ratingSystem/store/ratingStore";
+import { useRatingStore } from "@/stores/ratingStore";
 import { useRecommendationStore } from "@/stores/useRecommendationStore";
 
 const RecommendationSection = () => {
@@ -15,7 +15,8 @@ const RecommendationSection = () => {
     <div className="border p-4 rounded-lg bg-gray-100 text-center">
       <button
         onClick={handleViewRecommendations}
-        className="mt-2 text-blue-500 underline hover:text-blue-700">
+        className="mt-2 text-blue-500 underline hover:text-blue-700"
+      >
         View Recommendations
       </button>
     </div>

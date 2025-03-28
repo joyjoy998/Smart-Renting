@@ -1,10 +1,6 @@
 import { create } from "zustand";
 import { fetchGroupRatingData } from "@/services/ratingService";
 
-//mock data
-//import poisData from "@/components/ratingSystem/mockData/poi-u1.json" assert { type: "json" };
-//import propertiesData from "@/components/ratingSystem/mockData/property.json" assert { type: "json" };
-
 interface Property {
   property_property_id: string;
   latitude: number;
@@ -54,6 +50,17 @@ interface RatingState {
   isLoading: boolean;
   error: string | null;
   currentGroup: any | null;
+
+  selectedPropertyForRoute: Property | null;
+  routesToPOIs: {
+    poiId: string;
+    polylinePath: google.maps.LatLngLiteral[];
+    durationText: string;
+    distanceText: string;
+  }[];
+  setSelectedPropertyForRoute: (property: Property | null) => void;
+  setRoutesToPOIs: (routes: RatingState["routesToPOIs"]) => void;
+  clearRoutesToPOIs: () => void;
 
   setOpen: (open: boolean) => void;
   setSelectedPOI: (poi: POI) => void;
@@ -155,6 +162,14 @@ export const useRatingStore = create<RatingState>((set, get) => ({
   error: null,
   currentGroup: null,
 
+  selectedPropertyForRoute: null,
+  routesToPOIs: [],
+  setSelectedPropertyForRoute: (property) =>
+    set({ selectedPropertyForRoute: property }),
+  setRoutesToPOIs: (routes) => set({ routesToPOIs: routes }),
+  clearRoutesToPOIs: () =>
+    set({ selectedPropertyForRoute: null, routesToPOIs: [] }),
+
   setOpen: (open) => {
     set({ isOpen: open });
     if (open && get().properties.length === 0 && !get().isLoading) {
@@ -187,7 +202,7 @@ export const useRatingStore = create<RatingState>((set, get) => ({
     try {
       let data;
       data = await fetchGroupRatingData(groupData);
-      console.log(data);
+      //console.log(data);
       const { group, properties, pois, preferences } = data;
 
       if (!group) {
