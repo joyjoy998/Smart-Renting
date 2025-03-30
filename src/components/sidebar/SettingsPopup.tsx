@@ -6,14 +6,14 @@ import { usePreferencesStore } from "@/stores/usePreferencesStore";
 import { Button } from "@/components/ui/button";
 import { SliderWithPlusAndMinus } from "@/components/sidebar/preference/SliderWithPlusAndMinus";
 import UserBudget from "./UserBudget";
-import { useBudgetStore } from "@/stores/useSettingsStore";
+// import { useBudgetStore } from "@/stores/useSettingsStore";
 
 export function SettingsPopup() {
   const { isOpen, setOpen } = useSettingsStore();
   const { preferences, setPreference } = usePreferencesStore();
-  const { minPrice, maxPrice, setMinPrice, setMaxPrice } = useBudgetStore();
-  console.log("minPrice", minPrice);
-  console.log("maxPrice", maxPrice);
+  // const { minPrice, maxPrice, setMinPrice, setMaxPrice } = useBudgetStore();
+  // console.log("minPrice", minPrice);
+  // console.log("maxPrice", maxPrice);
 
   if (!isOpen) return null;
 

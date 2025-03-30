@@ -2,7 +2,6 @@ import {
   Modal,
   Typography,
   Box,
-  Grid2,
   List,
   ListItem,
   Avatar,
@@ -10,14 +9,12 @@ import {
   ListItemAvatar,
   ListItemText,
 } from "@mui/material";
-import { BookmarkCheck, DeleteIcon, FolderIcon } from "lucide-react";
-import { useRequest } from "ahooks";
-import React, { PropsWithChildren } from "react";
+import { BookmarkCheck, DeleteIcon } from "lucide-react";
+import React from "react";
 import { nearbySearch, usePlacesService } from "@/hooks/map/usePlacesService";
-import { useUserLocation } from "@/hooks/map/useUserLocation";
 import useSavedDataStore from "@/stores/useSavedData";
 import axios from "axios";
-import { PropertyInfo } from "../maps/MapContent";
+import { PropertyInfo } from "@/components/maps/MapContent";
 
 type Props = {
   placeData: PropertyInfo;
@@ -34,14 +31,13 @@ const style = {
   boxShadow: 24,
   p: 2,
 };
-const SavePoiModal: React.FC<PropsWithChildren<Props>> = (props) => {
+const SavePoiModal = () => {
   const [open, setOpen] = React.useState(false);
   const savedPois = useSavedDataStore.use.savedPois();
   const setSavedPois = useSavedDataStore.use.setSavedPois();
 
-  console.log("savedpois-======", savedPois);
+  // console.log("savedpois-======", savedPois);
   const placeService = usePlacesService();
-  const { location } = useUserLocation();
 
   const refreshData = () => {
     axios.get("/api/savedPois").then((res) => {

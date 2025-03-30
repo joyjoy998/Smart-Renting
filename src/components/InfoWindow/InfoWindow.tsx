@@ -1,12 +1,10 @@
 import { InfoWindow } from "@vis.gl/react-google-maps";
-import Image from "next/image";
-import { Box, Button, Fab, Stack, Typography } from "@mui/material";
-import { useMap } from "@vis.gl/react-google-maps";
-import { Favorite, Add, Edit, Navigation } from "@mui/icons-material";
+import { Box, Button, Stack, Typography } from "@mui/material";
+import { Navigation } from "@mui/icons-material";
 import EditPropertyModal from "./EditPropertyt";
 import SavePoi from "./SavePoi";
 import { PropertyInfo } from "../maps/MapContent";
-import { Bath, Bed, Car, ParkingCircle } from "lucide-react";
+import { Bath, Bed, Car } from "lucide-react";
 import { handleShowRoutesToPOIs } from "@/lib/routeDisplayHelpers";
 import { useRatingStore } from "@/stores/ratingStore";
 
@@ -33,13 +31,15 @@ export const PropertyInfoWindow: React.FC<PropertyInfoWindowProps> = ({
     >
       <Box className="info-window p-2 bg-white rounded-lg shadow-md flex flex-col ">
         <Stack direction="row">
-          <img
-            src={placeData?.image}
-            alt={placeData?.name}
-            width={120}
-            height={120}
-            className="rounded-md mr-4 overflow h-32 w-32"
-          />
+          {placeData?.image && (
+            <img
+              src={placeData.image}
+              alt={placeData.name}
+              width={120}
+              height={120}
+              className="rounded-md mr-4 overflow h-32 w-32"
+            />
+          )}
           <div>
             <Typography variant="body1" className="font-bold mt-2">
               {placeData?.address}

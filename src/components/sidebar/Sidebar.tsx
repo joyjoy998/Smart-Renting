@@ -76,9 +76,9 @@ export function Sidebar() {
         </div>
 
         <div className="p-4 space-y-2">
-          <SavePoiModal></SavePoiModal>
+          <SavePoiModal />
 
-          <SavedPropertyModal></SavedPropertyModal>
+          <SavedPropertyModal />
           {/* </div> */}
 
           {/* Main functional area for report generation, recommendation, and history management */}
