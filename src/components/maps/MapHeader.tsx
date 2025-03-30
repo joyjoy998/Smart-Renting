@@ -1,4 +1,4 @@
-import { ModeToggle } from "@/components/theme/ModeToggle";
+import { ModeToggle } from "@/components/theme/ThemeToggle";
 
 export function MapHeader() {
   return (

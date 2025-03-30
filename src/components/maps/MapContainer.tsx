@@ -19,15 +19,11 @@ import { MapContent } from "./MapContent";
 import { SettingsPopup } from "@/components/sidebar/SettingsPopup";
 import { getPlaceDetail, usePlacesService } from "@/hooks/map/usePlacesService";
 import useMapStore from "@/stores/useMapStore";
-import { SearchBox } from "../home/SearchBox";
 import { geocode, useGeocoder } from "@/hooks/map/useGeocoder";
 
 export function MapContainer() {
   const placesSerivce = usePlacesService();
   const gecoder = useGeocoder();
-  const [isError, setIsError] = useState<string | null>(null);
-  const [isLoaded, setIsLoaded] = useState<boolean>(true);
-  const [isThemeChanging, setIsThemeChanging] = useState(false);
   const { theme, resolvedTheme } = useTheme();
   const setCurrentInfoWindow = useMapStore.use.setCurrentInfoWindow();
   const setCurrentGeometry = useMapStore.use.setCurrentGeometry();

@@ -11,13 +11,11 @@ import {
   ListItemText,
 } from "@mui/material";
 import { BookmarkCheck, DeleteIcon, FolderIcon, MapPin } from "lucide-react";
-import { useRequest } from "ahooks";
-import React, { PropsWithChildren } from "react";
+import React from "react";
 import { nearbySearch, usePlacesService } from "@/hooks/map/usePlacesService";
-import { useUserLocation } from "@/hooks/map/useUserLocation";
 import useSavedDataStore from "@/stores/useSavedData";
 import axios from "axios";
-import { PropertyInfo } from "../maps/MapContent";
+import { PropertyInfo } from "@/components/maps/MapContent";
 
 type Props = { placeData: PropertyInfo };
 
@@ -32,15 +30,14 @@ const style = {
   boxShadow: 24,
   p: 2,
 };
-const SavedPropertyModal: React.FC<PropsWithChildren<Props>> = (props) => {
+const SavedPropertyModal = () => {
   const [open, setOpen] = React.useState(false);
   const savedProperties = useSavedDataStore.use.savedProperties();
   const setSavedProperties = useSavedDataStore.use.setSavedProperties();
 
-  console.log("savedpprperties-======", savedProperties);
+  // console.log("savedpprperties-======", savedProperties);
 
-  const placeService = usePlacesService();
-  const { location } = useUserLocation();
+  // const placeService = usePlacesService();
 
   const refreshData = () => {
     axios.get("/api/savedProperties").then((res) => {

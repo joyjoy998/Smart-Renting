@@ -2,12 +2,13 @@ import React, { useEffect, useState } from "react";
 import { MenuButton } from "./MenuButton";
 import { Sidebar } from "../sidebar/Sidebar";
 import { useMap } from "@vis.gl/react-google-maps";
-
+import { useMapLocationStore } from "@/stores/useMapLocationStore";
 import Autocomplete from "@mui/material/Autocomplete";
 import TextField from "@mui/material/TextField";
 import debounce from "lodash/debounce";
 import { usePlacesService } from "@/hooks/map/usePlacesService";
 import useMapStore from "@/stores/useMapStore";
+import { map } from "lodash";
 
 interface SearchBoxProps {
   onSearch?: (value: string) => void;
@@ -15,42 +16,30 @@ interface SearchBoxProps {
 }
 
 export const SearchBox: React.FC<SearchBoxProps> = ({ onSearch, onSelect }) => {
+  const { mapLocation } = useMapLocationStore();
   const [options, setOptions] = useState<google.maps.places.PlaceResult[]>([]);
   const places = usePlacesService();
-  const [userLocation, setUserLocation] = useState<google.maps.LatLngLiteral>(); //用户当前位置
-
   const setCurrentGeometry = useMapStore.use.setCurrentGeometry();
   const setCurrentInfoWindow = useMapStore.use.setCurrentInfoWindow();
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          setUserLocation({ lat: latitude, lng: longitude }); // 设置用户位置
-        },
-        (error) => {
-          console.error("获取位置失败：", error);
-        }
-      );
-    } else {
-      console.error("浏览器不支持 Geolocation API");
-    }
-  }, []);
+
   const textSearch = (
     value: string,
-    location?: any
+    location?: google.maps.LatLngLiteral
   ): Promise<google.maps.places.PlaceResult[]> => {
     return new Promise((resolve, reject) => {
       if (places) {
         places.nearbySearch(
           {
-            location: userLocation,
-            radius: 50000,
+            location: mapLocation,
+            rankBy: google.maps.places.RankBy.DISTANCE,
             keyword: value,
           },
           (results, status) => {
             if (status === "OK") {
-              resolve(results);
+              const filteredResults = results.filter((place) =>
+                place.name.toLowerCase().includes(value.toLowerCase())
+              );
+              resolve(filteredResults);
             } else {
               resolve([]);
             }
@@ -62,26 +51,10 @@ export const SearchBox: React.FC<SearchBoxProps> = ({ onSearch, onSelect }) => {
 
   const handleSearch = debounce(async (value: string) => {
     const results = await textSearch(value);
-    console.log("rest=======", results);
+    // console.log("rest=======", results);
     setOptions(results);
     onSearch?.(value);
   }, 300);
-
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          setUserLocation({ lat: latitude, lng: longitude });
-        },
-        (error) => {
-          console.error("获取位置失败：", error);
-        }
-      );
-    } else {
-      console.error("浏览器不支持 Geolocation API");
-    }
-  }, []);
 
   return (
     <>
@@ -110,7 +83,7 @@ export const SearchBox: React.FC<SearchBoxProps> = ({ onSearch, onSelect }) => {
             // value={value}
             noOptionsText="No locations"
             onChange={(event, value) => {
-              console.log("value=====", value);
+              // console.log("value=====", value);
               setCurrentGeometry({
                 lng: value?.geometry?.location?.lng()!,
                 lat: value?.geometry?.location?.lat()!,

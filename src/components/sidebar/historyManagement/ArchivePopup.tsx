@@ -38,7 +38,7 @@ export const ArchivePopup = () => {
   };
 
   const loadGroup = (id: number) => {
-    console.log(`Loading archive with ID: ${id}`);
+    // console.log(`Loading archive with ID: ${id}`);
     setGroupId(id);
     // 这里要用 API 进行档案的加载
   };
