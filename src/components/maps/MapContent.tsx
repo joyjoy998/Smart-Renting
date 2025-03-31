@@ -61,10 +61,10 @@ export function MapContent() {
             lng: position.coords.longitude,
           };
           if (pos) {
-            map.panTo(MAPS_CONFIG.defaultCenter);
+            map.panTo(pos);
             map.setZoom(15);
           } else {
-            map.panTo(pos);
+            map.panTo(MAPS_CONFIG.defaultCenter);
             map.setZoom(15);
           }
         } catch (err) {
