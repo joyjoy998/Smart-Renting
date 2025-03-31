@@ -37,6 +37,8 @@ export async function GET(req: NextRequest) {
     const group_id = searchParams.get("group_id");
     const min_budget = searchParams.get("min_budget");
     const max_budget = searchParams.get("max_budget");
+    const mapLat = searchParams.get("mapLat");
+    const mapLng = searchParams.get("mapLng");
     // let user_id: string | null = searchParams.get("user_id");
     // let group_id: string | null = searchParams.get("group_id");
 
@@ -77,32 +79,63 @@ export async function GET(req: NextRequest) {
       min_budget ? `Min: $${min_budget}` : "No Min",
       max_budget ? `Max: $${max_budget}` : "No Max"
     );
+    console.log(
+      "Map Center:",
+      mapLat && mapLng ? `(${mapLat}, ${mapLng})` : "Not provided"
+    );
 
     let recommendedProperties: any[] = [];
 
-    // if group_id is null return all properties
+    // 修改: 如果group_id为空且提供了地图中心位置，则基于地图位置推荐
     if (!group_id || group_id.trim() === "") {
       console.warn(
-        "No group_id provided, user has no marked POI or properties. Returning all listings."
+        "No group_id provided, user has no marked POI or properties."
       );
 
-      // get all properties
-      const { data: allProperties, error: allPropertiesError } = await supabase
-        .from("properties")
-        .select("*");
+      // 新增: 检查是否提供了地图中心位置
+      if (mapLat && mapLng) {
+        console.log("Using map center for proximity-based recommendations");
 
-      if (allPropertiesError) {
-        console.error(
-          "Failed to fetch all properties:",
-          allPropertiesError.message
-        );
-        return NextResponse.json(
-          { success: false, error: allPropertiesError.message },
-          { status: 500 }
-        );
+        // 新增: 调用新创建的存储过程获取基于位置的推荐
+        const { data: nearbyProperties, error: nearbyPropertiesError } =
+          await supabase.rpc("get_properties_by_proximity", {
+            center_lat: parseFloat(mapLat),
+            center_lng: parseFloat(mapLng),
+            min_rent: min_budget ? parseFloat(min_budget) : null,
+            max_rent: max_budget ? parseFloat(max_budget) : null,
+            limit_count: 50,
+          });
+
+        if (nearbyPropertiesError) {
+          console.error(
+            "Failed to fetch nearby properties:",
+            nearbyPropertiesError.message
+          );
+          return NextResponse.json(
+            { success: false, error: nearbyPropertiesError.message },
+            { status: 500 }
+          );
+        }
+
+        recommendedProperties = nearbyProperties || [];
+      } else {
+        // no map center location return 50 properties
+        const { data: allProperties, error: allPropertiesError } =
+          await supabase.from("properties").select("*").limit(50);
+
+        if (allPropertiesError) {
+          console.error(
+            "Failed to fetch all properties:",
+            allPropertiesError.message
+          );
+          return NextResponse.json(
+            { success: false, error: allPropertiesError.message },
+            { status: 500 }
+          );
+        }
+
+        recommendedProperties = allProperties || [];
       }
-
-      recommendedProperties = allProperties;
     } else {
       // transform group_id to int
       const parsedGroupId = parseInt(group_id, 10);
@@ -113,7 +146,6 @@ export async function GET(req: NextRequest) {
           { status: 400 }
         );
       }
-
       // check whether the group_id belongs to  user_id
       const { data: groupCheck, error: groupCheckError } = await supabase
         .from("saved_groups")
