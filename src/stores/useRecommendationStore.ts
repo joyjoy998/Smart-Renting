@@ -13,7 +13,9 @@ interface RecommendationState {
     currentGroupId: number | null,
     minPrice?: number,
     maxPrice?: number,
-    page?: number
+    page?: number,
+    mapLat?: number | null,
+    mapLng?: number | null
   ) => Promise<void>;
 }
 
@@ -29,14 +31,25 @@ export const useRecommendationStore = create<RecommendationState>()(
       userId: string,
       currentGroupId: number | null,
       minPrice?: number,
-      maxPrice?: number
+      maxPrice?: number,
+      mapLat?,
+      mapLng?
     ) => {
       try {
         let url = `/api/recommendProperties?user_id=${userId}&group_id=${currentGroupId}`;
 
         if (minPrice) url += `&min_budget=${minPrice}`;
         if (maxPrice) url += `&max_budget=${maxPrice}`;
-
+        if (
+          mapLat !== undefined &&
+          mapLat !== null &&
+          mapLng !== undefined &&
+          mapLng !== null
+        ) {
+          url += `&mapLat=${encodeURIComponent(
+            mapLat
+          )}&mapLng=${encodeURIComponent(mapLng)}`;
+        }
         const response = await fetch(url);
         const data = await response.json();
 

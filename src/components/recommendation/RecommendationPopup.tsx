@@ -19,6 +19,7 @@ import { useRatingStore } from "@/stores/ratingStore";
 import { useSidebarStore } from "@/stores/useSidebarStore";
 import { useBudgetStore } from "@/stores/useSettingsStore";
 import { useGroupIdStore } from "@/stores/useGroupStore";
+import { useMapLocationStore } from "@/stores/useMapLocationStore";
 import { useUser } from "@clerk/nextjs";
 
 const DEFAULT_IMAGE_URL = "/property-unavailable.png";
@@ -44,6 +45,7 @@ const RecommendationPopup = () => {
   const [page, setPage] = useState(0);
   const ITEMS_PER_PAGE = 5;
   const [shouldRefetchOnNextPage, setShouldRefetchOnNextPage] = useState(false);
+  const { mapLocation } = useMapLocationStore();
 
   useEffect(() => {
     if (isRecommendationOpen) {
@@ -56,11 +58,16 @@ const RecommendationPopup = () => {
         }, 2000);
       } else {
         setLoading(true);
-        fetchRecommendations(userId, groupId, minPrice, maxPrice).finally(
-          () => {
-            setLoading(false);
-          }
-        );
+        fetchRecommendations(
+          userId,
+          groupId,
+          minPrice,
+          maxPrice,
+          mapLocation?.lat,
+          mapLocation?.lng
+        ).finally(() => {
+          setLoading(false);
+        });
       }
     }
   }, [isRecommendationOpen, fetchRecommendations]);
@@ -74,7 +81,14 @@ const RecommendationPopup = () => {
   const handleNext = async () => {
     if (shouldRefetchOnNextPage) {
       setLoading(true);
-      await fetchRecommendations(userId!, groupId!, minPrice, maxPrice);
+      await fetchRecommendations(
+        userId!,
+        groupId!,
+        minPrice,
+        maxPrice,
+        mapLocation?.lat,
+        mapLocation?.lng
+      );
       setShouldRefetchOnNextPage(false);
       setLoading(false);
     }
@@ -94,15 +108,17 @@ const RecommendationPopup = () => {
           <DialogTitle>Recommended Properties</DialogTitle>
           <DialogDescription>
             {showWarning
-              ? "Please select properties of interest on the map."
-              : ""}
+              ? "Please login to see recommendations."
+              : groupId
+              ? "Based on your saved properties and points of interest."
+              : "Properties near your current map view."}
           </DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col space-y-4">
           {showWarning ? (
             <p className="text-center text-red-400 font-bold">
-              Please select properties of interest on the map.
+              Please login to see recommendations.
             </p>
           ) : loading ? (
             <p className="text-center text-blue-400 font-bold">
@@ -214,7 +230,8 @@ const RecommendationPopup = () => {
                 } else {
                   alert("Failed to get group data");
                 }
-              }}>
+              }}
+              disabled={!groupId}>
               Comparison Report
             </Button>
             {recommendedProperties.length > (page + 1) * ITEMS_PER_PAGE && (
