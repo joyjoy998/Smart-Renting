@@ -1,17 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/database/supabaseClient";
-import { currentUser } from "@clerk/nextjs/server";
 
 export async function DELETE(req: NextRequest) {
-  const user = await currentUser();
-  if (!user) {
-    return NextResponse.json({ error: "User not found" }, { status: 404 });
-  }
   try {
-    const { searchParams } = new URL(req.url);
-    const groupId = searchParams.get("groupId");
+    const { group_id, user_id } = await req.json();
 
-    if (!groupId) {
+    if (!group_id) {
       return NextResponse.json(
         { error: "Group ID is required" },
         { status: 400 }
@@ -20,8 +14,8 @@ export async function DELETE(req: NextRequest) {
     const { error } = await supabase
       .from("saved_groups")
       .delete()
-      .eq("group_id", groupId)
-      .eq("user_id", user.id);
+      .eq("group_id", group_id)
+      .eq("user_id", user_id);
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
