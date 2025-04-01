@@ -3,14 +3,18 @@ import React, { useState } from "react";
 import { X, Image } from "lucide-react";
 import ConfirmPopup from "./ConfirmPopup";
 import { useArchiveStore } from "@/stores/useArchiveStore";
-import { useGroupIdStore, useGroupStore } from "@/stores/useGroupStore";
+import { useGroupIdStore, useGroupStore, Group } from "@/stores/useGroupStore";
+import axios from "axios";
+import { useAuth } from "@clerk/clerk-react";
 
 export const ArchivePopup = () => {
+  const { userId } = useAuth();
   const { isArchiveOpen, setArchiveOpen } = useArchiveStore();
 
   const { currentGroupId, setGroupId } = useGroupIdStore();
 
   const { groups, setGroups } = useGroupStore();
+  console.log(groups.length);
 
   // 添加编辑状态
   const [editingId, setEditingId] = useState(null);
@@ -24,17 +28,74 @@ export const ArchivePopup = () => {
     targetId: null,
   });
 
-  const createNewGroup = () => {
-    const now = new Date();
-    const dateString = now
-      .toLocaleString("zh-CN", { hour12: false })
-      .replace(/\//g, "-");
-
+  const createNewGroup = async () => {
+    if (groups.length >= 3) {
+      alert("You can only create up to 3 archives.");
+      return;
+    }
     // 这里要用 API 对新档案进行创建
+    const groupName = `Archive ${groups.length + 1}`;
+    try {
+      const response = await fetch("/api/groupId/post", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          group_name: groupName,
+          user_id: userId,
+        }),
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const responseData = await response.json();
+      const newGroup = responseData.data?.[0];
+
+      if (!newGroup) {
+        throw new Error("API did not return a valid group.");
+      }
+
+      setGroups([...groups, newGroup] as Group[]);
+      alert("New group created successfully.");
+    } catch (error) {
+      console.error("Error creating new group:", error);
+    }
   };
 
-  const deleteGroup = (id: number) => {
-    // 这里要用 API对档案进行删除
+  const deleteGroup = async (id: number) => {
+    if (groups.length <= 1) {
+      alert("You must keep at least one archive.");
+      return;
+    }
+    if (currentGroupId === id) {
+      alert(
+        "You cannot delete the currently loaded archive. Please load another archive first."
+      );
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/groupId/delete", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          group_id: id,
+          user_id: userId,
+        }),
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      const newGroups = groups.filter((group) => group.group_id !== id);
+      setGroups(newGroups as Group[]);
+      alert("Group deleted successfully.");
+    } catch (error) {
+      console.error("Error deleting group:", error);
+    }
   };
 
   const loadGroup = (id: number) => {
@@ -85,7 +146,7 @@ export const ArchivePopup = () => {
     const group = groups.find((group) => group.group_id === id);
     setConfirmPopup({
       isOpen: true,
-      message: `Are you sure to load ${group.group_name}?`,
+      message: `Are you sure to load ${group!.group_name}?`,
       action: "load",
       targetId: id,
     });
@@ -114,7 +175,7 @@ export const ArchivePopup = () => {
       {isArchiveOpen && (
         <div
           className="fixed inset-0 bg-black/20 transition-opacity z-[1003]"
-          onClick={() => setArchiveOpen(false)}
+          onClick={() => createNewGroup()}
           aria-hidden="true"
         />
       )}
@@ -170,6 +231,7 @@ export const ArchivePopup = () => {
                     <Image size={20} />
                   </div> */}
                   {/* 考虑以后做缩略图时使用 */}
+
                   <div className="flex-1">
                     {editingId === group.group_id ? (
                       <input
@@ -212,7 +274,9 @@ export const ArchivePopup = () => {
                   </button>
                   <button
                     className="px-3 py-1 text-sm bg-red-500 text-white rounded hover:opacity-90 transition"
-                    onClick={() => confirmDeleteGroup(group.group_id)}
+                    onClick={() => {
+                      confirmDeleteGroup(group.group_id);
+                    }}
                   >
                     Delete
                   </button>

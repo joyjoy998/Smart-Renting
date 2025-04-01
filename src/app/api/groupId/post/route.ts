@@ -1,15 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/database/supabaseClient";
-import { currentUser } from "@clerk/nextjs/server";
 
 export async function POST(req: NextRequest) {
-  const user = await currentUser();
-
-  if (!user) {
-    return NextResponse.json({ error: "User not found" }, { status: 404 });
-  }
-
-  const { group_name } = await req.json();
+  const { group_name, user_id } = await req.json();
 
   if (!group_name) {
     return NextResponse.json(
@@ -23,7 +16,7 @@ export async function POST(req: NextRequest) {
       .from("saved_groups")
       .insert([
         {
-          user_id: user.id,
+          user_id: user_id,
           group_name: group_name,
         },
       ])
@@ -33,7 +26,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true, data }, { status: 201 });
+    return NextResponse.json(
+      { success: true, data: data.map(({ user_id, ...rest }) => rest) },
+      { status: 201 }
+    );
   } catch (error) {
     console.error("Failed to create group:", error);
     return NextResponse.json(
