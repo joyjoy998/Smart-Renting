@@ -10,11 +10,9 @@ import { useAuth } from "@clerk/clerk-react";
 export const ArchivePopup = () => {
   const { userId } = useAuth();
   const { isArchiveOpen, setArchiveOpen } = useArchiveStore();
-
   const { currentGroupId, setGroupId } = useGroupIdStore();
-
   const { groups, setGroups } = useGroupStore();
-  console.log(groups.length);
+  // console.log(groups.length);
 
   // 添加编辑状态
   const [editingId, setEditingId] = useState(null);
@@ -106,8 +104,8 @@ export const ArchivePopup = () => {
 
   // 开始编辑存档名称
   const startEditing = (group) => {
-    setEditingId(group.id);
-    setEditingName(group.name);
+    setEditingId(group.group_id);
+    setEditingName(group.group_name);
   };
 
   // 保存编辑后的名称
@@ -175,7 +173,7 @@ export const ArchivePopup = () => {
       {isArchiveOpen && (
         <div
           className="fixed inset-0 bg-black/20 transition-opacity z-[1003]"
-          onClick={() => createNewGroup()}
+          onClick={() => setArchiveOpen(false)}
           aria-hidden="true"
         />
       )}
