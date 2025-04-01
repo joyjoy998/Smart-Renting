@@ -4,7 +4,6 @@ import { X, Image } from "lucide-react";
 import ConfirmPopup from "./ConfirmPopup";
 import { useArchiveStore } from "@/stores/useArchiveStore";
 import { useGroupIdStore, useGroupStore, Group } from "@/stores/useGroupStore";
-import axios from "axios";
 import { useAuth } from "@clerk/clerk-react";
 
 export const ArchivePopup = () => {
@@ -109,15 +108,35 @@ export const ArchivePopup = () => {
   };
 
   // 保存编辑后的名称
-  const saveGroupName = () => {
+  const saveGroupName = async () => {
     if (editingId !== null) {
-      // setArchives(
-      //   archives.map((archive) =>
-      //     archive.id === editingId ? { ...archive, name: editingName } : archive
-      //   )
-      // );
-      // setEditingId(null);
-      // 这里要用 API 对档案名称进行更新
+      try {
+        const response = await fetch("/api/groupId/put", {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            group_id: editingId,
+            group_name: editingName,
+            user_id: userId,
+          }),
+        });
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        const updatedGroups = groups.map((group) =>
+          group.group_id === editingId
+            ? { ...group, group_name: editingName }
+            : group
+        );
+        setGroups(updatedGroups as Group[]);
+        alert("Group name updated successfully.");
+      } catch (error) {
+        console.error("Error updating group name:", error);
+      }
+      setEditingId(null);
+      setEditingName("");
     }
   };
 
@@ -125,6 +144,8 @@ export const ArchivePopup = () => {
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
       saveGroupName();
+      setEditingId(null);
+      setEditingName("");
     }
   };
 
@@ -164,6 +185,11 @@ export const ArchivePopup = () => {
   // 关闭确认弹窗
   const closeConfirmPopup = () => {
     setConfirmPopup((prev) => ({ ...prev, isOpen: false }));
+  };
+
+  const formatDateToMinute = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toISOString().slice(0, 16).replace("T", " ");
   };
 
   if (!isArchiveOpen) return null;
@@ -255,7 +281,7 @@ export const ArchivePopup = () => {
                       </div>
                     )}
                     <div className="text-sm text-gray-500">
-                      {group.created_at}
+                      {formatDateToMinute(group.created_at)}
                     </div>
                   </div>
                 </div>
