@@ -18,11 +18,11 @@ async function runGeocode() {
     const response = await fetch(`${BASE_URL}/api/getPropertyGeo`);
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = (await response.json()) as { error?: string };
       throw new Error(`API error: ${errorData.error || response.statusText}`);
     }
 
-    const result = await response.json();
+    const result = (await response.json()) as Record<string, any>;
 
     if (result.message === "No properties need geocoding") {
       console.log(
