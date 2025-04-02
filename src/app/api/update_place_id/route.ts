@@ -18,17 +18,26 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // 查询 properties 表中已具备经纬度但还没有 place_id 的记录
+    // 查询 properties 表中已具备经纬度但 place_id 为空或为 PlaceIdPlaceHolder 的记录
     const { data: properties, error: fetchError } = await supabase
       .from("properties")
       .select("*")
-      .or("place_id.is.null,place_id.eq.''")
+      .or('place_id.is.null,place_id.eq."",place_id.eq.PlaceIdPlaceHolder')
       .not("latitude", "is", "null")
       .not("longitude", "is", "null");
 
-    if (fetchError) throw fetchError;
+    if (fetchError) {
+      console.error("Error fetching properties:", fetchError);
+      throw fetchError;
+    }
+
+    // 添加调试日志
+    console.log("Query conditions:", {
+      or_filter: 'place_id.is.null,place_id.eq."",place_id.eq.PlaceIdPlaceHolder'
+    });
 
     if (!properties || properties.length === 0) {
+      console.log("No properties found matching the criteria");
       return NextResponse.json(
         { message: "No properties need place_id update" },
         { status: 200 }
@@ -36,6 +45,7 @@ export async function GET(req: NextRequest) {
     }
 
     console.log(`Found ${properties.length} properties that need place_id update`);
+    console.log("Sample property:", properties[0]);
 
     const results = [];
     let successCount = 0;

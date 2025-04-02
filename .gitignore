@@ -42,6 +42,7 @@ next-env.d.ts
 
 # rawdata
 *.txt
+*.csv
 
 package-lock.json
 
