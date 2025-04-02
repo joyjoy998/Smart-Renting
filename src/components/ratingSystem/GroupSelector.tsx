@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useRatingStore } from "@/stores/ratingStore";
 import { useGroupSelectorStore } from "@/stores/useGroupSelectorStore";
+import { useAuth } from "@clerk/nextjs";
 
 interface SavedGroup {
   group_id: number;
@@ -16,8 +17,14 @@ export default function GroupSelector() {
   const [showReport, setShowReport] = useState(false);
   const { loadData } = useRatingStore();
   const [showInsufficientData, setShowInsufficientData] = useState(false);
+  const { isSignedIn } = useAuth();
 
   useEffect(() => {
+    if (!isSignedIn) {
+      setLoading(false);
+      return;
+    }
+
     const fetchGroups = async () => {
       try {
         setLoading(true);
@@ -43,7 +50,7 @@ export default function GroupSelector() {
     };
 
     fetchGroups();
-  }, []);
+  }, [isSignedIn]);
 
   const handleGroupSelect = (groupId: number) => {
     setSelectedGroupId(groupId);
@@ -82,6 +89,17 @@ export default function GroupSelector() {
       }
     }
   };
+
+  if (!isSignedIn) {
+    return (
+      <div className="p-6 bg-blue-50 border border-blue-200 rounded-lg">
+        <h3 className="text-lg font-medium text-blue-800">Sign In Required</h3>
+        <p className="mt-2 text-blue-700">
+          Please sign in to view your property groups and generate reports.
+        </p>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
