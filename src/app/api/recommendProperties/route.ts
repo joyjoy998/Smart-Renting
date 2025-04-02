@@ -39,26 +39,6 @@ export async function GET(req: NextRequest) {
     const max_budget = searchParams.get("max_budget");
     const mapLat = searchParams.get("mapLat");
     const mapLng = searchParams.get("mapLng");
-    // let user_id: string | null = searchParams.get("user_id");
-    // let group_id: string | null = searchParams.get("group_id");
-
-    // TEST CASES
-    // 1. USER WITHOUT POI AND PROPERTIES
-    // const user_id: string | null = "user2";
-    // const group_id: string | null = "";
-    // 2. USER WITH POI AND PROPERTIES
-    // const user_id: string | null = "user1";
-    // const group_id: string | null = "1";
-
-    // 3. USER WITH POI NO PROPERTIES
-    // const user_id: string | null = "user4";
-    // const group_id: string | null = "3";
-    // const min_budget = "";
-    // const max_budget = "600";
-
-    // 4. USER WITH PROPERTIES NO POI
-    // const user_id: string | null = "user3";
-    // const group_id: string | null = "5";
 
     // check user_id existence
     if (!user_id) {
@@ -85,60 +65,12 @@ export async function GET(req: NextRequest) {
     );
 
     let recommendedProperties: any[] = [];
+    let parsedGroupId: number | null = null;
 
-    // 修改: 如果group_id为空且提供了地图中心位置，则基于地图位置推荐
-    if (!group_id || group_id.trim() === "") {
-      console.warn(
-        "No group_id provided, user has no marked POI or properties."
-      );
+    // pasing group_id
+    if (group_id && group_id.trim() !== "") {
+      parsedGroupId = parseInt(group_id, 10);
 
-      // 新增: 检查是否提供了地图中心位置
-      if (mapLat && mapLng) {
-        console.log("Using map center for proximity-based recommendations");
-
-        // 新增: 调用新创建的存储过程获取基于位置的推荐
-        const { data: nearbyProperties, error: nearbyPropertiesError } =
-          await supabase.rpc("get_properties_by_proximity", {
-            center_lat: parseFloat(mapLat),
-            center_lng: parseFloat(mapLng),
-            min_rent: min_budget ? parseFloat(min_budget) : null,
-            max_rent: max_budget ? parseFloat(max_budget) : null,
-            limit_count: 50,
-          });
-
-        if (nearbyPropertiesError) {
-          console.error(
-            "Failed to fetch nearby properties:",
-            nearbyPropertiesError.message
-          );
-          return NextResponse.json(
-            { success: false, error: nearbyPropertiesError.message },
-            { status: 500 }
-          );
-        }
-
-        recommendedProperties = nearbyProperties || [];
-      } else {
-        // no map center location return 50 properties
-        const { data: allProperties, error: allPropertiesError } =
-          await supabase.from("properties").select("*").limit(50);
-
-        if (allPropertiesError) {
-          console.error(
-            "Failed to fetch all properties:",
-            allPropertiesError.message
-          );
-          return NextResponse.json(
-            { success: false, error: allPropertiesError.message },
-            { status: 500 }
-          );
-        }
-
-        recommendedProperties = allProperties || [];
-      }
-    } else {
-      // transform group_id to int
-      const parsedGroupId = parseInt(group_id, 10);
       if (isNaN(parsedGroupId)) {
         console.error("Invalid group_id format, must be a number.");
         return NextResponse.json(
@@ -146,7 +78,8 @@ export async function GET(req: NextRequest) {
           { status: 400 }
         );
       }
-      // check whether the group_id belongs to  user_id
+
+      // check current group_id belongs to current user
       const { data: groupCheck, error: groupCheckError } = await supabase
         .from("saved_groups")
         .select("group_id")
@@ -177,52 +110,55 @@ export async function GET(req: NextRequest) {
           { status: 403 }
         );
       }
+    }
 
-      console.log("Calling stored procedure recommend_properties_for_user...");
+    console.log("Calling stored procedure recommend_properties_for_user...");
 
-      // call supabase function to get recommendation
-      const { data: recommendedData, error: recommendError } =
-        await supabase.rpc("recommend_properties_for_user", {
-          user_id: user_id,
-          group_id: parsedGroupId,
-        });
-
-      if (recommendError) {
-        console.error(
-          "Failed to fetch recommendations:",
-          recommendError.message
-        );
-        return NextResponse.json(
-          { success: false, error: recommendError.message },
-          { status: 500 }
-        );
+    //   call recommendation function on supabase
+    const { data: recommendedData, error: recommendError } = await supabase.rpc(
+      "recommend_properties_for_user",
+      {
+        user_id: user_id,
+        group_id: parsedGroupId,
+        map_lat: mapLat ? parseFloat(mapLat) : null,
+        map_lng: mapLng ? parseFloat(mapLng) : null,
       }
+    );
 
-      console.log("Recommended property IDs:", recommendedData);
-
-      const recommendedDataTyped: Recommendation[] = recommendedData || [];
-
-      if (!recommendedDataTyped.length) {
-        console.warn("⚠️ No recommendations found for this user.");
-        return NextResponse.json({
-          success: true,
-          recommended_properties: [],
-          message: "No recommendations found",
-        });
-      }
-
-      //extract property id from recommendation result
-      let propertyIds: number[] = recommendedDataTyped.map(
-        (item: Recommendation) => item.property_id
+    if (recommendError) {
+      console.error("Failed to fetch recommendations:", recommendError.message);
+      return NextResponse.json(
+        { success: false, error: recommendError.message },
+        { status: 500 }
       );
+    }
 
-      // get detailed info from properties table
-      let query = supabase
-        .from("properties")
-        .select("*")
-        .in("property_id", propertyIds);
+    console.log("Recommended property IDs:", recommendedData);
 
-      // for users who marked poi only apply budget filter
+    const recommendedDataTyped: Recommendation[] = recommendedData || [];
+
+    if (!recommendedDataTyped.length) {
+      console.warn("⚠️ No recommendations found for this user.");
+      return NextResponse.json({
+        success: true,
+        recommended_properties: [],
+        message: "No recommendations found",
+      });
+    }
+
+    // extract properties
+    let propertyIds: number[] = recommendedDataTyped.map(
+      (item: Recommendation) => item.property_id
+    );
+
+    //get recommended properties details
+    let query = supabase
+      .from("properties")
+      .select("*")
+      .in("property_id", propertyIds);
+
+    // if group_id exist，check if the user only marked POI,and apply budget filter
+    if (parsedGroupId) {
       const { data: markedProperties, error: markedPropertiesError } =
         await supabase
           .from("saved_properties")
@@ -243,43 +179,43 @@ export async function GET(req: NextRequest) {
 
       const isOnlyPOIUser = !markedProperties || markedProperties.length === 0;
 
-      //
       if (isOnlyPOIUser) {
         if (min_budget)
           query = query.gte("weekly_rent", parseFloat(min_budget));
         if (max_budget)
           query = query.lte("weekly_rent", parseFloat(max_budget));
       }
+    }
+    // if no group_id，apply budget filter
+    else {
+      if (min_budget) query = query.gte("weekly_rent", parseFloat(min_budget));
+      if (max_budget) query = query.lte("weekly_rent", parseFloat(max_budget));
+    }
 
-      const { data: propertyDetails, error: propertyError } = await query;
+    const { data: propertyDetails, error: propertyError } = await query;
 
-      if (propertyError) {
-        console.error(
-          "Failed to fetch property details:",
-          propertyError.message
-        );
-        return NextResponse.json(
-          { success: false, error: propertyError.message },
-          { status: 500 }
-        );
-      }
-
-      console.log("Property details fetched:", propertyDetails);
-
-      // merge final score to the result
-      recommendedProperties = propertyDetails.map((property) => ({
-        ...property,
-        final_score:
-          recommendedDataTyped.find(
-            (r) => r.property_id === property.property_id
-          )?.final_score ?? 0,
-      }));
-
-      // sort final score desc
-      recommendedProperties.sort(
-        (a, b) => (b.final_score ?? 0) - (a.final_score ?? 0)
+    if (propertyError) {
+      console.error("Failed to fetch property details:", propertyError.message);
+      return NextResponse.json(
+        { success: false, error: propertyError.message },
+        { status: 500 }
       );
     }
+
+    console.log("Property details fetched:", propertyDetails);
+
+    // combine final score to the result
+    recommendedProperties = propertyDetails.map((property) => ({
+      ...property,
+      final_score:
+        recommendedDataTyped.find((r) => r.property_id === property.property_id)
+          ?.final_score ?? 0,
+    }));
+
+    // sort final score desc
+    recommendedProperties.sort(
+      (a, b) => (b.final_score ?? 0) - (a.final_score ?? 0)
+    );
 
     return NextResponse.json({
       success: true,
