@@ -1,5 +1,4 @@
 import { clerkMiddleware } from "@clerk/nextjs/server";
-import { run } from "node:test";
 
 export default clerkMiddleware();
 
