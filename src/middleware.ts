@@ -1,4 +1,5 @@
 import { clerkMiddleware } from "@clerk/nextjs/server";
+import { run } from "node:test";
 
 export default clerkMiddleware();
 
@@ -9,4 +10,5 @@ export const config = {
     // Always run for API routes
     "/(api|trpc)(.*)",
   ],
+  runtime: "nodejs",
 };
