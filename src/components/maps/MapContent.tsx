@@ -1,4 +1,13 @@
 "client";
+import dynamic from "next/dynamic";
+const RoutePolylineLayer = dynamic(
+  () => import("@/components/maps/RoutePolylineLayer"),
+  {
+    ssr: false,
+    loading: () => null,
+  }
+);
+
 import { use, useEffect, useMemo, useState } from "react";
 import { AdvancedMarker, useMap } from "@vis.gl/react-google-maps";
 import { MAPS_CONFIG } from "@/lib/constants/mapConfigure";
@@ -11,7 +20,6 @@ import FavoriteRoundedIcon from "@mui/icons-material/FavoriteRounded";
 import HouseIcon from "@mui/icons-material/House";
 import { blue, red } from "@mui/material/colors";
 import { Badge } from "@mui/material";
-import RoutePolylineLayer from "@/components/maps/RoutePolylineLayer";
 import { useMapLocationStore } from "@/stores/useMapLocationStore";
 
 export type PropertyInfo =

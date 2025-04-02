@@ -1,29 +1,36 @@
-import { useRatingStore } from "@/stores/ratingStore";
-import polyline from "@mapbox/polyline";
+import { useRouteStore } from "@/stores/useRouteStore";
+import { useGroupIdStore } from "@/stores/useGroupStore";
+import * as polyline from "@mapbox/polyline";
 
 interface Property {
-  property_property_id: string;
-  group_id: number;
-  street: string;
-  suburb: string;
-  state: string;
-  postcode: string;
   latitude: number;
   longitude: number;
+  group_id?: string | number;
+  [key: string]: any;
 }
+
+let lastLoadedGroupId: string | null = null;
 
 export const handleShowRoutesToPOIs = async (property: Property) => {
   const {
-    loadData,
     travelMode,
-    setTravelMode,
     setSelectedPropertyForRoute,
     setRoutesToPOIs,
-  } = useRatingStore.getState();
+    setPois,
+    setVisiblePOIs,
+  } = useRouteStore.getState();
+
+  const groupId =
+    property.group_id || useGroupIdStore.getState().currentGroupId;
+
+  if (!groupId) {
+    console.error("No group ID available");
+    return;
+  }
 
   try {
     const groupResponse = await fetch(
-      `/api/getSavedGroupsByID?groupId=${property.group_id}`
+      `/api/getSavedGroupsByID?groupId=${groupId}`
     );
 
     if (!groupResponse.ok) {
@@ -39,8 +46,29 @@ export const handleShowRoutesToPOIs = async (property: Property) => {
       return;
     }
 
-    await loadData(groupData);
-    setSelectedPropertyForRoute(property);
+    const mappedPois = groupData.pois.map((poi: any) => ({
+      poi_id: poi.saved_poi_id.toString(),
+      name: poi.name,
+      latitude: poi.latitude,
+      longitude: poi.longitude,
+      place_id: poi.place_id,
+    }));
+
+    setPois(mappedPois);
+    console.log("Mapped POIs:", mappedPois);
+    setVisiblePOIs(mappedPois.map((poi) => poi.poi_id));
+    console.log(
+      "Set visible POIs:",
+      mappedPois.map((poi) => poi.poi_id)
+    );
+
+    setSelectedPropertyForRoute({
+      ...property,
+      property_id:
+        property.property_id || property.saved_property_id || "unknown",
+      address: property.address || "",
+      group_id: groupId.toString(),
+    });
 
     const routesResponse = await fetch("/api/getRouteToPOIs", {
       method: "POST",
@@ -62,30 +90,39 @@ export const handleShowRoutesToPOIs = async (property: Property) => {
     });
 
     const routesResult = await routesResponse.json();
-    console.log(routesResult);
+
     if (!routesResponse.ok || !routesResult.routes) {
       console.error("Failed to fetch routes to POIs", routesResult.error);
       return;
     }
 
-    const decodedRoutes = routesResult.routes.map((route: any) => ({
-      ...route,
-      polylinePath: polyline
-        .decode(route.polyline)
-        .map(([lat, lng]: [number, number]) => ({ lat, lng })),
-    }));
+    const decodedRoutes = routesResult.routes.map((route: any) => {
+      const decoded = polyline.decode(route.polyline);
+      const polylinePath = decoded.map((coords) => {
+        if (coords.length >= 2) {
+          return { lat: coords[0], lng: coords[1] };
+        }
+        return { lat: 0, lng: 0 };
+      });
+
+      return {
+        ...route,
+        poiId: (route.poiId || route.poi_id)?.toString(),
+        polylinePath,
+      };
+    });
 
     setRoutesToPOIs(decodedRoutes);
+    console.log("Decoded routes:", decodedRoutes);
   } catch (err) {
-    console.error("handleShowRoutesToPOIsFromProperty error:", err);
+    console.error("handleShowRoutesToPOIs error:", err);
   }
 };
 
-// Add utility for use inside <InfoWindow> to handle travel mode change
 export const handleChangeTravelMode = async (
   newMode: "DRIVING" | "WALKING" | "TRANSIT"
 ) => {
-  const store = useRatingStore.getState();
+  const store = useRouteStore.getState();
   const selectedProperty = store.selectedPropertyForRoute;
 
   if (!selectedProperty) return;
