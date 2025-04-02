@@ -70,7 +70,16 @@ const RecommendationPopup = () => {
         });
       }
     }
-  }, [isRecommendationOpen, fetchRecommendations]);
+  }, [
+    isRecommendationOpen,
+    fetchRecommendations,
+    userId,
+    groupId,
+    minPrice,
+    maxPrice,
+    mapLocation,
+    toggleRecommendation,
+  ]);
 
   // Get only the current page's properties
   const currentPageProperties = recommendedProperties.slice(
@@ -107,11 +116,9 @@ const RecommendationPopup = () => {
         <DialogHeader>
           <DialogTitle>Recommended Properties</DialogTitle>
           <DialogDescription>
-            {showWarning
-              ? "Please login to see recommendations."
-              : groupId
-              ? "Based on your saved properties and points of interest."
-              : "Properties near your current map view."}
+            <DialogDescription>
+              {showWarning ? "Please login to see recommendations." : ""}
+            </DialogDescription>
           </DialogDescription>
         </DialogHeader>
 
@@ -231,11 +238,12 @@ const RecommendationPopup = () => {
                   alert("Failed to get group data");
                 }
               }}
-              disabled={!groupId}>
+              // only login user can use Comparison Report
+              disabled={!userId}>
               Comparison Report
             </Button>
             {recommendedProperties.length > (page + 1) * ITEMS_PER_PAGE && (
-              <Button className="w-1/2" onClick={handleNext}>
+              <Button className="w-1/2" onClick={handleNext} disabled={!userId}>
                 Next Page
               </Button>
             )}
