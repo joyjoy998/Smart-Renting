@@ -20,7 +20,7 @@ import { BookmarkCheck, DeleteIcon, FolderIcon, MapPin } from "lucide-react";
 import { useRequest } from "ahooks";
 import React, { PropsWithChildren, useEffect, useState } from "react";
 import { nearbySearch, usePlacesService } from "@/hooks/map/usePlacesService";
-import { useUserLocation } from "@/hooks/map/useUserLocation";
+import { useMapLocationStore } from "@/stores/useMapLocationStore";
 import { useForm, Controller } from "react-hook-form";
 import useSavedDataStore from "@/stores/useSavedData";
 import { PropertyInfo } from "../maps/MapContent";
@@ -105,7 +105,7 @@ const EditPropertyModal: React.FC<PropsWithChildren<Props>> = (props) => {
       safety_score: values.safety_score || 0, // ✅ 必须在 `0.00 - 1.00` 之间
       // note: "Great location!",
       // created_at: new Date().toISOString(), // ✅ 必须是 `TIMESTAMP`
-      place_id: placeData?.placeId || "", // ✅ Ensure this exists
+      place_id: placeData?.place_id || "", // ✅ Ensure this exists
     };
 
     console.log("🚀 Sending Payload:", payload); // ✅ Debugging log

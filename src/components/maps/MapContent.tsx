@@ -97,6 +97,7 @@ export function MapContent() {
     );
 
     return {
+      ...currentInfoWindow,
       place_id: currentInfoWindow.place_id,
       name: currentInfoWindow.name,
       geometry: currentInfoWindow.geometry,
@@ -127,8 +128,7 @@ export function MapContent() {
           <Badge
             badgeContent={property.weekly_rent}
             color="primary"
-            max={10000}
-          >
+            max={10000}>
             <HouseIcon
               id={property.place_id}
               sx={{ color: blue[400] }}
