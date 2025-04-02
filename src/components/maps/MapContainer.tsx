@@ -17,82 +17,80 @@ import { useTheme } from "next-themes";
 import { useUserLocation } from "@/hooks/map/useUserLocation";
 import { MapContent } from "./MapContent";
 import { SettingsPopup } from "@/components/sidebar/SettingsPopup";
-import { usePlacesService } from "@/hooks/map/usePlacesService";
-import { SearchBox } from "../home/SearchBox";
+import { getPlaceDetail, usePlacesService } from "@/hooks/map/usePlacesService";
+import useMapStore from "@/stores/useMapStore";
+import { geocode, useGeocoder } from "@/hooks/map/useGeocoder";
 
 export function MapContainer() {
-  const [isError, setIsError] = useState<string | null>(null);
-  const [isLoaded, setIsLoaded] = useState<boolean>(true);
-  const [isThemeChanging, setIsThemeChanging] = useState(false);
+  const placesSerivce = usePlacesService();
+  const gecoder = useGeocoder();
   const { theme, resolvedTheme } = useTheme();
-  const { location, error } = useUserLocation();
-
-
-  if (!location && !error) {
-    return <Loading />;
-  }
+  const setCurrentInfoWindow = useMapStore.use.setCurrentInfoWindow();
+  const setCurrentGeometry = useMapStore.use.setCurrentGeometry();
 
   return (
-    <>
-      {(isLoaded || isThemeChanging) && <Loading />}
-      {isError ? (
-        <div className="flex h-screen w-full items-center justify-center bg-gray-100">
-          <div className="text-center">
-            <h2 className="text-xl font-semibold text-red-600">
-              Map cannot be loaded right now, sorry.
-            </h2>
-            <p className="mt-2 text-gray-600">{isError}</p>
-          </div>
-        </div>
-      ) : (
-        <APIProvider
-          apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ""}
-          libraries={["places"]}
-          onError={(error: unknown) => {
-            if (error instanceof Error) {
-              setIsError(error.message);
-            } else {
-              setIsError(String(error));
-            }
-            setIsLoaded(false);
-          }}
-          onLoad={() => setIsLoaded(false)}
-        >
-          <div style={{ width: "100%", height: "100vh", position: "relative" }}>
-            <SearchBox />
-            <Map
-              defaultCenter={MAPS_CONFIG.defaultCenter}
-              defaultZoom={MAPS_CONFIG.defaultZoom}
-              mapId={
-                theme === "dark" ? GOOGLE_DARK_MAPS_ID : GOOGLE_LIGHT_MAPS_ID
-              }
-              gestureHandling="greedy"
-              fullscreenControl={false}
-              keyboardShortcuts={false}
-              zoomControl={true}
-              mapTypeControl={false}
-              scaleControl={true}
-              streetViewControl={true}
-              rotateControl={true}
-              minZoom={3}
-              maxZoom={18}
-              restriction={{
-                latLngBounds: {
-                  north: 85,
-                  south: -85,
-                  west: -180,
-                  east: 180,
-                },
-                strictBounds: true,
-              }}
-            >
-              <MapContent />
-              <SettingsPopup />
-            </Map>
-          </div>
-        </APIProvider>
-      )}
-    </>
+    <div style={{ width: "100%", height: "100vh", position: "relative" }}>
+      <Map
+        defaultCenter={MAPS_CONFIG.defaultCenter}
+        defaultZoom={MAPS_CONFIG.defaultZoom}
+        mapId={theme === "dark" ? GOOGLE_DARK_MAPS_ID : GOOGLE_LIGHT_MAPS_ID}
+        onClick={async (event) => {
+          console.log("event=========", event);
+          if (event.detail?.placeId) {
+            // Call event.stop() on the event to prevent the default info window from showing.
+            event.stop();
+            const detail = await getPlaceDetail(
+              placesSerivce!,
+              event.detail.placeId
+            );
+            setCurrentGeometry(event.detail.latLng);
 
+            setCurrentInfoWindow(detail);
+          } else {
+            console.log(
+              "getplaceDetail==================",
+              event.detail.latLng && gecoder
+            );
+            if (event.detail.latLng && gecoder) {
+              const result = await geocode(gecoder, event.detail.latLng);
+              if (result) {
+                const detail = await getPlaceDetail(
+                  placesSerivce!,
+                  result.place_id
+                );
+                console.log("detail==========", detail);
+                setCurrentGeometry({
+                  lat: result?.geometry?.location.lat()!,
+                  lng: result?.geometry?.location.lng()!,
+                });
+                setCurrentInfoWindow(detail);
+              }
+            }
+          }
+        }}
+        gestureHandling="greedy"
+        fullscreenControl={false}
+        keyboardShortcuts={false}
+        zoomControl={true}
+        mapTypeControl={false}
+        scaleControl={true}
+        streetViewControl={true}
+        rotateControl={true}
+        minZoom={0}
+        maxZoom={30}
+        restriction={{
+          latLngBounds: {
+            north: 85,
+            south: -85,
+            west: -180,
+            east: 180,
+          },
+          strictBounds: true,
+        }}
+      >
+        <MapContent />
+        <SettingsPopup />
+      </Map>
+    </div>
   );
 }

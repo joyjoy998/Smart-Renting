@@ -1,36 +1,149 @@
-import { useEffect, useState } from "react";
-import { useMap } from "@vis.gl/react-google-maps";
+"client";
+import { use, useEffect, useMemo, useState } from "react";
+import { AdvancedMarker, useMap } from "@vis.gl/react-google-maps";
 import { MAPS_CONFIG } from "@/lib/constants/mapConfigure";
 import { UserLocationMarker } from "./UserLocationMarker";
+import PropertyInfoWindow from "@/components/InfoWindow/InfoWindow";
+import useMapStore from "@/stores/useMapStore";
+import useSavedDataStore from "@/stores/useSavedData";
+import PropertyMarker from "./PropertyMarker";
+import FavoriteRoundedIcon from "@mui/icons-material/FavoriteRounded";
+import HouseIcon from "@mui/icons-material/House";
+import { blue, red } from "@mui/material/colors";
+import { Badge } from "@mui/material";
+import RoutePolylineLayer from "@/components/maps/RoutePolylineLayer";
+import { useMapLocationStore } from "@/stores/useMapLocationStore";
 
+export type PropertyInfo =
+  | (google.maps.places.PlaceResult & {
+      image?: string;
+      address?: string;
+      savedPoi: any;
+      savedProperty: any;
+      placeId?: string;
+    })
+  | null;
 export function MapContent() {
   const map = useMap();
-  const [userLocation, setUserLocation] = useState<google.maps.LatLngLiteral>(
-    MAPS_CONFIG.defaultCenter
-  );
+  const { setMapLocation } = useMapLocationStore();
+  const currentInfoWindow = useMapStore.use.currentInfoWindow();
+  const currentGeometry = useMapStore.use.currentGeometry();
+  const clearCurrentInfo = useMapStore.use.clearCurrentInfo();
+  const savedPois = useSavedDataStore.use.savedPois();
+  const savedProperties = useSavedDataStore.use.savedProperties();
+  const properties = useSavedDataStore.use.properties();
+  const allProperties = useMemo(() => {
+    return [...(savedProperties || []), ...(properties || [])];
+  }, [savedProperties, properties]); //combine all the properties
 
   useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
+    if (map) {
+      const idleListener = map.addListener("idle", () => {
+        const center = map.getCenter();
+        // console.log("latitude=====", center?.lat());
+        // console.log("longitude=====", center?.lng());
+        if (center) {
+          setMapLocation({ lat: center.lat(), lng: center.lng() });
+        }
+      });
+      return () => {
+        idleListener.remove();
+      };
+    }
+  }, [map, setMapLocation]);
+
+  useEffect(() => {
+    if (map && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((position) => {
+        try {
           const pos = {
             lat: position.coords.latitude,
             lng: position.coords.longitude,
           };
-          setUserLocation(pos);
-
-          // Update map center and zoom if map is available
-          if (map) {
+          if (pos) {
             map.panTo(pos);
             map.setZoom(15);
+          } else {
+            map.panTo(MAPS_CONFIG.defaultCenter);
+            map.setZoom(15);
           }
-        },
-        (error) => {
-          console.error("Error getting location:", error);
+        } catch (err) {
+          console.error("Error updating map with location:", err);
         }
-      );
+      });
     }
   }, [map]);
 
-  return <UserLocationMarker position={userLocation} />;
+  const currentPropertyData: PropertyInfo = useMemo(() => {
+    if (!currentInfoWindow) {
+      return null;
+    }
+    // console.log("currentInfoWindow===========", currentInfoWindow);
+    const currentPlaceId = currentInfoWindow?.place_id;
+    const matchedPoi = savedPois?.find(
+      (poi) => poi.place_id === currentPlaceId
+    );
+
+    const matchedProperty = allProperties?.find(
+      (property) => property.place_id === currentPlaceId
+    );
+
+    return {
+      place_id: currentInfoWindow.place_id,
+      name: currentInfoWindow.name,
+      geometry: currentInfoWindow.geometry,
+      types: currentInfoWindow.types,
+      utc_offset_minutes: currentInfoWindow.utc_offset_minutes,
+      image: currentInfoWindow?.photos?.[0]?.getUrl() || "",
+      address: currentInfoWindow?.formatted_address,
+      isSavedPoi: !!matchedPoi,
+      isSavedProperty: !!matchedProperty,
+      savedPoi: matchedPoi,
+      savedProperty: matchedProperty,
+    };
+  }, [currentInfoWindow, savedPois, savedProperties]);
+
+  // console.log("currentGeometry====", currentGeometry);
+  return (
+    <>
+      <RoutePolylineLayer />
+
+      {currentGeometry &&
+        typeof currentGeometry.lat === "number" &&
+        typeof currentGeometry.lng === "number" && (
+          <AdvancedMarker position={currentGeometry} />
+        )}
+
+      {allProperties?.map((property, index) => (
+        <PropertyMarker property={property} key={property.place_id}>
+          <Badge
+            badgeContent={property.weekly_rent}
+            color="primary"
+            max={10000}
+          >
+            <HouseIcon
+              id={property.place_id}
+              sx={{ color: blue[400] }}
+              fontSize="large"
+            />
+          </Badge>
+        </PropertyMarker>
+      ))}
+      {savedPois?.map((property, index) => (
+        <PropertyMarker property={property} key={property.saved_poi_id}>
+          <FavoriteRoundedIcon sx={{ color: red[400] }} fontSize="large" />
+        </PropertyMarker>
+      ))}
+
+      {!!currentPropertyData && !!currentGeometry && (
+        <PropertyInfoWindow
+          position={currentGeometry}
+          onClose={() => {
+            clearCurrentInfo();
+          }}
+          placeData={currentPropertyData}
+        />
+      )}
+    </>
+  );
 }

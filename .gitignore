@@ -39,4 +39,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# rawdata
+*.txt
+*.csv
+
 package-lock.json
+
+# clerk configuration (can include secrets)
+/.clerk/

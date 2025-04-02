@@ -1,11 +1,9 @@
-import { ModeToggle } from "@/components/theme/ModeToggle";
-import { AccountButton } from "./AccountButton";
-import { LanguageToggle } from "../userCustomization/LanguageToggle";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { AvatarButton } from "./AvatarButton";
 import { SearchBox } from "./SearchBox";
-import { useMap } from "@vis.gl/react-google-maps";
-import { useEffect } from "react";
+import { SignedOut, SignedIn, UserButton } from "@clerk/nextjs";
 
-export function Header() {  
+export function Header() {
   return (
     <header className="fixed top-0 w-full z-50 ">
       <div className="h-full flex items-center justify-between gap-4">
@@ -14,9 +12,13 @@ export function Header() {
         </div>
 
         <div className="flex items-center gap-2">
-          <ModeToggle />
-          <LanguageToggle />
-          <AccountButton />
+          <ThemeToggle />
+          <SignedOut>
+            <AvatarButton />
+          </SignedOut>
+          <SignedIn>
+            <UserButton />
+          </SignedIn>
         </div>
       </div>
     </header>

@@ -3,7 +3,7 @@
 
 import { useSettingsStore } from "@/stores/useSettingsStore";
 import { useSidebarStore } from "@/stores/useSidebarStore";
-import { useRatingStore } from "@/components/ratingSystem/store/ratingStore";
+import { useRatingStore } from "@/stores/ratingStore";
 import {
   X,
   BookmarkCheck,
@@ -18,12 +18,28 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "../home/Logo";
-import { useAuthStore } from "@/stores/useAuthStore";
+// import { useAuthStore } from "@/stores/useAuthStore";
 import RatingReport from "../ratingSystem/ratingReport";
+import {
+  SignedIn,
+  SignInButton,
+  SignedOut,
+  SignOutButton,
+} from "@clerk/nextjs";
+import { ArchivePopup } from "./historyManagement/ArchivePopup";
+import { SettingsPopup } from "./SettingsPopup";
+import { useArchiveStore } from "@/stores/useArchiveStore";
+import { set } from "lodash";
+import SavePoiModal from "./SavePoi";
+import SavedPropertyModal from "./SavedProperty";
+import RecommendationPopup from "@/components/recommendation/RecommendationPopup";
+import { useRecommendationStore } from "@/stores/useRecommendationStore";
+import GroupSelector from "@/components/ratingSystem/GroupSelector";
+import { useState } from "react";
+import { useGroupSelectorStore } from "../../stores/useGroupSelectorStore";
 
 export function Sidebar() {
   const { isOpen, setOpen } = useSidebarStore();
-  const { isAuthenticated, signOut, signIn } = useAuthStore();
 
   return (
     <>
@@ -31,7 +47,10 @@ export function Sidebar() {
       {isOpen && (
         <div
           className="fixed inset-0 bg-black/30 transition-opacity z-[1001]"
-          onClick={() => setOpen(false)}
+          onClick={() => {
+            setOpen(false);
+            useArchiveStore.getState().setArchiveOpen(false);
+          }}
           aria-hidden="true"
         />
       )}
@@ -57,40 +76,47 @@ export function Sidebar() {
         </div>
 
         <div className="p-4 space-y-2">
-          <button className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg">
-            <BookmarkCheck className="h-5 w-5" />
-            <span>Saved POI</span>
-          </button>
+          <SavePoiModal />
 
-          <button className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg">
-            <MapPin className="h-5 w-5" />
-            <span>Saved Location</span>
-          </button>
+          <SavedPropertyModal />
           {/* </div> */}
 
           {/* Main functional area for report generation, recommendation, and history management */}
           {/* <div className="p-4 border-t space-y-2"> */}
           <button
             onClick={() => {
-              useRatingStore.getState().setOpen(true);
               useSidebarStore.getState().setOpen(false);
+              useRatingStore.getState().setOpen(false);
+              useGroupSelectorStore.getState().setOpen(true);
             }}
             className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg"
           >
             <FileText className="h-5 w-5" />
-            <span>Report Generation</span>
+            <span>Comparison Report</span>
           </button>
-          <RatingReport />
 
-          <button className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg">
+          <button
+            className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg"
+            onClick={() => {
+              useRecommendationStore.getState().setOpen(true);
+            }}
+          >
             <Lightbulb className="h-5 w-5" />
             <span>Recommendation</span>
           </button>
+          <RecommendationPopup />
 
-          <button className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg">
-            <History className="h-5 w-5" />
-            <span>History Management</span>
-          </button>
+          <SignedIn>
+            <button
+              className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg"
+              onClick={() => {
+                useArchiveStore.getState().setArchiveOpen(true);
+              }}
+            >
+              <History className="h-5 w-5" />
+              <span>History Management</span>
+            </button>
+          </SignedIn>
         </div>
 
         {/* Functional area for help, Settings and Login Logout */}
@@ -100,38 +126,39 @@ export function Sidebar() {
             <span>Help/Guidance</span>
           </button>
 
-          {isAuthenticated ? (
-            <>
-              <button
-                onClick={() => {
-                  useSettingsStore.getState().setOpen(true);
-                  useSidebarStore.getState().setOpen(false);
-                }}
-                className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg"
-              >
-                <Settings className="h-5 w-5" />
-                <span>Settings</span>
-              </button>
+          {/* Settings and Login/Logout */}
+          <SignedIn>
+            <button
+              onClick={() => {
+                useSettingsStore.getState().setOpen(true);
+                useSidebarStore.getState().setOpen(false);
+              }}
+              className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg"
+            >
+              <Settings className="h-5 w-5" />
+              <span>Settings</span>
+            </button>
 
-              <button
-                onClick={signOut}
-                className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg text-red-500"
-              >
+            <SignOutButton>
+              <button className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg text-red-500">
                 <LogOut className="h-5 w-5" />
                 <span>Sign Out</span>
               </button>
-            </>
-          ) : (
-            <button
-              onClick={signIn}
-              className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg text-blue-500"
-            >
-              <LogIn className="h-5 w-5" />
-              <span>Sign In</span>
-            </button>
-          )}
+            </SignOutButton>
+          </SignedIn>
+
+          <SignedOut>
+            <SignInButton mode="modal">
+              <button className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg text-blue-500">
+                <LogIn className="h-5 w-5" />
+                <span>Sign In</span>
+              </button>
+            </SignInButton>
+          </SignedOut>
         </div>
       </aside>
+      <ArchivePopup />
+      <SettingsPopup />
     </>
   );
 }

@@ -3,41 +3,112 @@
 import { MapContainer } from "@/components/maps/MapContainer";
 import { Header } from "@/components/home/Header";
 import { APIProvider } from "@vis.gl/react-google-maps";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Loading from "@/components/ui/Loading";
 import RatingReport from "@/components/ratingSystem/ratingReport";
+import { useAuth } from "@clerk/nextjs";
+import axios from "axios";
+import useSavedDataStore from "@/stores/useSavedData";
+import { SnackbarProvider } from "notistack";
+import { useGroupIdStore } from "@/stores/useGroupStore";
+import GroupSelector from "@/components/ratingSystem/GroupSelector";
+import { useGroupSelectorStore } from "@/stores/useGroupSelectorStore";
 
 export default function Home() {
+  const userInfo = useAuth();
+  const savedPois = useSavedDataStore.use.savedPois();
+  const savedProperties = useSavedDataStore.use.savedProperties();
+  const setSavedPois = useSavedDataStore.use.setSavedPois();
+  const setSavedProperties = useSavedDataStore.use.setSavedProperties();
+  const properties = useSavedDataStore.use.properties();
+  const setProperties = useSavedDataStore.use.setProperties();
+  const currentGroupId = useGroupIdStore((state) => state.currentGroupId);
+
+  const [person, setPerson] = useState("Alice");
+  const [bio, setBio] = useState(null);
+
+  const { isOpen: groupSelectorOpen, setOpen: setGroupSelectorOpen } =
+    useGroupSelectorStore();
+
+  useEffect(() => {
+    axios.get("/api/properties").then((res) => {
+      if (res.status === 200) {
+        //TODO: 临时取前100个，后续优化代讨论
+        setProperties(res.data?.slice(0, 100));
+      }
+    });
+  }, []);
+  useEffect(() => {
+    if (userInfo.userId && currentGroupId) {
+      //groupid 读取
+      axios.defaults.params = {
+        user_id: userInfo.userId,
+        group_id: currentGroupId,
+      };
+      axios.get("/api/savedProperties").then((res) => {
+        if (res.status === 200) {
+          setSavedProperties(res.data);
+        }
+      });
+
+      axios.get("/api/savedPois").then((res) => {
+        if (res.status === 200) {
+          setSavedPois(res.data);
+        }
+      });
+    }
+  }, [currentGroupId, userInfo.userId]);
+  console.log("savedProperties=======", savedProperties);
+  console.log("savedPois=======", savedPois);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isError, setIsError] = useState<boolean>(false);
   return (
-    <APIProvider
-      apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ""}
-      libraries={["places"]}
-      onError={() => {
-        setIsLoading(false);
-        setIsError(true);
-      }}
-      onLoad={() => {
-        setIsLoading(false);
-      }}
-    >
-      <main className="h-screen w-screen relative">
-        <Header />
-        {isLoading && <Loading />}
-        {isError && (
-          <div className="flex h-screen w-full items-center justify-center bg-gray-100">
-            <div className="text-center">
-              <h2 className="text-xl font-semibold text-red-600">
-                Map cannot be loaded right now, sorry.
-              </h2>
-              <p className="mt-2 text-gray-600">{isError}</p>
+    <SnackbarProvider maxSnack={3}>
+      <APIProvider
+        apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ""}
+        libraries={["places", "marker", "geocoding"]}
+        onError={() => {
+          setIsLoading(false);
+          setIsError(true);
+        }}
+        onLoad={() => {
+          setIsLoading(false);
+        }}
+      >
+        <main className="h-screen w-screen relative">
+          <Header />
+          {isLoading && <Loading />}
+          {isError && (
+            <div className="flex h-screen w-full items-center justify-center bg-gray-100">
+              <div className="text-center">
+                <h2 className="text-xl font-semibold text-red-600">
+                  Map cannot be loaded right now, sorry.
+                </h2>
+                <p className="mt-2 text-gray-600">{isError}</p>
+              </div>
             </div>
-          </div>
-        )}
-        <MapContainer />
-        <RatingReport />
-      </main>
-    </APIProvider>
+          )}
+
+          <MapContainer />
+          {groupSelectorOpen && (
+            <div className="fixed inset-0 z-[1500] bg-black/30 flex items-center justify-center">
+              <div
+                className="bg-white rounded-lg p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto relative"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button
+                  className="absolute top-2 right-2"
+                  onClick={() => setGroupSelectorOpen(false)}
+                >
+                  ✕
+                </button>
+                <GroupSelector />
+              </div>
+            </div>
+          )}
+          <RatingReport />
+        </main>
+      </APIProvider>
+    </SnackbarProvider>
   );
 }
