@@ -40,6 +40,8 @@ import { useGroupSelectorStore } from "../../stores/useGroupSelectorStore";
 
 export function Sidebar() {
   const { isOpen, setOpen } = useSidebarStore();
+  const { isOpen: groupSelectorOpen, setOpen: setGroupSelectorOpen } =
+    useGroupSelectorStore();
 
   return (
     <>
@@ -159,6 +161,25 @@ export function Sidebar() {
       </aside>
       <ArchivePopup />
       <SettingsPopup />
+      <RatingReport />
+
+      {/* Group Selector Modal */}
+      {groupSelectorOpen && (
+        <div className="fixed inset-0 z-[1500] bg-black/30 flex items-center justify-center">
+          <div
+            className="bg-white rounded-lg p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="absolute top-2 right-2"
+              onClick={() => setGroupSelectorOpen(false)}
+            >
+              ✕
+            </button>
+            <GroupSelector />
+          </div>
+        </div>
+      )}
     </>
   );
 }
