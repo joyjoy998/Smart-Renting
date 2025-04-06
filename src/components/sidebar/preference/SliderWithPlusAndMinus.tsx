@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Minus, Plus } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface SliderProps {
   label: string;
@@ -23,6 +23,13 @@ function SliderWithPlusAndMinus({
   const [value, setValue] = useState<number[]>([
     parseFloat(initialValue.toFixed(2)),
   ]);
+
+  useEffect(() => {
+    const formattedValue = parseFloat(initialValue.toFixed(2));
+    if (value[0] !== formattedValue) {
+      setValue([formattedValue]);
+    }
+  }, [initialValue]);
 
   const formatValue = (val: number): number => parseFloat(val.toFixed(2));
 
