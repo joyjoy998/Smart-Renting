@@ -7,13 +7,6 @@ interface Weight {
   amenity: number;
 }
 
-const defaultWeight: Weight = {
-  distance: 0.5,
-  price: 0.5,
-  neighborhood_safety: 0.5,
-  amenity: 0.5,
-};
-
 function normalizeWeights(weights: Weight): Weight {
   const total = Object.values(weights).reduce((sum, weight) => sum + weight, 0);
   return {
@@ -51,21 +44,9 @@ export function calculateTotalScore() {
 
   const userWeights = mapPreferenceToWeight(weightConfig);
 
-  const selectedWeights =
-    userWeights &&
-    Object.keys(userWeights).length === 4 &&
-    Object.values(userWeights).every(
-      (weight) => typeof weight === "number" && weight >= 0
-    )
-      ? userWeights
-      : defaultWeight;
+  console.log("Using weights from ratingStore:", userWeights);
 
-  console.log(
-    "Using weights from:",
-    selectedWeights === defaultWeight ? "default" : "user preference"
-  );
-
-  const weights = normalizeWeights(selectedWeights);
+  const weights = normalizeWeights(userWeights);
   const totalScores: Record<string, number> = {};
   let maxScore = -Infinity;
   let minScore = Infinity;
@@ -102,7 +83,7 @@ export function calculateTotalScore() {
 
   setTotalScores(totalScores);
 
-  console.log("Weight configuration used:", selectedWeights);
+  console.log("Weight configuration used:", userWeights);
   console.log("Normalized weights:", weights);
   console.log("Total scores:", totalScores);
 

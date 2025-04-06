@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { fetchGroupRatingData } from "@/services/ratingService";
+import { usePreferencesStore } from "@/stores/usePreferencesStore";
 
 interface Property {
   property_property_id: string;
@@ -77,13 +78,36 @@ interface RatingState {
   setWeightConfig: (config: WeightConfig) => void;
   updateWeight: (key: keyof WeightConfig, value: number) => void;
   loadData: (groupData?: any) => Promise<void>;
+  syncWithPreferences: () => void;
 }
 
-const defaultWeightConfig: WeightConfig = {
+const fallbackWeightConfig: WeightConfig = {
   distance: 0.5,
   price: 0.5,
   neighborhood_safety: 0.5,
   amenity: 0.5,
+};
+
+const getDefaultWeightConfig = (): WeightConfig => {
+  try {
+    const prefs = usePreferencesStore.getState().preferences;
+    if (prefs && typeof prefs.distance === "number") {
+      return {
+        distance: prefs.distance,
+        price: prefs.price,
+        neighborhood_safety: prefs.neighborhoodSafety,
+        amenity: prefs.amenity,
+      };
+    } else {
+      console.warn(
+        "Preferences not properly initialized, using fallback values"
+      );
+      return fallbackWeightConfig;
+    }
+  } catch (error) {
+    console.warn("Failed to get preferences, using fallback values", error);
+    return fallbackWeightConfig;
+  }
 };
 
 const mapPropertyFromDB = (dbProperty: any): Property => {
@@ -116,10 +140,11 @@ const mapPreferencesToWeightConfig = (
   preferences: any[] | null
 ): WeightConfig => {
   if (!preferences || preferences.length === 0) {
-    return defaultWeightConfig;
+    return getDefaultWeightConfig();
   }
 
   const weightConfig: Partial<WeightConfig> = {};
+  const defaultConfig = getDefaultWeightConfig();
 
   preferences.forEach((pref) => {
     if (pref.preference_type === "distance") {
@@ -134,14 +159,15 @@ const mapPreferencesToWeightConfig = (
   });
 
   return {
-    distance: weightConfig.distance || defaultWeightConfig.distance,
-    price: weightConfig.price || defaultWeightConfig.price,
+    distance: weightConfig.distance || defaultConfig.distance,
+    price: weightConfig.price || defaultConfig.price,
     neighborhood_safety:
-      weightConfig.neighborhood_safety ||
-      defaultWeightConfig.neighborhood_safety,
-    amenity: weightConfig.amenity || defaultWeightConfig.amenity,
+      weightConfig.neighborhood_safety || defaultConfig.neighborhood_safety,
+    amenity: weightConfig.amenity || defaultConfig.amenity,
   };
 };
+
+const initialWeightConfig = fallbackWeightConfig;
 
 export const useRatingStore = create<RatingState>((set, get) => ({
   isOpen: false,
@@ -157,7 +183,7 @@ export const useRatingStore = create<RatingState>((set, get) => ({
   amenitiesScores: {},
   amenitiesData: {},
   totalScores: {},
-  weightConfig: defaultWeightConfig,
+  weightConfig: initialWeightConfig,
   isLoading: false,
   error: null,
   currentGroup: null,
@@ -197,12 +223,39 @@ export const useRatingStore = create<RatingState>((set, get) => ({
       },
     })),
 
+  syncWithPreferences: () => {
+    try {
+      const prefs = usePreferencesStore.getState().preferences;
+      if (prefs && typeof prefs.distance === "number") {
+        const currentConfig = get().weightConfig;
+        if (
+          currentConfig.distance !== prefs.distance ||
+          currentConfig.price !== prefs.price ||
+          currentConfig.neighborhood_safety !== prefs.neighborhoodSafety ||
+          currentConfig.amenity !== prefs.amenity
+        ) {
+          set({
+            weightConfig: {
+              distance: prefs.distance,
+              price: prefs.price,
+              neighborhood_safety: prefs.neighborhoodSafety,
+              amenity: prefs.amenity,
+            },
+          });
+        }
+      }
+    } catch (error) {
+      console.warn("Failed to sync with preferences", error);
+    }
+  },
+
   loadData: async (groupData?: any) => {
     set({ isLoading: true, error: null });
     try {
+      get().syncWithPreferences();
+
       let data;
       data = await fetchGroupRatingData(groupData);
-      //console.log(data);
       const { group, properties, pois, preferences } = data;
 
       if (!group) {
@@ -212,7 +265,7 @@ export const useRatingStore = create<RatingState>((set, get) => ({
           properties: [],
           pois: [],
           currentGroup: null,
-          weightConfig: defaultWeightConfig,
+          weightConfig: getDefaultWeightConfig(),
         });
         return;
       }
