@@ -27,6 +27,17 @@ const FavoriteButton = ({
 
   const handleToggleStar = async () => {
     if (!isStarred) {
+      //Check if user has already saved 6 properties
+      if (savedProperties.length >= 6) {
+        enqueueSnackbar(
+          "You can save up to 6 properties. Please remove a property before adding a new one.",
+          {
+            variant: "warning",
+          }
+        );
+        return;
+      }
+
       const payload: Property = {
         saved_property_id: Math.floor(Math.random() * 1000000),
         group_id: groupId,

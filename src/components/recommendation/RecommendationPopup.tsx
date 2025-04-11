@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -21,6 +21,8 @@ import { useBudgetStore } from "@/stores/useSettingsStore";
 import { useGroupIdStore } from "@/stores/useGroupStore";
 import { useMapLocationStore } from "@/stores/useMapLocationStore";
 import { useUser } from "@clerk/nextjs";
+import useMapStore from "@/stores/useMapStore";
+import type { Property } from "@/types/property";
 
 const DEFAULT_IMAGE_URL = "/property-unavailable.png";
 
@@ -32,6 +34,8 @@ const RecommendationPopup = () => {
     fetchRecommendations,
   } = useRecommendationStore();
 
+  const setCurrentGeometry = useMapStore.use.setCurrentGeometry();
+  const setCurrentInfoWindow = useMapStore.use.setCurrentInfoWindow();
   const savedProperties = useSavedDataStore.use.savedProperties();
   const hasStarredProperties = savedProperties.length > 0;
   const { user } = useUser();
@@ -46,6 +50,24 @@ const RecommendationPopup = () => {
   const ITEMS_PER_PAGE = 5;
   const [shouldRefetchOnNextPage, setShouldRefetchOnNextPage] = useState(false);
   const { mapLocation } = useMapLocationStore();
+
+  // Use useCallback to wrap the handler function to avoid unnecessary recreations
+  const handlePropertyClick = useCallback(
+    (property: Property) => {
+      // Set map location
+      setCurrentGeometry({
+        lat: property.latitude,
+        lng: property.longitude,
+      });
+
+      // Set info window data
+      setCurrentInfoWindow(property);
+
+      // Close recommendation popup
+      toggleRecommendation();
+    },
+    [setCurrentGeometry, setCurrentInfoWindow, toggleRecommendation]
+  );
 
   useEffect(() => {
     if (isRecommendationOpen) {
@@ -116,9 +138,7 @@ const RecommendationPopup = () => {
         <DialogHeader>
           <DialogTitle>Recommended Properties</DialogTitle>
           <DialogDescription>
-            <DialogDescription>
-              {showWarning ? "Please login to see recommendations." : ""}
-            </DialogDescription>
+            {showWarning ? "Please login to see recommendations." : ""}
           </DialogDescription>
         </DialogHeader>
 
@@ -142,9 +162,12 @@ const RecommendationPopup = () => {
                 return (
                   <div
                     key={property.property_id}
-                    className="flex border rounded-lg overflow-hidden shadow-md">
+                    className="flex border rounded-lg overflow-hidden shadow-md cursor-pointer hover:bg-gray-50"
+                    onClick={() => handlePropertyClick(property)}>
                     {/* Left side image slider */}
-                    <div className="w-1/3 relative">
+                    <div
+                      className="w-1/3 relative"
+                      onClick={(e) => e.stopPropagation()}>
                       <Swiper
                         modules={[Navigation, Pagination]}
                         navigation
@@ -166,23 +189,25 @@ const RecommendationPopup = () => {
                     <div className="w-2/3 p-4 flex flex-col justify-between">
                       {/* Row 1 - Price & Favorite */}
                       <div className="flex justify-between items-center">
-                        <p className="text-xl font-bold">
+                        <p className="text-xl font-bold text-gray-900 dark:text-gray-600">
                           ${property.weekly_rent} per week
                         </p>
-                        <FavoriteButton
-                          propertyId={property.property_id}
-                          placeData={property}
-                          onFavorite={() => setShouldRefetchOnNextPage(true)}
-                        />
+                        <div onClick={(e) => e.stopPropagation()}>
+                          <FavoriteButton
+                            propertyId={property.property_id}
+                            placeData={property}
+                            onFavorite={() => setShouldRefetchOnNextPage(true)}
+                          />
+                        </div>
                       </div>
 
                       {/* Row 2 - Address */}
-                      <p className="text-gray-700 text-lg">
+                      <p className="text-gray-700 dark:text-gray-600 text-lg">
                         {property.street}, {property.suburb}
                       </p>
 
                       {/* Row 3 - Property Details */}
-                      <div className="flex items-center space-x-4 text-gray-600 mt-2">
+                      <div className="flex items-center space-x-4 text-gray-600 dark:text-gray-600 mt-2">
                         <span>
                           🛏 {property.bedrooms}{" "}
                           {property.bedrooms === 1 ? "Bed" : "Beds"}
@@ -200,7 +225,7 @@ const RecommendationPopup = () => {
                       </div>
 
                       {/* Property Type */}
-                      <p className="text-gray-600 mt-2">
+                      <p className="text-gray-600 dark:text-gray-600 mt-2">
                         {property.property_type}
                       </p>
                     </div>
@@ -209,7 +234,7 @@ const RecommendationPopup = () => {
               })}
             </div>
           ) : (
-            <p className="text-center text-gray-500">
+            <p className="text-center text-gray-500 dark:text-gray-600">
               No recommended properties available
             </p>
           )}
@@ -217,7 +242,7 @@ const RecommendationPopup = () => {
           {/* Bottom button section */}
           <div className="flex justify-between mt-4">
             <Button
-              className="w-1/2"
+              className="w-1/2 bg-gray-900 text-white hover:bg-gray-700 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-600"
               onClick={async () => {
                 const { currentGroupId } = useRecommendationStore.getState();
                 if (!currentGroupId) {
@@ -243,7 +268,10 @@ const RecommendationPopup = () => {
               Comparison Report
             </Button>
             {recommendedProperties.length > (page + 1) * ITEMS_PER_PAGE && (
-              <Button className="w-1/2" onClick={handleNext} disabled={!userId}>
+              <Button
+                className="w-1/2 bg-gray-900 text-white hover:bg-gray-700 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-600"
+                onClick={handleNext}
+                disabled={!userId}>
                 Next Page
               </Button>
             )}
