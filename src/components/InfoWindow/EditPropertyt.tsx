@@ -30,6 +30,7 @@ import { triggerVectorization } from "@/utils/vectorization";
 type Props = {
   placeData: PropertyInfo;
 };
+import { useAuth } from "@clerk/nextjs";
 
 const style = {
   position: "absolute",
@@ -43,6 +44,7 @@ const style = {
   p: 2,
 };
 const EditPropertyModal: React.FC<PropsWithChildren<Props>> = (props) => {
+  const { isSignedIn } = useAuth();
   const placeData = props?.placeData;
 
   const {
@@ -55,9 +57,16 @@ const EditPropertyModal: React.FC<PropsWithChildren<Props>> = (props) => {
 
   const savedProperties = useSavedDataStore.use.savedProperties();
   const setSavedProperties = useSavedDataStore.use.setSavedProperties();
+
   const { enqueueSnackbar } = useSnackbar();
   const [isProcessing, setIsProcessing] = React.useState(false);
   const toggle = () => {
+    if (!isSignedIn) {
+      enqueueSnackbar("Please sign in to save property", {
+        variant: "warning",
+      });
+      return;
+    }
     setOpen(!open);
   };
 
@@ -201,7 +210,8 @@ const EditPropertyModal: React.FC<PropsWithChildren<Props>> = (props) => {
             variant="contained"
             color="error"
             className="flex-auto"
-            onClick={handleRemove}>
+            onClick={handleRemove}
+          >
             Delete Property
           </Button>
         )}
@@ -210,7 +220,8 @@ const EditPropertyModal: React.FC<PropsWithChildren<Props>> = (props) => {
         open={open}
         onClose={toggle}
         aria-labelledby="modal-modal-title"
-        aria-describedby="modal-modal-description">
+        aria-describedby="modal-modal-description"
+      >
         <Box sx={style}>
           <div>
             <Typography sx={{ mt: 2, mb: 2 }} variant="h6" component="div">
@@ -225,7 +236,8 @@ const EditPropertyModal: React.FC<PropsWithChildren<Props>> = (props) => {
                 flexDirection: "column",
                 gap: 2,
                 width: 300,
-              }}>
+              }}
+            >
               <Controller
                 name="placeId"
                 control={control}

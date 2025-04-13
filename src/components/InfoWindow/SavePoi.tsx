@@ -12,12 +12,16 @@ import React from "react";
 import axios from "axios";
 import useSavedDataStore from "@/stores/useSavedData";
 import { PropertyInfo } from "../maps/MapContent";
+import { useAuth } from "@clerk/nextjs";
+import { useSnackbar } from "notistack";
 
 type Props = {
   placeData: PropertyInfo;
 };
 
 const SavePoi = (props: Props) => {
+  const { isSignedIn } = useAuth();
+  const { enqueueSnackbar } = useSnackbar();
   const placeData = props.placeData;
 
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
@@ -26,6 +30,10 @@ const SavePoi = (props: Props) => {
   const open = Boolean(anchorEl);
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+    if (!isSignedIn) {
+      enqueueSnackbar("Please sign in to save POIs", { variant: "warning" });
+      return;
+    }
     setAnchorEl(event.currentTarget);
   };
 
