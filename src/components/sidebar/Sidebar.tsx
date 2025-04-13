@@ -87,7 +87,7 @@ export function Sidebar() {
           {/* <div className="p-4 border-t space-y-2"> */}
           <button
             onClick={() => {
-              useSidebarStore.getState().setOpen(false);
+              //useSidebarStore.getState().setOpen(false);
               useRatingStore.getState().setOpen(false);
               useGroupSelectorStore.getState().setOpen(true);
             }}
