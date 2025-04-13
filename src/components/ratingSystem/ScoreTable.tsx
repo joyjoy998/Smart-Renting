@@ -7,11 +7,17 @@ import { calculateAmenitiesScore } from "./lib/amenitiesScore";
 import { calculateTotalScore } from "./lib/finalScore";
 import POISelector from "./POISelector";
 import TravelModeSelector from "./TravelModeSelector";
+import useMapStore from "@/stores/useMapStore";
+import { useGroupSelectorStore } from "@/stores/useGroupSelectorStore";
 
 const ScoreTable = () => {
   const [showDetails, setShowDetails] = useState<
     Record<string | number, boolean>
   >({});
+
+  const setCurrentGeometry = useMapStore.use.setCurrentGeometry();
+  const setCurrentInfoWindow = useMapStore.use.setCurrentInfoWindow();
+  const { setOpen: setGroupSelectorOpen } = useGroupSelectorStore();
 
   const {
     selectedPOI,
@@ -26,6 +32,7 @@ const ScoreTable = () => {
     amenitiesData,
     totalScores,
     weightConfig,
+    setOpen: setRatingOpen,
   } = useRatingStore();
 
   // Distance Score
@@ -118,6 +125,29 @@ const ScoreTable = () => {
     }));
   };
 
+  const handleRowClick = (property: any) => {
+    if (property && property.latitude && property.longitude) {
+      setCurrentGeometry({
+        lat: property.latitude,
+        lng: property.longitude,
+      });
+
+      const placeInfo = {
+        name: property.address,
+        geometry: {
+          location: {
+            lat: () => property.latitude,
+            lng: () => property.longitude,
+          },
+        },
+      };
+
+      setCurrentInfoWindow(placeInfo as any);
+      setRatingOpen(false);
+      setGroupSelectorOpen(false);
+    }
+  };
+
   return (
     <div className="overflow-x-auto">
       <table className="w-full border-collapse border border-gray-300 table-fixed">
@@ -146,7 +176,10 @@ const ScoreTable = () => {
         <tbody>
           {sortedProperties.map((property) => (
             <React.Fragment key={property.property_property_id}>
-              <tr className="border-t hover:bg-gray-50">
+              <tr
+                className="border-t hover:bg-gray-50 cursor-pointer"
+                onClick={() => handleRowClick(property)}
+              >
                 <td className="p-2">{property.property_property_id}</td>
                 <td className="p-2 truncate" title={property.address}>
                   {property.address}
@@ -188,9 +221,10 @@ const ScoreTable = () => {
                     </span>
 
                     <button
-                      onClick={() =>
-                        toggleDetails(property.property_property_id)
-                      }
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleDetails(property.property_property_id);
+                      }}
                       className="text-xs text-blue-500 border border-blue-300 rounded px-2 py-1 inline-block"
                     >
                       {showDetails[property.property_property_id]
