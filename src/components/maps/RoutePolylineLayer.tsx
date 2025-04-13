@@ -6,6 +6,7 @@ import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { handleChangeTravelMode } from "@/lib/routeDisplayHelpers";
 import isEqual from "lodash.isequal";
 import React from "react";
+import { useTheme } from "next-themes";
 
 interface POI {
   poi_id: string;
@@ -28,6 +29,7 @@ const RoutePolylineLayer = React.memo(function RoutePolylineLayer() {
   const rawMap = useMap();
   const mapRef = useRef<google.maps.Map | null>(null);
   const [mapReady, setMapReady] = useState(false);
+  const { theme } = useTheme();
 
   useEffect(() => {
     if (!mapRef.current && rawMap) {
@@ -51,6 +53,7 @@ const RoutePolylineLayer = React.memo(function RoutePolylineLayer() {
   const prevRoutesRef = useRef<RouteInfo[]>([]);
   const prevPropertyRef = useRef<typeof selectedPropertyForRoute | null>(null);
   const prevVisiblePOIsRef = useRef<string[]>([]);
+  const prevThemeRef = useRef<string | undefined>(theme);
 
   useEffect(() => {
     if (!mapRef.current || !selectedPropertyForRoute || !routesToPOIs.length) {
@@ -63,29 +66,35 @@ const RoutePolylineLayer = React.memo(function RoutePolylineLayer() {
       selectedPropertyForRoute
     );
     const visibleChanged = !isEqual(prevVisiblePOIsRef.current, visiblePOIs);
+    const themeChanged = prevThemeRef.current !== theme;
 
-    if (!routesChanged && !propertyChanged && !visibleChanged) return;
+    if (!routesChanged && !propertyChanged && !visibleChanged && !themeChanged)
+      return;
 
     prevRoutesRef.current = routesToPOIs;
     prevPropertyRef.current = selectedPropertyForRoute;
     prevVisiblePOIsRef.current = visiblePOIs;
+    prevThemeRef.current = theme;
 
     polylinesRef.current.forEach((polyline) => polyline.setMap(null));
     polylinesRef.current = [];
+
+    const strokeColor = theme === "dark" ? "#4C9AFF" : "#3367D6";
+    const strokeWeight = theme === "dark" ? 5 : 4;
 
     routesToPOIs.forEach((route) => {
       if (!visiblePOIs.includes(route.poiId)) return;
 
       const polyline = new google.maps.Polyline({
         path: route.polylinePath,
-        strokeColor: "#3367D6",
+        strokeColor: strokeColor,
         strokeOpacity: 0.8,
-        strokeWeight: 4,
+        strokeWeight: strokeWeight,
         map: mapRef.current!,
       });
       polylinesRef.current.push(polyline);
     });
-  }, [selectedPropertyForRoute, routesToPOIs, visiblePOIs]);
+  }, [selectedPropertyForRoute, routesToPOIs, visiblePOIs, theme]);
 
   useEffect(() => {
     return () => {
