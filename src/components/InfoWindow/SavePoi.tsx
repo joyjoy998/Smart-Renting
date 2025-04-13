@@ -23,7 +23,7 @@ const SavePoi = (props: Props) => {
   const { isSignedIn } = useAuth();
   const { enqueueSnackbar } = useSnackbar();
   const placeData = props.placeData;
-
+  const savedPois = useSavedDataStore.use.savedPois();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const setSavedPois = useSavedDataStore.use.setSavedPois();
 
@@ -32,6 +32,10 @@ const SavePoi = (props: Props) => {
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     if (!isSignedIn) {
       enqueueSnackbar("Please sign in to save POIs", { variant: "warning" });
+      return;
+    }
+    if (savedPois.length >= 6) {
+      enqueueSnackbar("You can only save up to 6 POIs", { variant: "info" });
       return;
     }
     setAnchorEl(event.currentTarget);
