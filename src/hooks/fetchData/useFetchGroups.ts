@@ -19,8 +19,8 @@ export const useFetchGroups = () => {
         const response = await axios.get("/api/groupId/get");
         if (response.data.success) {
           const groups = response.data.data;
-          useGroupStore.getState().setGroups(groups);
           if (groups.length > 0) {
+            useGroupStore.getState().setGroups(groups);
             const currentGroup = groups[groups.length - 1];
             setGroupId(currentGroup.group_id);
           }
