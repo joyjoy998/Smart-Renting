@@ -27,6 +27,7 @@ import { PropertyInfo } from "../maps/MapContent";
 import { useSnackbar } from "notistack";
 import { divide } from "lodash";
 import { triggerVectorization } from "@/utils/vectorization";
+import { useGroupIdStore } from "@/stores/useGroupStore";
 type Props = {
   placeData: PropertyInfo;
 };
@@ -46,6 +47,7 @@ const style = {
 const EditPropertyModal: React.FC<PropsWithChildren<Props>> = (props) => {
   const { isSignedIn } = useAuth();
   const placeData = props?.placeData;
+  const currentGroupId = useGroupIdStore((state) => state.currentGroupId);
 
   const {
     control,
@@ -59,7 +61,9 @@ const EditPropertyModal: React.FC<PropsWithChildren<Props>> = (props) => {
   const setSavedProperties = useSavedDataStore.use.setSavedProperties();
 
   const { enqueueSnackbar } = useSnackbar();
+
   const [isProcessing, setIsProcessing] = React.useState(false);
+
   const toggle = () => {
     if (!isSignedIn) {
       enqueueSnackbar("Please sign in to save property", {
@@ -68,6 +72,48 @@ const EditPropertyModal: React.FC<PropsWithChildren<Props>> = (props) => {
       return;
     }
     setOpen(!open);
+  };
+
+  const handleQuickSave = async () => {
+    if (!isSignedIn) {
+      enqueueSnackbar("Please sign in to save property", {
+        variant: "warning",
+      });
+      return;
+    }
+
+    const payload = {
+      saved_property_id: Math.floor(Math.random() * 1000000),
+      street: addressParts[0],
+      suburb,
+      state,
+      postcode,
+      latitude: placeData?.geometry?.location?.lat?.(),
+      longitude: placeData?.geometry?.location?.lng?.(),
+      weekly_rent: placeData?.savedProperty?.weekly_rent || 0,
+      photo: placeData?.photos || [],
+      bedrooms: placeData?.savedProperty?.bedrooms || 0,
+      bathrooms: placeData?.savedProperty?.bathrooms || 0,
+      parking_spaces: placeData?.savedProperty?.parking_spaces || 0,
+      property_type: "Apartment",
+      safety_score: 0,
+      place_id: placeData?.place_id || "",
+    };
+
+    try {
+      const res = await axios.post("/api/savedProperties", payload);
+      if (res.status === 200) {
+        enqueueSnackbar("Property saved successfully", { variant: "success" });
+        refreshData();
+      }
+    } catch (err: any) {
+      enqueueSnackbar(
+        `Failed to save property: ${
+          err.response?.data?.message || err.message
+        }`,
+        { variant: "error" }
+      );
+    }
   };
 
   //transfer address
@@ -192,16 +238,37 @@ const EditPropertyModal: React.FC<PropsWithChildren<Props>> = (props) => {
     }
   };
 
-  if (
-    !!placeData?.savedPoi ||
-    (placeData?.savedProperty && !placeData?.savedProperty.group_id)
-  ) {
+  if (!!placeData?.savedPoi) {
     return null;
   }
 
   return (
     <div>
       <Box className="flex gap-2">
+        {/* without group_id：Save Property quickyly save */}
+        {!placeData?.savedProperty?.group_id && (
+          <Button variant="contained" onClick={handleQuickSave}>
+            Save Property
+          </Button>
+        )}
+        {/* have group_id：can edit */}
+        {placeData?.savedProperty?.group_id && (
+          <>
+            <Button variant="contained" onClick={toggle}>
+              Edit Property
+            </Button>
+            <Button
+              variant="contained"
+              color="error"
+              className="flex-auto"
+              onClick={handleRemove}
+            >
+              Delete Property
+            </Button>
+          </>
+        )}
+      </Box>
+      {/* <Box className="flex gap-2">
         <Button variant="contained" onClick={toggle}>
           {!!placeData?.savedProperty ? "Edit Property" : "Save Property"}
         </Button>
@@ -215,7 +282,8 @@ const EditPropertyModal: React.FC<PropsWithChildren<Props>> = (props) => {
             Delete Property
           </Button>
         )}
-      </Box>
+      </Box> */}
+
       <Modal
         open={open}
         onClose={toggle}
