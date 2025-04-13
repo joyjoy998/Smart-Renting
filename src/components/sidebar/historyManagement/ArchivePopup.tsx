@@ -327,7 +327,9 @@ export const ArchivePopup = () => {
               <div
                 key={group.group_id}
                 className={`flex items-center p-4 ${
-                  currentGroupId === group.group_id ? "bg-blue-50" : ""
+                  currentGroupId === group.group_id
+                    ? "bg-blue-50 dark:bg-blue-900/30"
+                    : "dark:hover:bg-gray-800"
                 }`}
               >
                 <div className="flex items-center flex-1">
