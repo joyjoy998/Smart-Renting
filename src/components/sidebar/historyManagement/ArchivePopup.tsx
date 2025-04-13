@@ -5,19 +5,19 @@ import ConfirmPopup from "./ConfirmPopup";
 import { useArchiveStore } from "@/stores/useArchiveStore";
 import { useGroupIdStore, useGroupStore, Group } from "@/stores/useGroupStore";
 import { useAuth } from "@clerk/clerk-react";
+import { useSnackbar, closeSnackbar } from "notistack";
 
 export const ArchivePopup = () => {
+  const { enqueueSnackbar } = useSnackbar();
   const { userId } = useAuth();
   const { isArchiveOpen, setArchiveOpen } = useArchiveStore();
   const { currentGroupId, setGroupId } = useGroupIdStore();
   const { groups, setGroups } = useGroupStore();
   // console.log(groups.length);
 
-  // 添加编辑状态
-  const [editingId, setEditingId] = useState(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [editingName, setEditingName] = useState("");
 
-  // 确认弹窗状态
   const [confirmPopup, setConfirmPopup] = useState({
     isOpen: false,
     message: "",
@@ -27,10 +27,18 @@ export const ArchivePopup = () => {
 
   const createNewGroup = async () => {
     if (groups.length >= 3) {
-      alert("You can only create up to 3 archives.");
+      enqueueSnackbar(
+        "You can only create up to 3 archives. Please delete one before creating a new one.",
+        {
+          variant: "error",
+          autoHideDuration: 3000,
+          action: (key) => (
+            <button onClick={() => closeSnackbar(key)}>x</button>
+          ),
+        }
+      );
       return;
     }
-    // 这里要用 API 对新档案进行创建
     const groupName = `Archive ${groups.length + 1}`;
     try {
       const response = await fetch("/api/groupId/post", {
@@ -44,6 +52,13 @@ export const ArchivePopup = () => {
         }),
       });
       if (!response.ok) {
+        enqueueSnackbar("Failed to create new archive. Please try again.", {
+          variant: "error",
+          autoHideDuration: 3000,
+          action: (key) => (
+            <button onClick={() => closeSnackbar(key)}>x</button>
+          ),
+        });
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
 
@@ -51,24 +66,61 @@ export const ArchivePopup = () => {
       const newGroup = responseData.data?.[0];
 
       if (!newGroup) {
+        enqueueSnackbar("Failed to create new archive. Please try again.", {
+          variant: "error",
+          autoHideDuration: 3000,
+          action: (key) => (
+            <button onClick={() => closeSnackbar(key)}>x</button>
+          ),
+        });
         throw new Error("API did not return a valid group.");
       }
 
       setGroups([...groups, newGroup] as Group[]);
-      alert("New group created successfully.");
+      enqueueSnackbar(
+        `New archive "${newGroup.group_name}" created successfully.`,
+        {
+          variant: "success",
+          autoHideDuration: 3000,
+          action: (key) => (
+            <button onClick={() => closeSnackbar(key)}>x</button>
+          ),
+        }
+      );
     } catch (error) {
+      enqueueSnackbar("Failed to create new archive. Please try again.", {
+        variant: "error",
+        autoHideDuration: 3000,
+        action: (key) => <button onClick={() => closeSnackbar(key)}>x</button>,
+      });
       console.error("Error creating new group:", error);
     }
   };
 
   const deleteGroup = async (id: number) => {
     if (groups.length <= 1) {
-      alert("You must keep at least one archive.");
+      enqueueSnackbar(
+        "You need at least one archive. Please create a new one before deleting.",
+        {
+          variant: "warning",
+          autoHideDuration: 3000,
+          action: (key) => (
+            <button onClick={() => closeSnackbar(key)}>x</button>
+          ),
+        }
+      );
       return;
     }
     if (currentGroupId === id) {
-      alert(
-        "You cannot delete the currently loaded archive. Please load another archive first."
+      enqueueSnackbar(
+        "You cannot delete the currently loaded archive. Please load another archive first.",
+        {
+          variant: "warning",
+          autoHideDuration: 3000,
+          action: (key) => (
+            <button onClick={() => closeSnackbar(key)}>x</button>
+          ),
+        }
       );
       return;
     }
@@ -85,12 +137,28 @@ export const ArchivePopup = () => {
         }),
       });
       if (!response.ok) {
+        enqueueSnackbar("Failed to delete archive. Please try again.", {
+          variant: "error",
+          autoHideDuration: 3000,
+          action: (key) => (
+            <button onClick={() => closeSnackbar(key)}>x</button>
+          ),
+        });
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
       const newGroups = groups.filter((group) => group.group_id !== id);
       setGroups(newGroups as Group[]);
-      alert("Group deleted successfully.");
+      enqueueSnackbar(`Archive deleted successfully.`, {
+        variant: "success",
+        autoHideDuration: 3000,
+        action: (key) => <button onClick={() => closeSnackbar(key)}>x</button>,
+      });
     } catch (error) {
+      enqueueSnackbar("Failed to delete archive. Please try again.", {
+        variant: "error",
+        autoHideDuration: 3000,
+        action: (key) => <button onClick={() => closeSnackbar(key)}>x</button>,
+      });
       console.error("Error deleting group:", error);
     }
   };
@@ -98,16 +166,13 @@ export const ArchivePopup = () => {
   const loadGroup = (id: number) => {
     // console.log(`Loading archive with ID: ${id}`);
     setGroupId(id);
-    // 这里要用 API 进行档案的加载
   };
 
-  // 开始编辑存档名称
-  const startEditing = (group) => {
+  const startEditing = (group: Group) => {
     setEditingId(group.group_id);
     setEditingName(group.group_name);
   };
 
-  // 保存编辑后的名称
   const saveGroupName = async () => {
     if (editingId !== null) {
       try {
@@ -123,6 +188,13 @@ export const ArchivePopup = () => {
           }),
         });
         if (!response.ok) {
+          enqueueSnackbar("Failed to update group name. Please try again.", {
+            variant: "error",
+            autoHideDuration: 3000,
+            action: (key) => (
+              <button onClick={() => closeSnackbar(key)}>x</button>
+            ),
+          });
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
         const updatedGroups = groups.map((group) =>
@@ -131,8 +203,21 @@ export const ArchivePopup = () => {
             : group
         );
         setGroups(updatedGroups as Group[]);
-        alert("Group name updated successfully.");
+        enqueueSnackbar(`Group name updated successfully.`, {
+          variant: "success",
+          autoHideDuration: 3000,
+          action: (key) => (
+            <button onClick={() => closeSnackbar(key)}>x</button>
+          ),
+        });
       } catch (error) {
+        enqueueSnackbar("Failed to update group name. Please try again.", {
+          variant: "error",
+          autoHideDuration: 3000,
+          action: (key) => (
+            <button onClick={() => closeSnackbar(key)}>x</button>
+          ),
+        });
         console.error("Error updating group name:", error);
       }
       setEditingId(null);
@@ -140,7 +225,6 @@ export const ArchivePopup = () => {
     }
   };
 
-  // 处理按下Enter键保存
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
       saveGroupName();
@@ -149,18 +233,16 @@ export const ArchivePopup = () => {
     }
   };
 
-  // 确认删除存档
   const confirmDeleteGroup = (id: number) => {
     const group = groups.find((group) => group.group_id === id);
     setConfirmPopup({
       isOpen: true,
-      message: `Are you sure to delete ${group.group_name}?`,
+      message: `Are you sure to delete ${group!.group_name}?`,
       action: "delete",
       targetId: id,
     });
   };
 
-  // 确认加载存档
   const confirmLoadGroup = (id: number) => {
     const group = groups.find((group) => group.group_id === id);
     setConfirmPopup({
@@ -171,7 +253,6 @@ export const ArchivePopup = () => {
     });
   };
 
-  // 确认弹窗的确认操作
   const handleConfirm = () => {
     const { action, targetId } = confirmPopup;
     if (action === "delete") {
@@ -182,7 +263,6 @@ export const ArchivePopup = () => {
     closeConfirmPopup();
   };
 
-  // 关闭确认弹窗
   const closeConfirmPopup = () => {
     setConfirmPopup((prev) => ({ ...prev, isOpen: false }));
   };
