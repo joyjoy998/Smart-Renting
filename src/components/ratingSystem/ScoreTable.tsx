@@ -9,6 +9,8 @@ import POISelector from "./POISelector";
 import TravelModeSelector from "./TravelModeSelector";
 import useMapStore from "@/stores/useMapStore";
 import { useGroupSelectorStore } from "@/stores/useGroupSelectorStore";
+import { getPlaceDetail, usePlacesService } from "@/hooks/map/usePlacesService";
+import { geocode, useGeocoder } from "@/hooks/map/useGeocoder";
 
 const ScoreTable = () => {
   const [showDetails, setShowDetails] = useState<
@@ -18,6 +20,8 @@ const ScoreTable = () => {
   const setCurrentGeometry = useMapStore.use.setCurrentGeometry();
   const setCurrentInfoWindow = useMapStore.use.setCurrentInfoWindow();
   const { setOpen: setGroupSelectorOpen } = useGroupSelectorStore();
+  const placesService = usePlacesService();
+  const geocoder = useGeocoder();
 
   const {
     selectedPOI,
@@ -125,24 +129,28 @@ const ScoreTable = () => {
     }));
   };
 
-  const handleRowClick = (property: any) => {
+  const handleRowClick = async (property: any) => {
     if (property && property.latitude && property.longitude) {
-      setCurrentGeometry({
+      const latLng = {
         lat: property.latitude,
         lng: property.longitude,
-      });
-
-      const placeInfo = {
-        name: property.address,
-        geometry: {
-          location: {
-            lat: () => property.latitude,
-            lng: () => property.longitude,
-          },
-        },
       };
+      setCurrentGeometry(latLng);
+      if (property.place_id) {
+        if (placesService) {
+          const detail = await getPlaceDetail(placesService, property.place_id);
+          setCurrentInfoWindow(detail);
+        }
+      } else {
+        if (geocoder && placesService) {
+          const result = await geocode(geocoder, latLng);
+          if (result) {
+            const detail = await getPlaceDetail(placesService, result.place_id);
+            setCurrentInfoWindow(detail);
+          }
+        }
+      }
 
-      setCurrentInfoWindow(placeInfo as any);
       setRatingOpen(false);
       setGroupSelectorOpen(false);
     }
