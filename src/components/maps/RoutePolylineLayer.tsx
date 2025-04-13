@@ -79,10 +79,8 @@ const RoutePolylineLayer = React.memo(function RoutePolylineLayer() {
     polylinesRef.current.forEach((polyline) => polyline.setMap(null));
     polylinesRef.current = [];
 
-    // 根据主题模式选择路线颜色
-    // 在暗色模式下使用亮蓝色，在亮色模式下使用标准蓝色
     const strokeColor = theme === "dark" ? "#4C9AFF" : "#3367D6";
-    const strokeWeight = theme === "dark" ? 5 : 4; // 在暗色模式下使线条更粗
+    const strokeWeight = theme === "dark" ? 5 : 4;
 
     routesToPOIs.forEach((route) => {
       if (!visiblePOIs.includes(route.poiId)) return;

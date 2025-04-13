@@ -54,7 +54,6 @@ export default function GroupSelector() {
           return;
         }
 
-        // 加载数据并打开报告
         await loadData(result.data);
         useRatingStore.getState().setOpen(true);
         setGroupSelectorOpen(false);
