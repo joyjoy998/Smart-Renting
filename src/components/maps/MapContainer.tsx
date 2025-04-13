@@ -14,7 +14,6 @@ import {
 } from "@/lib/constants/mapId";
 import Loading from "@/components/ui/Loading";
 import { useTheme } from "next-themes";
-import { useUserLocation } from "@/hooks/map/useUserLocation";
 import { MapContent } from "./MapContent";
 import { SettingsPopup } from "@/components/sidebar/SettingsPopup";
 import { getPlaceDetail, usePlacesService } from "@/hooks/map/usePlacesService";
