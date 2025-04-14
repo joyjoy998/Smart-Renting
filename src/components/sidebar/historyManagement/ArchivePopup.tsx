@@ -290,6 +290,7 @@ export const ArchivePopup = () => {
         fixed top-1/4 left-64  
         h-[50vh] w-80
         bg-background border-r 
+        rounded-tr-lg rounded-br-lg
         transform transition-transform duration-300 ease-in-out 
         z-[1004]
         overflow-hidden

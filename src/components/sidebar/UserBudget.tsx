@@ -110,8 +110,10 @@ const UserBudget: React.FC = () => {
   return (
     <div className="w-full">
       <div className="mb-8">
-        <h3 className="font-medium text-gray-800 mb-4">Budget</h3>
-        <div className="text-gray-700 mb-6">
+        <h3 className="font-medium text-gray-800 mb-4 dark:text-gray-300">
+          Budget
+        </h3>
+        <div className="text-gray-700 mb-6 dark:text-gray-300">
           ${minPrice} - ${maxPrice} / Week
         </div>
 
