@@ -29,8 +29,10 @@ export type PropertyInfo =
       savedPoi: any;
       savedProperty: any;
       placeId?: string;
+      weekly_rent?: number;
     })
   | null;
+
 export function MapContent() {
   const map = useMap();
   const { setMapLocation } = useMapLocationStore();
@@ -40,6 +42,7 @@ export function MapContent() {
   const savedPois = useSavedDataStore.use.savedPois();
   const savedProperties = useSavedDataStore.use.savedProperties();
   const properties = useSavedDataStore.use.properties();
+
   const allProperties = useMemo(() => {
     return [...(savedProperties || []), ...(properties || [])];
   }, [savedProperties, properties]); //combine all the properties
@@ -123,25 +126,40 @@ export function MapContent() {
           <AdvancedMarker position={currentGeometry} />
         )}
 
-      {allProperties?.map((property, index) => (
-        <PropertyMarker property={property} key={property.place_id}>
-          <Badge
-            badgeContent={property.weekly_rent}
-            color="primary"
-            max={10000}>
-            <HouseIcon
-              id={property.place_id}
-              sx={{ color: blue[400] }}
-              fontSize="large"
-            />
-          </Badge>
-        </PropertyMarker>
-      ))}
-      {savedPois?.map((property, index) => (
-        <PropertyMarker property={property} key={property.saved_poi_id}>
-          <FavoriteRoundedIcon sx={{ color: red[400] }} fontSize="large" />
-        </PropertyMarker>
-      ))}
+      {allProperties?.map((property, index) => {
+        const p = property as { saved_poi_id: string; weekly_rent: number };
+        const matchedSaved = savedProperties?.find(
+          (saved) => saved.place_id === property.place_id
+        );
+        console.log("matchedData========", matchedSaved);
+        const weeklyRent =
+          (matchedSaved as PropertyInfo)?.weekly_rent ?? p.weekly_rent;
+
+        const isSaved = !!matchedSaved;
+
+        return (
+          <PropertyMarker
+            property={property}
+            key={`${property.place_id}-${index}`}
+          >
+            <Badge badgeContent={weeklyRent} color="primary" max={10000}>
+              <HouseIcon
+                id={property.place_id}
+                sx={{ color: isSaved ? red[400] : blue[400] }}
+                fontSize="large"
+              />
+            </Badge>
+          </PropertyMarker>
+        );
+      })}
+      {savedPois?.map((property, index) => {
+        const p = property as { saved_poi_id: string; place_id: string };
+        return (
+          <PropertyMarker property={property} key={p.saved_poi_id}>
+            <FavoriteRoundedIcon sx={{ color: red[400] }} fontSize="large" />
+          </PropertyMarker>
+        );
+      })}
 
       {!!currentPropertyData && !!currentGeometry && (
         <PropertyInfoWindow
