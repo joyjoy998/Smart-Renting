@@ -6,7 +6,7 @@ import { useMapLocationStore } from "@/stores/useMapLocationStore";
 import Autocomplete from "@mui/material/Autocomplete";
 import TextField from "@mui/material/TextField";
 import debounce from "lodash/debounce";
-import { getPlaceDetail, usePlacesService } from "@/hooks/map/usePlacesService";
+import { usePlacesService } from "@/hooks/map/usePlacesService";
 import useMapStore from "@/stores/useMapStore";
 import { map } from "lodash";
 
@@ -22,13 +22,12 @@ export const SearchBox: React.FC<SearchBoxProps> = ({ onSearch, onSelect }) => {
   const setCurrentGeometry = useMapStore.use.setCurrentGeometry();
   const setCurrentInfoWindow = useMapStore.use.setCurrentInfoWindow();
 
-  console.log("options==========", options);
   const textSearch = (
     value: string,
     location?: google.maps.LatLngLiteral
   ): Promise<google.maps.places.PlaceResult[]> => {
     return new Promise((resolve, reject) => {
-      if (places && mapLocation) {
+      if (places) {
         places.nearbySearch(
           {
             location: mapLocation,
@@ -37,10 +36,10 @@ export const SearchBox: React.FC<SearchBoxProps> = ({ onSearch, onSelect }) => {
           },
           (results, status) => {
             if (status === "OK") {
-              const filteredResults = results?.filter((place) =>
-                place.name?.toLowerCase().includes(value.toLowerCase())
+              const filteredResults = results.filter((place) =>
+                place.name.toLowerCase().includes(value.toLowerCase())
               );
-              resolve(filteredResults!);
+              resolve(filteredResults);
             } else {
               resolve([]);
             }
@@ -83,17 +82,13 @@ export const SearchBox: React.FC<SearchBoxProps> = ({ onSearch, onSelect }) => {
             filterSelectedOptions
             // value={value}
             noOptionsText="No locations"
-            onChange={async (event, value) => {
-              console.log("value=====", value);
-              if (places) {
-                const placeData = await getPlaceDetail(places, value?.place_id);
-
-                setCurrentGeometry({
-                  lng: placeData?.geometry?.location?.lng()!,
-                  lat: placeData?.geometry?.location?.lat()!,
-                });
-                setCurrentInfoWindow(placeData);
-              }
+            onChange={(event, value) => {
+              // console.log("value=====", value);
+              setCurrentGeometry({
+                lng: value?.geometry?.location?.lng()!,
+                lat: value?.geometry?.location?.lat()!,
+              });
+              setCurrentInfoWindow(value);
             }}
             onInputChange={(event, newInputValue) => {
               if (newInputValue) {

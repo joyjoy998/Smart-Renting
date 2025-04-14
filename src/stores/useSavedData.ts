@@ -16,52 +16,11 @@ const createSelectors = <S extends UseBoundStore<StoreApi<object>>>(
   return store
 }
 
-export type SavedPropertyProps = {
-  saved_property_id: number;
-  group_id: number;
-  property_id: string | null;
-  place_id: string;
-  street: string;
-  suburb: string;
-  state: string;
-  postcode: string;
-  weekly_rent: number;
-  bedrooms: number;
-  bathrooms: number;
-  parking_spaces: number;
-  property_type: string | null;
-  photo: string[];
-  latitude: number;
-  longitude: number;
-  created_at: string;
-  safety_score: number;
-  note: string | null;
-  category: string | null;
-};
-export type SavedPoiProps = {
-  category: string | null;
-  created_at: string;
-  group_id: number;
-  latitude: number;
-  longitude: number;
-  name: string;
-  note: string | null;
-  photo: string[];
-  place_id: string;
-  poi_id: string | null;
-  postcode:string;
-  state: string;
-  street: string;
-  suburb: string;
-  saved_poi_id: number;
-};
-
-
 
 type State = {
-  savedPois: SavedPoiProps[];
-  savedProperties: SavedPropertyProps[];
-  properties: SavedPropertyProps[];
+  savedPois: google.maps.places.PlaceResult[];
+  savedProperties: google.maps.places.PlaceResult[];
+  properties: google.maps.places.PlaceResult[];
 
 }
 interface Action {

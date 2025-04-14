@@ -7,16 +7,16 @@ import { ThemeProvider as MaterialUIThemeProvider } from "@mui/material/styles";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
 import { ClerkProvider } from "@clerk/nextjs";
 import { SnackbarProvider, VariantType, useSnackbar } from "notistack";
-import { getTheme } from "../theme";
+import theme from "../theme";
 import { InitializeApp } from "./InitializeApp";
-import { useTheme } from "next-themes";
-import { useMemo } from "react";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Smart Renting",
   description: "Explore locations with our interactive map application",
 };
+
+
 
 const roboto = Roboto({
   weight: ["300", "400", "500", "700"],
@@ -35,15 +35,17 @@ export default function RootLayout({
       <html lang="en" suppressHydrationWarning>
         <body className={`${inter.className} ${roboto.variable}`}>
           <AppRouterCacheProvider>
-            <ThemeProvider
-              attribute="class"
-              defaultTheme="system"
-              enableSystem
-              disableTransitionOnChange
-            >
-              <InitializeApp />
-              {children}
-            </ThemeProvider>
+            <MaterialUIThemeProvider theme={theme}>
+              <ThemeProvider
+                attribute="class"
+                defaultTheme="system"
+                enableSystem
+                disableTransitionOnChange
+              >
+                <InitializeApp />
+                {children}
+              </ThemeProvider>
+            </MaterialUIThemeProvider>
           </AppRouterCacheProvider>
         </body>
       </html>

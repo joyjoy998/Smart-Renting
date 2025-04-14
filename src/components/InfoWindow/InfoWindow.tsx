@@ -7,7 +7,7 @@ import { PropertyInfo } from "../maps/MapContent";
 import { Bath, Bed, Car } from "lucide-react";
 import { handleShowRoutesToPOIs } from "@/lib/routeDisplayHelpers";
 import { useGroupIdStore } from "@/stores/useGroupStore";
-import { useTheme } from "@mui/material/styles";
+
 interface PropertyInfoWindowProps {
   position: google.maps.LatLngLiteral;
   onClose: () => void;
@@ -19,8 +19,6 @@ export const PropertyInfoWindow: React.FC<PropertyInfoWindowProps> = ({
   onClose,
   placeData, // ✅ 传入 Google Places API 数据
 }) => {
-  const theme = useTheme();
-
   const currentGroupId = useGroupIdStore((state) => state.currentGroupId);
   const toggleSavedPoi = () => {};
   const toggleSaveProperty = () => {};
@@ -31,15 +29,7 @@ export const PropertyInfoWindow: React.FC<PropertyInfoWindowProps> = ({
       onCloseClick={onClose}
       headerContent={placeData?.name}
     >
-      <Box
-        sx={{
-          p: 2,
-          borderRadius: 2,
-          display: "flex",
-          flexDirection: "column",
-          minWidth: 300,
-        }}
-      >
+      <Box className="info-window p-2 bg-white rounded-lg shadow-md flex flex-col ">
         <Stack direction="row">
           {placeData?.image && (
             <img

@@ -27,11 +27,9 @@ import { PropertyInfo } from "../maps/MapContent";
 import { useSnackbar } from "notistack";
 import { divide } from "lodash";
 import { triggerVectorization } from "@/utils/vectorization";
-import { useGroupIdStore } from "@/stores/useGroupStore";
 type Props = {
   placeData: PropertyInfo;
 };
-import { useAuth } from "@clerk/nextjs";
 
 const style = {
   position: "absolute",
@@ -45,9 +43,7 @@ const style = {
   p: 2,
 };
 const EditPropertyModal: React.FC<PropsWithChildren<Props>> = (props) => {
-  const { isSignedIn } = useAuth();
   const placeData = props?.placeData;
-  const currentGroupId = useGroupIdStore((state) => state.currentGroupId);
 
   const {
     control,
@@ -59,67 +55,10 @@ const EditPropertyModal: React.FC<PropsWithChildren<Props>> = (props) => {
 
   const savedProperties = useSavedDataStore.use.savedProperties();
   const setSavedProperties = useSavedDataStore.use.setSavedProperties();
-
   const { enqueueSnackbar } = useSnackbar();
-
   const [isProcessing, setIsProcessing] = React.useState(false);
-
   const toggle = () => {
-    if (!isSignedIn) {
-      enqueueSnackbar("Please sign in to save property", {
-        variant: "warning",
-      });
-      return;
-    }
     setOpen(!open);
-  };
-
-  const handleQuickSave = async () => {
-    if (savedProperties.length >= 6) {
-      enqueueSnackbar("You can only save up to 6 properties", {
-        variant: "error",
-      });
-      return;
-    }
-    if (!isSignedIn) {
-      enqueueSnackbar("Please sign in to save property", {
-        variant: "warning",
-      });
-      return;
-    }
-
-    const payload = {
-      saved_property_id: Math.floor(Math.random() * 1000000),
-      street: addressParts[0],
-      suburb,
-      state,
-      postcode,
-      latitude: placeData?.geometry?.location?.lat?.(),
-      longitude: placeData?.geometry?.location?.lng?.(),
-      weekly_rent: placeData?.savedProperty?.weekly_rent || 0,
-      photo: placeData?.photos?.map((item) => item.getUrl()) || [],
-      bedrooms: placeData?.savedProperty?.bedrooms || 0,
-      bathrooms: placeData?.savedProperty?.bathrooms || 0,
-      parking_spaces: placeData?.savedProperty?.parking_spaces || 0,
-      property_type: "Apartment",
-      safety_score: 0,
-      place_id: placeData?.place_id || "",
-    };
-
-    try {
-      const res = await axios.post("/api/savedProperties", payload);
-      if (res.status === 200) {
-        enqueueSnackbar("Property saved successfully", { variant: "success" });
-        refreshData();
-      }
-    } catch (err: any) {
-      enqueueSnackbar(
-        `Failed to save property: ${
-          err.response?.data?.message || err.message
-        }`,
-        { variant: "error" }
-      );
-    }
   };
 
   //transfer address
@@ -158,7 +97,7 @@ const EditPropertyModal: React.FC<PropsWithChildren<Props>> = (props) => {
       latitude: placeData?.geometry?.location?.lat?.() || null,
       longitude: placeData?.geometry?.location?.lng?.() || null,
       weekly_rent: Number(values.weekly_rent), // ✅ 必须是 `NUMERIC(10,2)`
-      photo: placeData?.photos?.map((item) => item.getUrl()) || [], // ✅ 必须是数组
+      photo: placeData?.photos || [], // ✅ 必须是数组
       bedrooms: values.bedrooms, // ✅ 必须是 `INT`
       bathrooms: values.bathrooms, // ✅ 必须是 `INT`
       parking_spaces: values.parking_spaces, // ✅ 必须是 `INT`
@@ -177,12 +116,6 @@ const EditPropertyModal: React.FC<PropsWithChildren<Props>> = (props) => {
       if (!!placeData?.savedProperty) {
         response = await axios.put("/api/savedProperties", payload);
       } else {
-        if (savedProperties.length >= 6) {
-          enqueueSnackbar("You can only save up to 6 properties", {
-            variant: "error",
-          });
-          return;
-        }
         response = await axios.post("/api/savedProperties", payload);
       }
 
@@ -250,45 +183,16 @@ const EditPropertyModal: React.FC<PropsWithChildren<Props>> = (props) => {
     }
   };
 
-  if (!!placeData?.savedPoi) {
+  if (
+    !!placeData?.savedPoi ||
+    (placeData?.savedProperty && !placeData?.savedProperty.group_id)
+  ) {
     return null;
   }
-  const hasGroupId = !!placeData?.savedProperty?.group_id;
-  const hasWeeklyRent = !!placeData?.savedProperty?.weekly_rent;
+
   return (
     <div>
       <Box className="flex gap-2">
-        {/*New Google Place：upload table */}
-        {!placeData?.savedProperty?.group_id &&
-          !placeData?.savedProperty?.weekly_rent && (
-            <Button variant="contained" onClick={toggle}>
-              Save Property
-            </Button>
-          )}
-        {/* without group_id and rent：Save Property quickyly save */}
-        {!hasGroupId && hasWeeklyRent && (
-          <Button variant="contained" onClick={handleQuickSave}>
-            Save Property
-          </Button>
-        )}
-        {/* have group_id and rent：can edit */}
-        {placeData?.savedProperty?.group_id && (
-          <>
-            <Button variant="contained" onClick={toggle}>
-              Edit Property
-            </Button>
-            <Button
-              variant="contained"
-              color="error"
-              className="flex-auto"
-              onClick={handleRemove}
-            >
-              Delete Property
-            </Button>
-          </>
-        )}
-      </Box>
-      {/* <Box className="flex gap-2">
         <Button variant="contained" onClick={toggle}>
           {!!placeData?.savedProperty ? "Edit Property" : "Save Property"}
         </Button>
@@ -297,19 +201,16 @@ const EditPropertyModal: React.FC<PropsWithChildren<Props>> = (props) => {
             variant="contained"
             color="error"
             className="flex-auto"
-            onClick={handleRemove}
-          >
+            onClick={handleRemove}>
             Delete Property
           </Button>
         )}
-      </Box> */}
-
+      </Box>
       <Modal
         open={open}
         onClose={toggle}
         aria-labelledby="modal-modal-title"
-        aria-describedby="modal-modal-description"
-      >
+        aria-describedby="modal-modal-description">
         <Box sx={style}>
           <div>
             <Typography sx={{ mt: 2, mb: 2 }} variant="h6" component="div">
@@ -324,8 +225,7 @@ const EditPropertyModal: React.FC<PropsWithChildren<Props>> = (props) => {
                 flexDirection: "column",
                 gap: 2,
                 width: 300,
-              }}
-            >
+              }}>
               <Controller
                 name="placeId"
                 control={control}
