@@ -70,3 +70,8 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+
+.gm-style-iw-a {
+  color: #000;
+}

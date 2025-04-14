@@ -43,8 +43,7 @@ const SavedPropertyModal = () => {
   const setCurrentGeometry = useMapStore.use.setCurrentGeometry();
   const setCurrentInfoWindow = useMapStore.use.setCurrentInfoWindow();
   const [open, setOpen] = React.useState(false);
-  const savedProperties =
-    useSavedDataStore.use.savedProperties() as PropertyInfo[];
+  const savedProperties = useSavedDataStore.use.savedProperties();
   const setSavedProperties = useSavedDataStore.use.setSavedProperties();
 
   // console.log("savedpprperties-======", savedProperties);
@@ -58,7 +57,7 @@ const SavedPropertyModal = () => {
       }
     });
   };
-  const handleRemoveSaved = async (savedProperties) => {
+  const handleRemoveSaved = async (savedProperties: any) => {
     const response = await axios.delete("/api/savedProperties", {
       params: {
         group_id: savedProperties.group_id,
@@ -94,7 +93,7 @@ const SavedPropertyModal = () => {
             Saved Property
           </Typography>
           <div className="max-h-[800px] overflow-y-auto">
-            {savedProperties?.map((item: PropertyInfo) => {
+            {savedProperties?.map((item) => {
               if (!item) return null;
               const images: string[] =
                 Array.isArray(item.photo) && item.photo.length > 0
@@ -125,7 +124,7 @@ const SavedPropertyModal = () => {
                         <SwiperSlide key={i}>
                           <img
                             src={img}
-                            alt={item.name || item.street}
+                            alt={item.street}
                             className="w-full h-full max-h-48 object-cover rounded-lg aspect-[4/5]"
                           />
                         </SwiperSlide>
@@ -136,11 +135,11 @@ const SavedPropertyModal = () => {
                   {/* Right: Property Info */}
                   <div className="w-2/3 p-4 flex flex-col justify-between">
                     <div className="flex justify-between items-start">
-                      <p className="text-xl font-bold text-gray-900">
+                      <Typography className="text-xl font-bold">
                         {item.weekly_rent
                           ? `$${item.weekly_rent} per week`
                           : "No rent info"}
-                      </p>
+                      </Typography>
                       <IconButton
                         aria-label="delete"
                         onClick={() => handleRemoveSaved(item)}
@@ -149,19 +148,19 @@ const SavedPropertyModal = () => {
                       </IconButton>
                     </div>
 
-                    <p className="text-gray-700 text-lg">
-                      {item.name || item.street}, {item.suburb}
-                    </p>
+                    <Typography className="text-lg">
+                      {item.street}, {item.suburb}
+                    </Typography>
 
-                    <div className="flex items-center space-x-4 text-gray-600 mt-2">
+                    <div className="flex items-center space-x-4 mt-2">
                       <span>🛏 {item.bedrooms ?? "-"} Beds</span>
                       <span>🛁 {item.bathrooms ?? "-"} Baths</span>
                       <span>🚗 {item.parking_spaces ?? "-"} Parking</span>
                     </div>
 
-                    <p className="text-gray-600 mt-2">
+                    <Typography className="mt-2">
                       {item.property_type ?? "Property"}
-                    </p>
+                    </Typography>
                   </div>
                 </div>
               );

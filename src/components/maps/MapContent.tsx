@@ -14,7 +14,7 @@ import { MAPS_CONFIG } from "@/lib/constants/mapConfigure";
 import { UserLocationMarker } from "./UserLocationMarker";
 import PropertyInfoWindow from "@/components/InfoWindow/InfoWindow";
 import useMapStore from "@/stores/useMapStore";
-import useSavedDataStore from "@/stores/useSavedData";
+import useSavedDataStore, { SavedPropertyProps } from "@/stores/useSavedData";
 import PropertyMarker from "./PropertyMarker";
 import FavoriteRoundedIcon from "@mui/icons-material/FavoriteRounded";
 import HouseIcon from "@mui/icons-material/House";
@@ -24,26 +24,12 @@ import { useMapLocationStore } from "@/stores/useMapLocationStore";
 
 export type PropertyInfo =
   | (google.maps.places.PlaceResult & {
-      saved_property_id: number;
-      group_id: number;
-      property_id: string | null;
-      place_id: string;
-      street: string;
-      suburb: string;
-      state: string;
-      postcode: string;
-      weekly_rent: number;
-      bedrooms: number;
-      bathrooms: number;
-      parking_spaces: number;
-      property_type: string | null;
-      photo: string[];
-      latitude: number;
-      longitude: number;
-      created_at: string;
-      safety_score: number;
-      note: string | null;
-      category: string | null;
+      image?: string;
+      address?: string;
+      savedPoi?: any;
+      savedProperty?: SavedPropertyProps;
+      placeId?: string;
+      weekly_rent?: number;
     })
   | null;
 
@@ -141,11 +127,10 @@ export function MapContent() {
         )}
 
       {allProperties?.map((property, index) => {
-        const p = property as { saved_poi_id: string; weekly_rent: number };
         const matchedSaved = savedProperties?.find(
           (saved) => saved.place_id === property.place_id
         );
-        console.log("matchedData========", matchedSaved);
+
         const weeklyRent =
           (matchedSaved as PropertyInfo)?.weekly_rent ??
           (property as { weekly_rent?: number })?.weekly_rent ??
@@ -168,10 +153,9 @@ export function MapContent() {
           </PropertyMarker>
         );
       })}
-      {savedPois?.map((property, index) => {
-        const p = property as { saved_poi_id: string; place_id: string };
+      {savedPois?.map((property) => {
         return (
-          <PropertyMarker property={property} key={p.saved_poi_id}>
+          <PropertyMarker property={property} key={property.saved_poi_id}>
             <FavoriteRoundedIcon sx={{ color: red[400] }} fontSize="large" />
           </PropertyMarker>
         );

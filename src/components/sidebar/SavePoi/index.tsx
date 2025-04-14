@@ -86,7 +86,7 @@ const SavePoiModal = () => {
               return (
                 <div
                   key={`${item.place_id}-${index}`}
-                  className="flex border rounded-lg overflow-hidden shadow-md cursor-pointer hover:bg-gray-50"
+                  className="flex border rounded-lg overflow-hidden shadow-md cursor-pointer "
                   onClick={() => {
                     setCurrentGeometry({
                       lat: item.latitude,
@@ -119,24 +119,24 @@ const SavePoiModal = () => {
                   {/* Right: Info */}
                   <div className="w-2/3 p-4 flex flex-col justify-between">
                     <div className="flex justify-between items-start">
-                      <p className="text-lg font-semibold text-gray-900">
+                      <Typography className="text-lg font-semibold">
                         {item.name ?? "Unnamed POI"}
-                      </p>
+                      </Typography>
                       <IconButton onClick={() => handleRemove(item)}>
                         <DeleteIcon />
                       </IconButton>
                     </div>
 
-                    <p className="text-gray-700">
+                    <Typography>
                       {[item.street, item.suburb, item.state, item.postcode]
                         .filter(Boolean)
                         .join(", ") || "No address"}
-                    </p>
+                    </Typography>
 
-                    <p className="text-gray-600 mt-2">
+                    <Typography className="mt-2">
                       POI Type:
                       {item.category ?? "POI"}
-                    </p>
+                    </Typography>
                   </div>
                 </div>
               );

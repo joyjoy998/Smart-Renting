@@ -35,7 +35,7 @@ const SavePoi = (props: Props) => {
       return;
     }
     if (savedPois.length >= 6) {
-      enqueueSnackbar("You can only save up to 6 POIs", { variant: "info" });
+      enqueueSnackbar("You can only save up to 6 POIs", { variant: "error" });
       return;
     }
     setAnchorEl(event.currentTarget);
@@ -91,7 +91,7 @@ const SavePoi = (props: Props) => {
       postcode: postcode,
       latitude: placeData?.geometry?.location?.lat?.() || null,
       longitude: placeData?.geometry?.location?.lng?.() || null,
-      photo: placeData?.photos || [], // ✅ 必须是数组
+      photo: placeData?.photos?.map((item) => item.getUrl()) || [], // ✅ 必须是数组
       note: "Great location!",
       created_at: new Date().toISOString(), // ✅ 必须是 `TIMESTAMP`
       category: type, // 用户选择的 POI 类型

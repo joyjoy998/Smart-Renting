@@ -75,6 +75,12 @@ const EditPropertyModal: React.FC<PropsWithChildren<Props>> = (props) => {
   };
 
   const handleQuickSave = async () => {
+    if (savedProperties.length >= 6) {
+      enqueueSnackbar("You can only save up to 6 properties", {
+        variant: "error",
+      });
+      return;
+    }
     if (!isSignedIn) {
       enqueueSnackbar("Please sign in to save property", {
         variant: "warning",
@@ -91,7 +97,7 @@ const EditPropertyModal: React.FC<PropsWithChildren<Props>> = (props) => {
       latitude: placeData?.geometry?.location?.lat?.(),
       longitude: placeData?.geometry?.location?.lng?.(),
       weekly_rent: placeData?.savedProperty?.weekly_rent || 0,
-      photo: placeData?.photos || [],
+      photo: placeData?.photos?.map((item) => item.getUrl()) || [],
       bedrooms: placeData?.savedProperty?.bedrooms || 0,
       bathrooms: placeData?.savedProperty?.bathrooms || 0,
       parking_spaces: placeData?.savedProperty?.parking_spaces || 0,
@@ -152,7 +158,7 @@ const EditPropertyModal: React.FC<PropsWithChildren<Props>> = (props) => {
       latitude: placeData?.geometry?.location?.lat?.() || null,
       longitude: placeData?.geometry?.location?.lng?.() || null,
       weekly_rent: Number(values.weekly_rent), // ✅ 必须是 `NUMERIC(10,2)`
-      photo: placeData?.photos || [], // ✅ 必须是数组
+      photo: placeData?.photos?.map((item) => item.getUrl()) || [], // ✅ 必须是数组
       bedrooms: values.bedrooms, // ✅ 必须是 `INT`
       bathrooms: values.bathrooms, // ✅ 必须是 `INT`
       parking_spaces: values.parking_spaces, // ✅ 必须是 `INT`
@@ -171,6 +177,12 @@ const EditPropertyModal: React.FC<PropsWithChildren<Props>> = (props) => {
       if (!!placeData?.savedProperty) {
         response = await axios.put("/api/savedProperties", payload);
       } else {
+        if (savedProperties.length >= 6) {
+          enqueueSnackbar("You can only save up to 6 properties", {
+            variant: "error",
+          });
+          return;
+        }
         response = await axios.post("/api/savedProperties", payload);
       }
 
