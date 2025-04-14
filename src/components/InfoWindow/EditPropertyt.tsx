@@ -241,17 +241,25 @@ const EditPropertyModal: React.FC<PropsWithChildren<Props>> = (props) => {
   if (!!placeData?.savedPoi) {
     return null;
   }
-
+  const hasGroupId = !!placeData?.savedProperty?.group_id;
+  const hasWeeklyRent = !!placeData?.savedProperty?.weekly_rent;
   return (
     <div>
       <Box className="flex gap-2">
-        {/* without group_id：Save Property quickyly save */}
-        {!placeData?.savedProperty?.group_id && (
+        {/*New Google Place：upload table */}
+        {!placeData?.savedProperty?.group_id &&
+          !placeData?.savedProperty?.weekly_rent && (
+            <Button variant="contained" onClick={toggle}>
+              Save Property
+            </Button>
+          )}
+        {/* without group_id and rent：Save Property quickyly save */}
+        {!hasGroupId && hasWeeklyRent && (
           <Button variant="contained" onClick={handleQuickSave}>
             Save Property
           </Button>
         )}
-        {/* have group_id：can edit */}
+        {/* have group_id and rent：can edit */}
         {placeData?.savedProperty?.group_id && (
           <>
             <Button variant="contained" onClick={toggle}>

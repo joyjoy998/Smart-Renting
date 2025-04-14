@@ -18,7 +18,7 @@ import useSavedDataStore from "@/stores/useSavedData";
 import PropertyMarker from "./PropertyMarker";
 import FavoriteRoundedIcon from "@mui/icons-material/FavoriteRounded";
 import HouseIcon from "@mui/icons-material/House";
-import { blue, red } from "@mui/material/colors";
+import { blue, green, red, yellow } from "@mui/material/colors";
 import { Badge } from "@mui/material";
 import { useMapLocationStore } from "@/stores/useMapLocationStore";
 
@@ -133,7 +133,9 @@ export function MapContent() {
         );
         console.log("matchedData========", matchedSaved);
         const weeklyRent =
-          (matchedSaved as PropertyInfo)?.weekly_rent ?? p.weekly_rent;
+          (matchedSaved as PropertyInfo)?.weekly_rent ??
+          (property as { weekly_rent?: number })?.weekly_rent ??
+          0;
 
         const isSaved = !!matchedSaved;
 
@@ -145,7 +147,7 @@ export function MapContent() {
             <Badge badgeContent={weeklyRent} color="primary" max={10000}>
               <HouseIcon
                 id={property.place_id}
-                sx={{ color: isSaved ? red[400] : blue[400] }}
+                sx={{ color: isSaved ? green[400] : blue[400] }}
                 fontSize="large"
               />
             </Badge>
