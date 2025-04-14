@@ -14,11 +14,11 @@ import { MAPS_CONFIG } from "@/lib/constants/mapConfigure";
 import { UserLocationMarker } from "./UserLocationMarker";
 import PropertyInfoWindow from "@/components/InfoWindow/InfoWindow";
 import useMapStore from "@/stores/useMapStore";
-import useSavedDataStore from "@/stores/useSavedData";
+import useSavedDataStore, { SavedPropertyProps } from "@/stores/useSavedData";
 import PropertyMarker from "./PropertyMarker";
 import FavoriteRoundedIcon from "@mui/icons-material/FavoriteRounded";
 import HouseIcon from "@mui/icons-material/House";
-import { blue, red } from "@mui/material/colors";
+import { blue, green, red, yellow } from "@mui/material/colors";
 import { Badge } from "@mui/material";
 import { useMapLocationStore } from "@/stores/useMapLocationStore";
 
@@ -26,11 +26,13 @@ export type PropertyInfo =
   | (google.maps.places.PlaceResult & {
       image?: string;
       address?: string;
-      savedPoi: any;
-      savedProperty: any;
+      savedPoi?: any;
+      savedProperty?: SavedPropertyProps;
       placeId?: string;
+      weekly_rent?: number;
     })
   | null;
+
 export function MapContent() {
   const map = useMap();
   const { setMapLocation } = useMapLocationStore();
@@ -40,6 +42,7 @@ export function MapContent() {
   const savedPois = useSavedDataStore.use.savedPois();
   const savedProperties = useSavedDataStore.use.savedProperties();
   const properties = useSavedDataStore.use.properties();
+
   const allProperties = useMemo(() => {
     return [...(savedProperties || []), ...(properties || [])];
   }, [savedProperties, properties]); //combine all the properties
@@ -123,25 +126,40 @@ export function MapContent() {
           <AdvancedMarker position={currentGeometry} />
         )}
 
-      {allProperties?.map((property, index) => (
-        <PropertyMarker property={property} key={property.place_id}>
-          <Badge
-            badgeContent={property.weekly_rent}
-            color="primary"
-            max={10000}>
-            <HouseIcon
-              id={property.place_id}
-              sx={{ color: blue[400] }}
-              fontSize="large"
-            />
-          </Badge>
-        </PropertyMarker>
-      ))}
-      {savedPois?.map((property, index) => (
-        <PropertyMarker property={property} key={property.saved_poi_id}>
-          <FavoriteRoundedIcon sx={{ color: red[400] }} fontSize="large" />
-        </PropertyMarker>
-      ))}
+      {allProperties?.map((property, index) => {
+        const matchedSaved = savedProperties?.find(
+          (saved) => saved.place_id === property.place_id
+        );
+
+        const weeklyRent =
+          (matchedSaved as PropertyInfo)?.weekly_rent ??
+          (property as { weekly_rent?: number })?.weekly_rent ??
+          0;
+
+        const isSaved = !!matchedSaved;
+
+        return (
+          <PropertyMarker
+            property={property}
+            key={`${property.place_id}-${index}`}
+          >
+            <Badge badgeContent={weeklyRent} color="primary" max={10000}>
+              <HouseIcon
+                id={property.place_id}
+                sx={{ color: isSaved ? green[400] : blue[400] }}
+                fontSize="large"
+              />
+            </Badge>
+          </PropertyMarker>
+        );
+      })}
+      {savedPois?.map((property) => {
+        return (
+          <PropertyMarker property={property} key={property.saved_poi_id}>
+            <FavoriteRoundedIcon sx={{ color: red[400] }} fontSize="large" />
+          </PropertyMarker>
+        );
+      })}
 
       {!!currentPropertyData && !!currentGeometry && (
         <PropertyInfoWindow
