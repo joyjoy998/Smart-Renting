@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -21,6 +21,8 @@ import { useBudgetStore } from "@/stores/useSettingsStore";
 import { useGroupIdStore } from "@/stores/useGroupStore";
 import { useMapLocationStore } from "@/stores/useMapLocationStore";
 import { useUser } from "@clerk/nextjs";
+import useMapStore from "@/stores/useMapStore";
+import type { Property } from "@/types/property";
 
 const DEFAULT_IMAGE_URL = "/property-unavailable.png";
 
@@ -46,6 +48,25 @@ const RecommendationPopup = () => {
   const ITEMS_PER_PAGE = 5;
   const [shouldRefetchOnNextPage, setShouldRefetchOnNextPage] = useState(false);
   const { mapLocation } = useMapLocationStore();
+  const setCurrentGeometry = useMapStore.use.setCurrentGeometry();
+  const setCurrentInfoWindow = useMapStore.use.setCurrentInfoWindow();
+  // Use useCallback to wrap the handler function to avoid unnecessary recreations
+  const handlePropertyClick = useCallback(
+    (property: Property) => {
+      // Set map location
+      setCurrentGeometry({
+        lat: property.latitude,
+        lng: property.longitude,
+      });
+
+      // Set info window data
+      setCurrentInfoWindow(property);
+
+      // Close recommendation popup
+      toggleRecommendation();
+    },
+    [setCurrentGeometry, setCurrentInfoWindow, toggleRecommendation]
+  );
 
   useEffect(() => {
     if (isRecommendationOpen) {
@@ -142,9 +163,12 @@ const RecommendationPopup = () => {
                 return (
                   <div
                     key={property.property_id}
-                    className="flex border rounded-lg overflow-hidden shadow-md ">
+                    className="flex border rounded-lg overflow-hidden shadow-md "
+                    onClick={() => handlePropertyClick(property)}>
                     {/* Left side image slider */}
-                    <div className="w-1/3 relative">
+                    <div
+                      className="w-1/3 relative"
+                      onClick={(e) => e.stopPropagation()}>
                       <Swiper
                         modules={[Navigation, Pagination]}
                         navigation
