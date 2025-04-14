@@ -6,6 +6,21 @@ const theme = createTheme({
     fontFamily: 'var(--font-roboto)',
   },
   cssVariables: true,
+
 });
+
+
+export const getTheme = (mode?: string) => {
+
+  return createTheme({
+    typography: {
+      fontFamily: 'var(--font-roboto)',
+    },
+    cssVariables: true,
+    palette: {
+      mode: mode === 'dark' ? 'dark' : 'light'
+    }
+  });
+}
 
 export default theme;

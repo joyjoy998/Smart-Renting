@@ -1,24 +1,18 @@
-import {
-  Modal,
-  Typography,
-  Box,
-  List,
-  ListItem,
-  Avatar,
-  IconButton,
-  ListItemAvatar,
-  ListItemText,
-} from "@mui/material";
+import { Modal, Typography, Box, IconButton } from "@mui/material";
 import { BookmarkCheck, DeleteIcon } from "lucide-react";
 import React from "react";
-import { nearbySearch, usePlacesService } from "@/hooks/map/usePlacesService";
 import useSavedDataStore from "@/stores/useSavedData";
 import axios from "axios";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Pagination } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
+import useMapStore from "@/stores/useMapStore";
+import { useSnackbar } from "notistack";
 import { PropertyInfo } from "@/components/maps/MapContent";
 
-type Props = {
-  placeData: PropertyInfo;
-};
+const DEFAULT_IMAGE_URL = "/property-unavailable.png";
 
 const style = {
   position: "absolute",
@@ -29,15 +23,17 @@ const style = {
   bgcolor: "background.paper",
   border: "2px solid #000",
   boxShadow: 24,
+  borderRadius: 2,
   p: 2,
 };
-const SavePoiModal = () => {
-  const [open, setOpen] = React.useState(false);
-  const savedPois = useSavedDataStore.use.savedPois();
-  const setSavedPois = useSavedDataStore.use.setSavedPois();
 
-  // console.log("savedpois-======", savedPois);
-  const placeService = usePlacesService();
+const SavePoiModal = () => {
+  const { enqueueSnackbar } = useSnackbar();
+  const [open, setOpen] = React.useState(false);
+  const savedPois = useSavedDataStore.use.savedPois() as PropertyInfo[];
+  const setSavedPois = useSavedDataStore.use.setSavedPois();
+  const setCurrentGeometry = useMapStore.use.setCurrentGeometry();
+  const setCurrentInfoWindow = useMapStore.use.setCurrentInfoWindow();
 
   const refreshData = () => {
     axios.get("/api/savedPois").then((res) => {
@@ -49,12 +45,13 @@ const SavePoiModal = () => {
   const handleRemove = async (savedPoi) => {
     const response = await axios.delete("/api/savedPois", {
       params: {
-        group_id: savedPoi.group_id, // 确保 group_id 传递正确
-        place_id: savedPoi.place_id, // 使用 place_id  传递正确
+        group_id: savedPoi.group_id,
+        place_id: savedPoi.place_id,
       },
     });
     if (response.status === 200) {
       refreshData();
+      enqueueSnackbar("Removed successfully!", { variant: "success" });
     }
   };
 
@@ -71,41 +68,79 @@ const SavePoiModal = () => {
         <BookmarkCheck className="h-5 w-5" />
         <span>Saved POI</span>
       </button>
-      <Modal
-        open={open}
-        onClose={toggle}
-        aria-labelledby="modal-modal-title"
-        aria-describedby="modal-modal-description"
-      >
+
+      <Modal open={open} onClose={toggle}>
         <Box sx={style}>
-          <div>
-            <Typography sx={{ mt: 2, mb: 2 }} variant="h6" component="div">
-              Saved POI
-            </Typography>
-            <div className="max-h-[800px] overflow-y-auto">
-              <List>
-                {savedPois?.map((item) => {
-                  return (
-                    <ListItem
-                      secondaryAction={
-                        <IconButton
-                          edge="end"
-                          aria-label="delete"
-                          onClick={() => handleRemove(item)}
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      }
+          <Typography sx={{ mt: 2, mb: 2 }} variant="h6" component="div">
+            Saved POIs
+          </Typography>
+
+          <div className="flex flex-col space-y-4">
+            {savedPois.map((item: PropertyInfo, index) => {
+              if (!item) return null;
+              const images: string[] =
+                Array.isArray(item.photo) && item.photo.length > 0
+                  ? item.photo.filter((p): p is string => typeof p === "string")
+                  : [DEFAULT_IMAGE_URL];
+
+              return (
+                <div
+                  key={`${item.place_id}-${index}`}
+                  className="flex border rounded-lg overflow-hidden shadow-md cursor-pointer "
+                  onClick={() => {
+                    setCurrentGeometry({
+                      lat: item.latitude,
+                      lng: item.longitude,
+                    });
+                    setCurrentInfoWindow(item);
+                    setOpen(false);
+                  }}
+                >
+                  {/* Left: Swiper */}
+                  <div className="w-1/3 relative">
+                    <Swiper
+                      modules={[Navigation, Pagination]}
+                      navigation
+                      pagination={{ clickable: true }}
+                      className="h-full"
                     >
-                      <ListItemAvatar>
-                        <Avatar src={item.photo?.[0]}></Avatar>
-                      </ListItemAvatar>
-                      <ListItemText primary={item.name} />
-                    </ListItem>
-                  );
-                })}
-              </List>
-            </div>
+                      {images.map((img, i) => (
+                        <SwiperSlide key={i}>
+                          <img
+                            src={img}
+                            alt={item.name ?? ""}
+                            className="w-full h-full max-h-48 object-cover rounded-lg aspect-[4/5]"
+                          />
+                        </SwiperSlide>
+                      ))}
+                    </Swiper>
+                  </div>
+
+                  {/* Right: Info */}
+                  <div className="w-2/3 p-4 flex flex-col justify-between">
+                    <div className="flex justify-between items-start">
+                      <Typography className="text-lg font-semibold">
+                        {item.name ?? "Unnamed POI"}
+                      </Typography>
+                      <IconButton onClick={() => handleRemove(item)}>
+                        <DeleteIcon />
+                      </IconButton>
+                    </div>
+
+                    <Typography>
+                      {[item.street, item.suburb, item.state, item.postcode]
+                        .filter(Boolean)
+                        .join(", ") || "No address"}
+                    </Typography>
+
+                    <Typography className="mt-2">
+                      POI Type:
+                      {item.category ?? "POI"}
+                    </Typography>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </Box>
       </Modal>

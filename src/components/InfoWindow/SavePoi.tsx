@@ -12,20 +12,32 @@ import React from "react";
 import axios from "axios";
 import useSavedDataStore from "@/stores/useSavedData";
 import { PropertyInfo } from "../maps/MapContent";
+import { useAuth } from "@clerk/nextjs";
+import { useSnackbar } from "notistack";
 
 type Props = {
   placeData: PropertyInfo;
 };
 
 const SavePoi = (props: Props) => {
+  const { isSignedIn } = useAuth();
+  const { enqueueSnackbar } = useSnackbar();
   const placeData = props.placeData;
-
+  const savedPois = useSavedDataStore.use.savedPois();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const setSavedPois = useSavedDataStore.use.setSavedPois();
 
   const open = Boolean(anchorEl);
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+    if (!isSignedIn) {
+      enqueueSnackbar("Please sign in to save POIs", { variant: "warning" });
+      return;
+    }
+    if (savedPois.length >= 6) {
+      enqueueSnackbar("You can only save up to 6 POIs", { variant: "error" });
+      return;
+    }
     setAnchorEl(event.currentTarget);
   };
 
@@ -79,7 +91,7 @@ const SavePoi = (props: Props) => {
       postcode: postcode,
       latitude: placeData?.geometry?.location?.lat?.() || null,
       longitude: placeData?.geometry?.location?.lng?.() || null,
-      photo: placeData?.photos || [], // ✅ 必须是数组
+      photo: placeData?.photos?.map((item) => item.getUrl()) || [], // ✅ 必须是数组
       note: "Great location!",
       created_at: new Date().toISOString(), // ✅ 必须是 `TIMESTAMP`
       category: type, // 用户选择的 POI 类型
