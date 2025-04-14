@@ -43,21 +43,17 @@ export function calculateTotalScore() {
   } = useRatingStore.getState();
 
   const userWeights = mapPreferenceToWeight(weightConfig);
-
   console.log("Using weights from ratingStore:", userWeights);
 
   const weights = normalizeWeights(userWeights);
   const totalScores: Record<string, number> = {};
-  let maxScore = -Infinity;
-  let minScore = Infinity;
 
   for (const property of properties) {
     const propertyId = property.property_property_id;
-
-    const distanceScore = distanceScores[propertyId] || 0;
-    const priceScore = priceScores[propertyId] || 0;
-    const safetyScore = safetyScores[propertyId] || 0;
-    const amenityScore = amenitiesScores[propertyId] || 0;
+    const distanceScore = distanceScores[propertyId] || 0.4;
+    const priceScore = priceScores[propertyId] || 0.4;
+    const safetyScore = safetyScores[propertyId] || 0.4;
+    const amenityScore = amenitiesScores[propertyId] || 0.4;
 
     const totalScore =
       distanceScore * weights.distance +
@@ -66,19 +62,6 @@ export function calculateTotalScore() {
       amenityScore * weights.amenity;
 
     totalScores[propertyId] = totalScore;
-    maxScore = Math.max(maxScore, totalScore);
-    minScore = Math.min(minScore, totalScore);
-  }
-
-  if (properties.length > 1) {
-    for (const propertyId in totalScores) {
-      if (maxScore === minScore) {
-        totalScores[propertyId] = 1;
-      } else {
-        totalScores[propertyId] =
-          (totalScores[propertyId] - minScore) / (maxScore - minScore);
-      }
-    }
   }
 
   setTotalScores(totalScores);
