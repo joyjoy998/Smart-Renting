@@ -257,9 +257,6 @@ const ScoreTable = () => {
         onClick={() => handlePropertyClick(property)}
       >
         <div className="flex flex-col items-start">
-          <span className="font-medium">
-            ID: {property.property_property_id}
-          </span>
           <span
             className="text-sm truncate max-w-[150px]"
             title={property.address}
