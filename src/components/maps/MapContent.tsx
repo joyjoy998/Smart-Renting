@@ -24,12 +24,25 @@ import { useMapLocationStore } from "@/stores/useMapLocationStore";
 
 export type PropertyInfo =
   | (google.maps.places.PlaceResult & {
-      image?: string;
-      address?: string;
-      savedPoi: any;
-      savedProperty: any;
-      placeId?: string;
-      weekly_rent?: number;
+      saved_property_id: number;
+      group_id: number;
+      property_id: string | null; 
+      place_id: string;
+      street: string;
+      suburb: string;
+      state: string;
+      postcode: string;
+      weekly_rent: number;
+      bedrooms: number;
+      bathrooms: number;
+      parking_spaces: number;
+      property_type: string | null;
+      photo: string[]; 
+      latitude: number;
+      longitude: number;
+      created_at: string;
+      safety_score: number;
+      note: string | null;
     })
   | null;
 

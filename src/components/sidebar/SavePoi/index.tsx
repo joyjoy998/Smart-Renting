@@ -31,6 +31,9 @@ const style = {
   boxShadow: 24,
   p: 2,
 };
+
+const ITEMS_PER_PAGE = 6;
+
 const SavePoiModal = () => {
   const [open, setOpen] = React.useState(false);
   const savedPois = useSavedDataStore.use.savedPois();
