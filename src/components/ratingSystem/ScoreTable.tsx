@@ -5,7 +5,6 @@ import { calculatePriceScore } from "./lib/priceScore";
 import { loadSafetyScores } from "./lib/safetyScore";
 import { calculateAmenitiesScore } from "./lib/amenitiesScore";
 import { calculateTotalScore } from "./lib/finalScore";
-import POISelector from "./POISelector";
 import TravelModeSelector from "./TravelModeSelector";
 import useMapStore from "@/stores/useMapStore";
 import { useGroupSelectorStore } from "@/stores/useGroupSelectorStore";
@@ -13,6 +12,13 @@ import { getPlaceDetail, usePlacesService } from "@/hooks/map/usePlacesService";
 import { geocode, useGeocoder } from "@/hooks/map/useGeocoder";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
+
+interface PropertyToPOIDistance {
+  property: any;
+  poi: any;
+  distance?: number;
+  travelTime?: number;
+}
 
 const ScoreTable = () => {
   const [showDetails, setShowDetails] = useState<
@@ -28,27 +34,42 @@ const ScoreTable = () => {
   const isDark = theme === "dark";
 
   const {
-    selectedPOI,
     travelMode,
     distanceScores,
     travelTimes,
     distances,
     properties,
+    pois,
     priceScores,
     safetyScores,
     amenitiesScores,
     amenitiesData,
     totalScores,
     weightConfig,
+    loadData,
     setOpen: setRatingOpen,
   } = useRatingStore();
 
-  // Distance Score
+  // 确保为所有POIs和properties加载数据
   useEffect(() => {
-    if (selectedPOI && properties.length > 0) {
-      calculateDistanceScore(selectedPOI, travelMode, properties);
+    // Load rating data if needed
+    if (properties.length === 0 || pois.length === 0) {
+      loadData();
     }
-  }, [selectedPOI, travelMode, properties]);
+
+    // 为每个POI计算所有properties的距离分数
+    const calculateAllDistanceScores = async () => {
+      if (properties.length > 0 && pois.length > 0) {
+        for (const poi of pois) {
+          await calculateDistanceScore(poi, travelMode, properties);
+        }
+        // 依然计算总分
+        await calculateTotalScore();
+      }
+    };
+
+    calculateAllDistanceScores();
+  }, [properties, pois, travelMode]);
 
   // Price Score
   useEffect(() => {
@@ -105,17 +126,13 @@ const ScoreTable = () => {
         await calculatePriceScore();
         await loadSafetyScores();
         await calculateAmenitiesScore();
-        if (selectedPOI) {
-          await calculateDistanceScore(selectedPOI, travelMode, properties);
-        }
-
         await calculateTotalScore();
       }
     };
     calculateScores();
-  }, [properties, selectedPOI, weightConfig]);
+  }, [properties, weightConfig]);
 
-  // rank the properties descending
+  // 获取按总分排序的属性
   const sortedProperties = useMemo(() => {
     if (Object.keys(totalScores).length === 0) return properties;
 
@@ -126,6 +143,30 @@ const ScoreTable = () => {
     });
   }, [properties, totalScores]);
 
+  // 创建property和poi的组合数据
+  const propertyPOICombinations = useMemo(() => {
+    if (!sortedProperties.length || !pois.length) return [];
+
+    const combinations: PropertyToPOIDistance[] = [];
+
+    sortedProperties.forEach((property) => {
+      pois.forEach((poi) => {
+        const propertyId = property.property_property_id;
+        const poiId = poi.poi_id;
+        const distanceKey = `${propertyId}_${poiId}`;
+
+        combinations.push({
+          property,
+          poi,
+          distance: distances[distanceKey],
+          travelTime: travelTimes[distanceKey],
+        });
+      });
+    });
+
+    return combinations;
+  }, [sortedProperties, pois, distances, travelTimes]);
+
   const toggleDetails = (propertyId: string | number) => {
     setShowDetails((prev) => ({
       ...prev,
@@ -133,7 +174,7 @@ const ScoreTable = () => {
     }));
   };
 
-  const handleRowClick = async (property: any) => {
+  const handlePropertyClick = async (property: any) => {
     if (property && property.latitude && property.longitude) {
       const latLng = {
         lat: property.latitude,
@@ -160,11 +201,70 @@ const ScoreTable = () => {
     }
   };
 
+  const handlePOIClick = async (poi: any) => {
+    if (poi && poi.latitude && poi.longitude) {
+      const latLng = {
+        lat: poi.latitude,
+        lng: poi.longitude,
+      };
+      setCurrentGeometry(latLng);
+      if (poi.place_id) {
+        if (placesService) {
+          const detail = await getPlaceDetail(placesService, poi.place_id);
+          setCurrentInfoWindow(detail);
+        }
+      } else {
+        if (geocoder && placesService) {
+          const result = await geocode(geocoder, latLng);
+          if (result) {
+            const detail = await getPlaceDetail(placesService, result.place_id);
+            setCurrentInfoWindow(detail);
+          }
+        }
+      }
+    }
+  };
+
+  // 格式化时间显示
+  const formatTravelTime = (seconds?: number) => {
+    if (seconds === undefined) return "N/A";
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.round(seconds % 60);
+    return `${minutes} min ${remainingSeconds} s`;
+  };
+
+  // 渲染每一行的单元格
+  const renderPropertyCell = (property: any, isFirstInGroup: boolean) => {
+    if (!isFirstInGroup) return null;
+    return (
+      <td
+        rowSpan={pois.length}
+        className={cn(
+          "p-2 border-r cursor-pointer",
+          isDark ? "border-gray-700" : "border-gray-300"
+        )}
+        onClick={() => handlePropertyClick(property)}
+      >
+        <div className="flex flex-col items-start">
+          <span className="font-medium">
+            ID: {property.property_property_id}
+          </span>
+          <span
+            className="text-sm truncate max-w-[150px]"
+            title={property.address}
+          >
+            {property.address}
+          </span>
+        </div>
+      </td>
+    );
+  };
+
   return (
     <div className="overflow-x-auto">
       <table
         className={cn(
-          "w-full border-collapse table-fixed",
+          "w-full border-collapse",
           isDark ? "border border-gray-700" : "border border-gray-300"
         )}
       >
@@ -173,219 +273,205 @@ const ScoreTable = () => {
             className={cn(isDark ? "bg-gray-800 text-gray-100" : "bg-gray-200")}
           >
             <th className="p-2 w-1/16">🏠 Property</th>
-            <th className="p-2 w-2/16">📍 Location</th>
             <th className="p-2 w-1/16">💰 Price</th>
             <th className="p-2 w-2/16">🏚️ Layout</th>
-            <th className="p-2 w-4/16 relative">
-              🚶 Distance
-              <div className="mt-1 w-full truncate">
-                <POISelector />
-              </div>
-            </th>
+            <th className="p-2 w-2/16">🏪 Amenities</th>
+            <th className="p-2 w-2/16">📍 POI</th>
+            <th className="p-2 w-2/16">🚶 Distance</th>
             <th className="p-2 w-2/16 relative">
               🕒 Travel Time
               <div className="mt-1 w-full truncate">
                 <TravelModeSelector />
               </div>
             </th>
-            <th className="p-2 w-2/16">🏪 Amenities</th>
-            <th className="p-2 w-2/16">⭐ Total Score</th>
+
+            <th className="p-2 w-2/16">⭐ Score</th>
           </tr>
         </thead>
         <tbody>
-          {sortedProperties.map((property) => (
-            <React.Fragment key={property.property_property_id}>
+          {propertyPOICombinations.map((combo, index) => {
+            const property = combo.property;
+            const poi = combo.poi;
+            const propertyId = property.property_property_id;
+            const poiId = poi.poi_id;
+            const distanceKey = `${propertyId}_${poiId}`;
+
+            // 检查是否是该property的第一个POI组合
+            const isFirstPOIForProperty = index % pois.length === 0;
+
+            return (
               <tr
+                key={`${propertyId}_${poiId}`}
                 className={cn(
-                  "border-t cursor-pointer",
+                  "border-t",
+                  isFirstPOIForProperty ? "border-t-2 border-t-blue-500" : "",
                   isDark
                     ? "hover:bg-gray-700 border-gray-700 text-gray-200"
                     : "hover:bg-gray-50 border-gray-300"
                 )}
-                onClick={() => handleRowClick(property)}
               >
-                <td className="p-2">{property.property_property_id}</td>
-                <td className="p-2 truncate" title={property.address}>
-                  {property.address}
-                </td>
-                <td className="p-2">${property.weeklyRent}/wk</td>
-                <td className="p-2">
-                  🛏️ {property.bedrooms} 🚽 {property.bathrooms} 🚘{" "}
-                  {property.parkingSpaces}
-                </td>
-                <td className="p-2">
-                  {selectedPOI
-                    ? `${
-                        distances[property.property_property_id]?.toFixed(2) ||
-                        "N/A"
-                      } km`
-                    : "Select POI"}
-                </td>
-                <td className="p-2">
-                  {selectedPOI &&
-                  travelTimes[property.property_property_id] !== undefined
-                    ? `${Math.floor(
-                        travelTimes[property.property_property_id] / 60
-                      )} min ${Math.round(
-                        travelTimes[property.property_property_id] % 60
-                      )} s`
-                    : "N/A"}
-                </td>
-                <td
-                  className="p-2 truncate"
-                  title={getDetailedTooltip(property.property_property_id)}
-                >
-                  {formatAmenitiesCounts(property.property_property_id)}
-                </td>
-                <td className="p-2">
-                  <div className="flex justify-between items-center">
-                    <span
-                      className={cn(
-                        "text-lg",
-                        isDark && "text-white font-semibold"
-                      )}
-                    >
-                      {totalScores[property.property_property_id]?.toFixed(1) ||
-                        "N/A"}
-                    </span>
+                {renderPropertyCell(property, isFirstPOIForProperty)}
 
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleDetails(property.property_property_id);
-                      }}
-                      className={cn(
-                        "text-xs rounded px-2 py-1 inline-block",
-                        isDark
-                          ? "text-blue-300 border border-blue-500 hover:bg-blue-900/30"
-                          : "text-blue-500 border border-blue-300 hover:bg-blue-50"
-                      )}
-                    >
-                      {showDetails[property.property_property_id]
-                        ? "Hide"
-                        : "Details"}
-                    </button>
+                {isFirstPOIForProperty && (
+                  <td
+                    rowSpan={pois.length}
+                    className={cn(
+                      "p-2 border-r",
+                      isDark ? "border-gray-700" : "border-gray-300"
+                    )}
+                  >
+                    ${property.weeklyRent}/w
+                  </td>
+                )}
+
+                {isFirstPOIForProperty && (
+                  <td
+                    rowSpan={pois.length}
+                    className={cn(
+                      "p-2 border-r",
+                      isDark ? "border-gray-700" : "border-gray-300"
+                    )}
+                  >
+                    🛏️ {property.bedrooms} 🚽 {property.bathrooms} 🚘{" "}
+                    {property.parkingSpaces}
+                  </td>
+                )}
+
+                {isFirstPOIForProperty && (
+                  <td
+                    rowSpan={pois.length}
+                    className={cn(
+                      "p-2 border-r",
+                      isDark ? "border-gray-700" : "border-gray-300"
+                    )}
+                    title={getDetailedTooltip(propertyId)}
+                  >
+                    {formatAmenitiesCounts(propertyId)}
+                  </td>
+                )}
+
+                <td
+                  className={cn(
+                    "p-2 border-r cursor-pointer",
+                    isDark ? "border-gray-700" : "border-gray-300"
+                  )}
+                  onClick={() => handlePOIClick(poi)}
+                >
+                  <div className="flex flex-col">
+                    <span className="font-medium">{poi.name}</span>
+                    <span className="text-xs text-gray-500">{poi.type}</span>
                   </div>
                 </td>
-              </tr>
-              {showDetails[property.property_property_id] && (
-                <tr className={isDark ? "bg-gray-800" : "bg-gray-100"}>
-                  <td colSpan={8} className="p-2">
-                    <div className="grid grid-cols-4 gap-4 p-2">
-                      <div
-                        className={cn(
-                          "flex flex-col items-center border rounded p-2",
-                          isDark
-                            ? "bg-gray-700 border-gray-600"
-                            : "bg-white border-gray-300"
-                        )}
-                      >
-                        <div
-                          className={cn(
-                            "font-semibold",
-                            isDark && "text-gray-200"
-                          )}
-                        >
-                          🛡 Safety
-                        </div>
-                        <div
-                          className={cn(
-                            "text-lg font-bold",
-                            isDark && "text-white"
-                          )}
-                        >
-                          {safetyScores[property.property_property_id]?.toFixed(
-                            1
-                          ) || "N/A"}
-                        </div>
-                      </div>
-                      <div
-                        className={cn(
-                          "flex flex-col items-center border rounded p-2",
-                          isDark
-                            ? "bg-gray-700 border-gray-600"
-                            : "bg-white border-gray-300"
-                        )}
-                      >
-                        <div
-                          className={cn(
-                            "font-semibold",
-                            isDark && "text-gray-200"
-                          )}
-                        >
-                          📏 Distance
-                        </div>
-                        <div
+
+                <td
+                  className={cn(
+                    "p-2 border-r",
+                    isDark ? "border-gray-700" : "border-gray-300"
+                  )}
+                >
+                  {combo.distance !== undefined
+                    ? `${combo.distance.toFixed(2)} km`
+                    : "N/A"}
+                </td>
+
+                <td
+                  className={cn(
+                    "p-2 border-r",
+                    isDark ? "border-gray-700" : "border-gray-300"
+                  )}
+                >
+                  {formatTravelTime(combo.travelTime)}
+                </td>
+
+                {isFirstPOIForProperty && (
+                  <td
+                    rowSpan={pois.length}
+                    className={cn(
+                      "p-2",
+                      isDark ? "border-gray-700" : "border-gray-300"
+                    )}
+                  >
+                    <div className="flex flex-col">
+                      <div className="flex justify-between items-center mb-2">
+                        <span
                           className={cn(
                             "text-lg font-bold",
                             isDark && "text-white"
                           )}
                         >
-                          {distanceScores[
-                            property.property_property_id
-                          ]?.toFixed(1) || "N/A"}
-                        </div>
+                          {totalScores[propertyId]?.toFixed(1) || "N/A"}
+                        </span>
+
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleDetails(propertyId);
+                          }}
+                          className={cn(
+                            "text-xs rounded px-2 py-1 inline-block",
+                            isDark
+                              ? "text-blue-300 border border-blue-500 hover:bg-blue-900/30"
+                              : "text-blue-500 border border-blue-300 hover:bg-blue-50"
+                          )}
+                        >
+                          {showDetails[propertyId] ? "Hide" : "Details"}
+                        </button>
                       </div>
-                      <div
-                        className={cn(
-                          "flex flex-col items-center border rounded p-2",
-                          isDark
-                            ? "bg-gray-700 border-gray-600"
-                            : "bg-white border-gray-300"
-                        )}
-                      >
-                        <div
-                          className={cn(
-                            "font-semibold",
-                            isDark && "text-gray-200"
-                          )}
-                        >
-                          💰 Price
+
+                      {showDetails[propertyId] && (
+                        <div className="grid grid-cols-2 gap-2">
+                          <div
+                            className={cn(
+                              "flex items-center justify-between p-1 rounded",
+                              isDark ? "bg-gray-700" : "bg-gray-100"
+                            )}
+                          >
+                            <span>🛡 Safety:</span>
+                            <span className="font-medium">
+                              {safetyScores[propertyId]?.toFixed(1) || "N/A"}
+                            </span>
+                          </div>
+                          <div
+                            className={cn(
+                              "flex items-center justify-between p-1 rounded",
+                              isDark ? "bg-gray-700" : "bg-gray-100"
+                            )}
+                          >
+                            <span>📏 Distance:</span>
+                            <span className="font-medium">
+                              {distanceScores[propertyId]?.toFixed(1) || "N/A"}
+                            </span>
+                          </div>
+                          <div
+                            className={cn(
+                              "flex items-center justify-between p-1 rounded",
+                              isDark ? "bg-gray-700" : "bg-gray-100"
+                            )}
+                          >
+                            <span>💰 Price:</span>
+                            <span className="font-medium">
+                              {priceScores[propertyId]?.toFixed(1) || "N/A"}
+                            </span>
+                          </div>
+                          <div
+                            className={cn(
+                              "flex items-center justify-between p-1 rounded",
+                              isDark ? "bg-gray-700" : "bg-gray-100"
+                            )}
+                          >
+                            <span>🏪 Amenities:</span>
+                            <span className="font-medium">
+                              {amenitiesScores[propertyId]?.toFixed(1) || "N/A"}
+                            </span>
+                          </div>
                         </div>
-                        <div
-                          className={cn(
-                            "text-lg font-bold",
-                            isDark && "text-white"
-                          )}
-                        >
-                          {priceScores[property.property_property_id]?.toFixed(
-                            1
-                          ) || "N/A"}
-                        </div>
-                      </div>
-                      <div
-                        className={cn(
-                          "flex flex-col items-center border rounded p-2",
-                          isDark
-                            ? "bg-gray-700 border-gray-600"
-                            : "bg-white border-gray-300"
-                        )}
-                      >
-                        <div
-                          className={cn(
-                            "font-semibold",
-                            isDark && "text-gray-200"
-                          )}
-                        >
-                          🏪 Amenities
-                        </div>
-                        <div
-                          className={cn(
-                            "text-lg font-bold",
-                            isDark && "text-white"
-                          )}
-                        >
-                          {amenitiesScores[
-                            property.property_property_id
-                          ]?.toFixed(1) || "N/A"}
-                        </div>
-                      </div>
+                      )}
                     </div>
                   </td>
-                </tr>
-              )}
-            </React.Fragment>
-          ))}
+                )}
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
