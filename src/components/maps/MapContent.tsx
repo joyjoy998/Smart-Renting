@@ -26,7 +26,7 @@ export type PropertyInfo =
   | (google.maps.places.PlaceResult & {
       saved_property_id: number;
       group_id: number;
-      property_id: string | null; 
+      property_id: string | null;
       place_id: string;
       street: string;
       suburb: string;
@@ -37,12 +37,13 @@ export type PropertyInfo =
       bathrooms: number;
       parking_spaces: number;
       property_type: string | null;
-      photo: string[]; 
+      photo: string[];
       latitude: number;
       longitude: number;
       created_at: string;
       safety_score: number;
       note: string | null;
+      category: string | null;
     })
   | null;
 

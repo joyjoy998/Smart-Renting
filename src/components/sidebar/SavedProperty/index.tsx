@@ -163,33 +163,3 @@ const SavedPropertyModal = () => {
 };
 
 export default SavedPropertyModal;
-
-//                     <ListItem
-//                       secondaryAction={
-//                         <IconButton
-//                           edge="end"
-//                           aria-label="delete"
-//                           onClick={() => handleRemoveSaved(item)}
-//                         >
-//                           <DeleteIcon />
-//                         </IconButton>
-//                       }
-//                     >
-//                       <ListItemAvatar>
-//                         <Avatar src={item.photo?.[0]}></Avatar>
-//                       </ListItemAvatar>
-//                       {/* 后面要把street删掉用name */}
-//                       <ListItemText primary={item.name || item.street} />
-//                     </ListItem>
-//                   );
-//                 })}
-//               </List>
-//             </div>
-//           </div>
-//         </Box>
-//       </Modal>
-//     </div>
-//   );
-// };
-
-// export default SavedPropertyModal;
