@@ -22,6 +22,7 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import { useSnackbar } from "notistack";
+import useMapStore from "@/stores/useMapStore";
 const DEFAULT_IMAGE_URL = "/property-unavailable.png";
 type Props = { placeData: PropertyInfo };
 
@@ -38,7 +39,8 @@ const style = {
 };
 const SavedPropertyModal = () => {
   const { enqueueSnackbar } = useSnackbar();
-
+  const setCurrentGeometry = useMapStore.use.setCurrentGeometry();
+  const setCurrentInfoWindow = useMapStore.use.setCurrentInfoWindow();
   const [open, setOpen] = React.useState(false);
   const savedProperties =
     useSavedDataStore.use.savedProperties() as PropertyInfo[];
@@ -101,6 +103,14 @@ const SavedPropertyModal = () => {
                 <div
                   key={item.place_id}
                   className="flex border rounded-lg overflow-hidden shadow-md"
+                  onClick={() => {
+                    setCurrentGeometry({
+                      lat: item.latitude,
+                      lng: item.longitude,
+                    });
+                    setCurrentInfoWindow(item);
+                    setOpen(false);
+                  }}
                 >
                   {/* Left: Swiper Image */}
                   <div className="w-1/3 relative">
