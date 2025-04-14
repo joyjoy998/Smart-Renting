@@ -50,20 +50,17 @@ const ScoreTable = () => {
     setOpen: setRatingOpen,
   } = useRatingStore();
 
-  // 确保为所有POIs和properties加载数据
   useEffect(() => {
     // Load rating data if needed
     if (properties.length === 0 || pois.length === 0) {
       loadData();
     }
 
-    // 为每个POI计算所有properties的距离分数
     const calculateAllDistanceScores = async () => {
       if (properties.length > 0 && pois.length > 0) {
         for (const poi of pois) {
           await calculateDistanceScore(poi, travelMode, properties);
         }
-        // 依然计算总分
         await calculateTotalScore();
       }
     };
@@ -103,7 +100,16 @@ const ScoreTable = () => {
       `🌳 ${amenitiesData[propertyId].park?.count || 0}`,
     ];
 
-    return counts.join(" | ");
+    return (
+      <>
+        {counts.map((item, index) => (
+          <React.Fragment key={index}>
+            {item}
+            {index < counts.length - 1 && <br />}
+          </React.Fragment>
+        ))}
+      </>
+    );
   };
 
   // display the detailed number of amenities of each category
@@ -132,7 +138,6 @@ const ScoreTable = () => {
     calculateScores();
   }, [properties, weightConfig]);
 
-  // 获取按总分排序的属性
   const sortedProperties = useMemo(() => {
     if (Object.keys(totalScores).length === 0) return properties;
 
@@ -143,7 +148,6 @@ const ScoreTable = () => {
     });
   }, [properties, totalScores]);
 
-  // 创建property和poi的组合数据
   const propertyPOICombinations = useMemo(() => {
     if (!sortedProperties.length || !pois.length) return [];
 
@@ -172,6 +176,15 @@ const ScoreTable = () => {
       ...prev,
       [propertyId]: !prev[propertyId],
     }));
+  };
+
+  const getScoreDetailsTooltip = (propertyId: string | number) => {
+    return `
+      Safety: ${safetyScores[propertyId]?.toFixed(1) || "N/A"} 
+      Distance: ${distanceScores[propertyId]?.toFixed(1) || "N/A"} 
+      Price: ${priceScores[propertyId]?.toFixed(1) || "N/A"} 
+      Amenities: ${amenitiesScores[propertyId]?.toFixed(1) || "N/A"}
+    `;
   };
 
   const handlePropertyClick = async (property: any) => {
@@ -225,7 +238,6 @@ const ScoreTable = () => {
     }
   };
 
-  // 格式化时间显示
   const formatTravelTime = (seconds?: number) => {
     if (seconds === undefined) return "N/A";
     const minutes = Math.floor(seconds / 60);
@@ -233,7 +245,6 @@ const ScoreTable = () => {
     return `${minutes} min ${remainingSeconds} s`;
   };
 
-  // 渲染每一行的单元格
   const renderPropertyCell = (property: any, isFirstInGroup: boolean) => {
     if (!isFirstInGroup) return null;
     return (
@@ -295,8 +306,6 @@ const ScoreTable = () => {
             const propertyId = property.property_property_id;
             const poiId = poi.poi_id;
             const distanceKey = `${propertyId}_${poiId}`;
-
-            // 检查是否是该property的第一个POI组合
             const isFirstPOIForProperty = index % pois.length === 0;
 
             return (
@@ -332,8 +341,9 @@ const ScoreTable = () => {
                       isDark ? "border-gray-700" : "border-gray-300"
                     )}
                   >
-                    🛏️ {property.bedrooms} 🚽 {property.bathrooms} 🚘{" "}
-                    {property.parkingSpaces}
+                    🛏️ {property.bedrooms} <br />
+                    🚽 {property.bathrooms}
+                    <br /> 🚘 {property.parkingSpaces}
                   </td>
                 )}
 
@@ -387,12 +397,12 @@ const ScoreTable = () => {
                   <td
                     rowSpan={pois.length}
                     className={cn(
-                      "p-2",
+                      "p-2 relative",
                       isDark ? "border-gray-700" : "border-gray-300"
                     )}
                   >
                     <div className="flex flex-col">
-                      <div className="flex justify-between items-center mb-2">
+                      <div className="flex justify-between items-center">
                         <span
                           className={cn(
                             "text-lg font-bold",
@@ -402,70 +412,86 @@ const ScoreTable = () => {
                           {totalScores[propertyId]?.toFixed(1) || "N/A"}
                         </span>
 
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleDetails(propertyId);
-                          }}
-                          className={cn(
-                            "text-xs rounded px-2 py-1 inline-block",
-                            isDark
-                              ? "text-blue-300 border border-blue-500 hover:bg-blue-900/30"
-                              : "text-blue-500 border border-blue-300 hover:bg-blue-50"
-                          )}
-                        >
-                          {showDetails[propertyId] ? "Hide" : "Details"}
-                        </button>
-                      </div>
+                        <div className="relative">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleDetails(propertyId);
+                            }}
+                            className={cn(
+                              "text-xs rounded px-2 py-1 inline-block",
+                              isDark
+                                ? "text-blue-300 border border-blue-500 hover:bg-blue-900/30"
+                                : "text-blue-500 border border-blue-300 hover:bg-blue-50"
+                            )}
+                            title={getScoreDetailsTooltip(propertyId)}
+                          >
+                            {showDetails[propertyId] ? "Close" : "Details"}
+                          </button>
 
-                      {showDetails[propertyId] && (
-                        <div className="grid grid-cols-2 gap-2">
-                          <div
-                            className={cn(
-                              "flex items-center justify-between p-1 rounded",
-                              isDark ? "bg-gray-700" : "bg-gray-100"
-                            )}
-                          >
-                            <span>🛡 Safety:</span>
-                            <span className="font-medium">
-                              {safetyScores[propertyId]?.toFixed(1) || "N/A"}
-                            </span>
-                          </div>
-                          <div
-                            className={cn(
-                              "flex items-center justify-between p-1 rounded",
-                              isDark ? "bg-gray-700" : "bg-gray-100"
-                            )}
-                          >
-                            <span>📏 Distance:</span>
-                            <span className="font-medium">
-                              {distanceScores[propertyId]?.toFixed(1) || "N/A"}
-                            </span>
-                          </div>
-                          <div
-                            className={cn(
-                              "flex items-center justify-between p-1 rounded",
-                              isDark ? "bg-gray-700" : "bg-gray-100"
-                            )}
-                          >
-                            <span>💰 Price:</span>
-                            <span className="font-medium">
-                              {priceScores[propertyId]?.toFixed(1) || "N/A"}
-                            </span>
-                          </div>
-                          <div
-                            className={cn(
-                              "flex items-center justify-between p-1 rounded",
-                              isDark ? "bg-gray-700" : "bg-gray-100"
-                            )}
-                          >
-                            <span>🏪 Amenities:</span>
-                            <span className="font-medium">
-                              {amenitiesScores[propertyId]?.toFixed(1) || "N/A"}
-                            </span>
-                          </div>
+                          {showDetails[propertyId] && (
+                            <div
+                              className={cn(
+                                "absolute z-10 right-0 mt-1 p-2 rounded shadow-lg w-52",
+                                isDark
+                                  ? "bg-gray-800 border border-gray-700"
+                                  : "bg-white border border-gray-200"
+                              )}
+                            >
+                              <div className="space-y-2">
+                                <div
+                                  className={cn(
+                                    "flex items-center justify-between p-1 rounded",
+                                    isDark ? "bg-gray-700" : "bg-gray-100"
+                                  )}
+                                >
+                                  <span>🛡 Safety:</span>
+                                  <span className="font-medium">
+                                    {safetyScores[propertyId]?.toFixed(1) ||
+                                      "N/A"}
+                                  </span>
+                                </div>
+                                <div
+                                  className={cn(
+                                    "flex items-center justify-between p-1 rounded",
+                                    isDark ? "bg-gray-700" : "bg-gray-100"
+                                  )}
+                                >
+                                  <span>📏 Distance:</span>
+                                  <span className="font-medium">
+                                    {distanceScores[propertyId]?.toFixed(1) ||
+                                      "N/A"}
+                                  </span>
+                                </div>
+                                <div
+                                  className={cn(
+                                    "flex items-center justify-between p-1 rounded",
+                                    isDark ? "bg-gray-700" : "bg-gray-100"
+                                  )}
+                                >
+                                  <span>💰 Price:</span>
+                                  <span className="font-medium">
+                                    {priceScores[propertyId]?.toFixed(1) ||
+                                      "N/A"}
+                                  </span>
+                                </div>
+                                <div
+                                  className={cn(
+                                    "flex items-center justify-between p-1 rounded",
+                                    isDark ? "bg-gray-700" : "bg-gray-100"
+                                  )}
+                                >
+                                  <span>🏪 Amenities:</span>
+                                  <span className="font-medium">
+                                    {amenitiesScores[propertyId]?.toFixed(1) ||
+                                      "N/A"}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          )}
                         </div>
-                      )}
+                      </div>
                     </div>
                   </td>
                 )}
