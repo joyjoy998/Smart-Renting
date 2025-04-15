@@ -287,7 +287,7 @@ export const ArchivePopup = () => {
       {/* Archive弹出面板 */}
       <div
         className={`
-        fixed top-1/4 left-64  
+        fixed top-[84px] left-64  
         h-[50vh] w-80
         bg-background border-r 
         rounded-tr-lg rounded-br-lg

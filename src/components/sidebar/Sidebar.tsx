@@ -26,7 +26,7 @@ import {
   SignedOut,
   SignOutButton,
 } from "@clerk/nextjs";
-import { ArchivePopup } from "./historyManagement/ArchivePopup";
+import { ArchivePopup } from "./archiveManagement/ArchivePopup";
 import { SettingsPopup } from "./SettingsPopup";
 import { useArchiveStore } from "@/stores/useArchiveStore";
 import { set } from "lodash";
@@ -78,6 +78,17 @@ export function Sidebar() {
         </div>
 
         <div className="p-4 space-y-2">
+          <SignedIn>
+            <button
+              className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg"
+              onClick={() => {
+                useArchiveStore.getState().setArchiveOpen(true);
+              }}
+            >
+              <History className="h-5 w-5" />
+              <span>Archive Management</span>
+            </button>
+          </SignedIn>
           <SavePoiModal />
 
           <SavedPropertyModal />
@@ -107,18 +118,6 @@ export function Sidebar() {
             <span>Recommendation</span>
           </button>
           <RecommendationPopup />
-
-          <SignedIn>
-            <button
-              className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg"
-              onClick={() => {
-                useArchiveStore.getState().setArchiveOpen(true);
-              }}
-            >
-              <History className="h-5 w-5" />
-              <span>History Management</span>
-            </button>
-          </SignedIn>
         </div>
 
         {/* Functional area for help, Settings and Login Logout */}
