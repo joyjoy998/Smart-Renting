@@ -7,8 +7,7 @@ CREATE TABLE users (
     username VARCHAR(20) NOT NULL,         
     email VARCHAR(255) NOT NULL UNIQUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_sign_at TIMESTAMP,
-    delete_at TIMESTAMP DEFAULT NULL
+    last_sign_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE user_preferences (
