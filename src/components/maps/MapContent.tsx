@@ -106,7 +106,10 @@ export function MapContent() {
       geometry: currentInfoWindow.geometry,
       types: currentInfoWindow.types,
       utc_offset_minutes: currentInfoWindow.utc_offset_minutes,
-      image: currentInfoWindow?.photos?.[0]?.getUrl() || "",
+      image:
+        matchedProperty?.photo?.[0] ||
+        currentInfoWindow?.photos?.[0]?.getUrl() ||
+        "",
       address: currentInfoWindow?.formatted_address,
       isSavedPoi: !!matchedPoi,
       isSavedProperty: !!matchedProperty,
