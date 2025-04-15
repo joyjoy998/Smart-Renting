@@ -7,8 +7,7 @@ CREATE TABLE users (
     username VARCHAR(20) NOT NULL,         
     email VARCHAR(255) NOT NULL UNIQUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_sign_at TIMESTAMP,
-    delete_at TIMESTAMP DEFAULT NULL
+    last_sign_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE user_preferences (
@@ -70,7 +69,7 @@ CREATE TABLE poi_markers (
 CREATE TABLE saved_groups (
     group_id SERIAL PRIMARY KEY,
     user_id TEXT NOT NULL,
-    group_name TEXT NOT NULL UNIQUE,  
+    group_name TEXT NOT NULL,  
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_saved_groups_user FOREIGN KEY (user_id)
         REFERENCES users(user_id)
