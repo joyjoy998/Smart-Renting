@@ -18,87 +18,77 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // query the properties table where place_id is null or PlaceIdPlaceHolder
+    // query the properties table where photo is an empty array
     const { data: properties, error: fetchError } = await supabase
       .from("properties")
       .select("*")
-      .or('place_id.is.null,place_id.eq."",place_id.eq.PlaceIdPlaceHolder')
-      .not("latitude", "is", "null")
-      .not("longitude", "is", "null");
+      .eq("photo", "{}")
+      .not("place_id", "is", "null");
 
     if (fetchError) {
       console.error("Error fetching properties:", fetchError);
       throw fetchError;
     }
 
-    // add debug log
-    console.log("Query conditions:", {
-      or_filter: 'place_id.is.null,place_id.eq."",place_id.eq.PlaceIdPlaceHolder'
-    });
-
     if (!properties || properties.length === 0) {
-      console.log("No properties found matching the criteria");
+      console.log("No properties found with empty photos");
       return NextResponse.json(
-        { message: "No properties need place_id update" },
+        { message: "No properties need photo update" },
         { status: 200 }
       );
     }
 
-    console.log(`Found ${properties.length} properties that need place_id update`);
-    console.log("Sample property:", properties[0]);
+    console.log(`Found ${properties.length} properties that need photo update`);
 
     const results = [];
     let successCount = 0;
     let errorCount = 0;
 
-    // call the reverse geocoding API for each property
+    // call Google Places API to get photos for each property
     for (let i = 0; i < properties.length; i++) {
       const property = properties[i];
       console.log(
         `Processing ${i + 1}/${properties.length}: Property ID ${property.property_id}`
       );
 
-      const { latitude, longitude } = property;
-
       try {
-        // use latitude and longitude to construct the request URL for the reverse geocoding API
-        const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${googleMapsApiKey}`;
-        const response = await fetch(url);
-        const geocodeData = await response.json();
+        // 1. get Place Details to get photo references
+        const placeDetailsUrl = `https://places.googleapis.com/v1/places/${property.place_id}?fields=photos&key=${googleMapsApiKey}`;
+        const placeDetailsResponse = await fetch(placeDetailsUrl, {
+          headers: {
+            'X-Goog-FieldMask': 'photos'
+          }
+        });
+        const placeDetailsData = await placeDetailsResponse.json();
 
-        if (
-          geocodeData.status === "OK" &&
-          geocodeData.results &&
-          geocodeData.results.length > 0
-        ) {
-          // get the place_id of the first result
-          const place_id = geocodeData.results[0].place_id;
-
-          // update the place_id in the database
-          const { error: updateError } = await supabase
-            .from("properties")
-            .update({ place_id })
-            .eq("property_id", property.property_id);
-
-          if (updateError) throw updateError;
-          successCount++;
-
-          results.push({
-            property_id: property.property_id,
-            status: "success",
-            place_id,
-          });
-        } else {
-          console.error(
-            `Error: Property ID ${property.property_id}, reverse geocoding failed: ${geocodeData.status}`
-          );
-          errorCount++;
-          results.push({
-            property_id: property.property_id,
-            status: "error",
-            message: `Reverse geocoding failed: ${geocodeData.status}`,
-          });
+        let photos = [];
+        if (placeDetailsData.photos && placeDetailsData.photos.length > 0) {
+          // get up to 2 photos
+          const maxPhotos = Math.min(2, placeDetailsData.photos.length);
+          for (let j = 0; j < maxPhotos; j++) {
+            const photoName = placeDetailsData.photos[j].name;
+            // use the new Place Photo API to get the photo URL
+            const photoUrl = `https://places.googleapis.com/v1/${photoName}/media?maxWidthPx=800&key=${googleMapsApiKey}`;
+            photos.push(photoUrl);
+          }
         }
+
+        // update the photos in the database
+        const { error: updateError } = await supabase
+          .from("properties")
+          .update({ 
+            photo: photos.length > 0 ? photos : null
+          })
+          .eq("property_id", property.property_id);
+
+        if (updateError) throw updateError;
+        successCount++;
+
+        results.push({
+          property_id: property.property_id,
+          status: "success",
+          photos_count: photos.length
+        });
       } catch (err) {
         console.error(
           `Error: Property ID ${property.property_id}, ${(err as Error).message}`
@@ -117,7 +107,7 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    console.log("\nPlace ID update completed:");
+    console.log("\nPhoto update completed:");
     console.log(`Total: ${properties.length} properties`);
     console.log(`Success: ${successCount} properties`);
     console.log(`Failed: ${errorCount} properties`);
@@ -127,6 +117,7 @@ export async function GET(req: NextRequest) {
         total: properties.length,
         success: successCount,
         error: errorCount,
+        results
       },
       { status: 200 }
     );
@@ -137,4 +128,4 @@ export async function GET(req: NextRequest) {
       { status: 500 }
     );
   }
-}
+} 

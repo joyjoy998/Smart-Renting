@@ -102,7 +102,7 @@ CREATE TABLE saved_properties (
         ON DELETE CASCADE,
     CONSTRAINT fk_property_id FOREIGN KEY (property_id)
         REFERENCES properties(property_id)
-        ON DELETE CASCADE
+        ON DELETE SET NULL
 );
 
 -- user saved POIs (detailed info stored in this table)
@@ -127,7 +127,7 @@ CREATE TABLE saved_pois (
         ON DELETE CASCADE,
     CONSTRAINT fk_poi_id FOREIGN KEY (poi_id)
         REFERENCES poi_markers(poi_id)
-        ON DELETE CASCADE
+        ON DELETE SET NULL
 );
 
 -- =====================================================
