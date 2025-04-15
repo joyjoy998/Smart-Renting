@@ -9,7 +9,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  // 从URL获取group_id参数
+  // get group_id parameter from url
   const { searchParams } = new URL(request.url);
   const groupId = searchParams.get("groupId");
 
@@ -21,7 +21,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    // 验证组是否属于当前用户
+    // validate if the group belongs to the current user
     const { data: group, error: groupError } = await supabase
       .from("saved_groups")
       .select("*")
@@ -36,7 +36,7 @@ export async function GET(request: Request) {
       );
     }
 
-    // 获取组的properties
+    // get the properties of the group
     const { data: properties, error: propertiesError } = await supabase
       .from("saved_properties")
       .select("*")
@@ -49,7 +49,7 @@ export async function GET(request: Request) {
       );
     }
 
-    // 获取组的POIs
+    // get the POIs of the group
     const { data: pois, error: poisError } = await supabase
       .from("saved_pois")
       .select("*")
