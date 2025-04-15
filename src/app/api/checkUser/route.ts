@@ -21,6 +21,17 @@ export async function POST() {
       .single();
 
     if (data) {
+      const { error: lastSignInError } = await supabase
+        .from("users")
+        .update({ last_sign_at: new Date().toISOString() })
+        .eq("user_id", userId);
+      if (lastSignInError) {
+        return NextResponse.json(
+          { error: lastSignInError.message },
+          { status: 500 }
+        );
+      }
+      // if the user exists, return a success response
       return NextResponse.json(
         { success: true, message: "User already exists" },
         { status: 200 }
