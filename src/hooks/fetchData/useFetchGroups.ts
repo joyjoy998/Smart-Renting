@@ -3,11 +3,13 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { useAuth } from "@clerk/clerk-react";
 import { useGroupIdStore, useGroupStore } from "@/stores/useGroupStore";
+import { useCheckedStore } from "@/stores/useCheckedStore";
 
 export const useFetchGroups = () => {
   const { setGroupId } = useGroupIdStore();
   const { isSignedIn, isLoaded } = useAuth();
   const [error, setError] = useState<string | null>(null);
+  const { isChecked } = useCheckedStore();
 
   useEffect(() => {
     if (!isLoaded || !isSignedIn) return;
@@ -28,11 +30,13 @@ export const useFetchGroups = () => {
           setError(response.data.error || "Failed to fetch groups");
         }
       } catch (error) {
-        setError(error.response?.data?.error || "Error fetching groups");
+        if (axios.isAxiosError(error)) {
+          setError(error.response?.data?.error || "Error validating user");
+        }
         console.error("Error fetching groups:", error);
       }
     };
     fetchGroups();
-  }, [isSignedIn, isLoaded]);
+  }, [isSignedIn, isLoaded, isChecked]);
   return { error };
 };

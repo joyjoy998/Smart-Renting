@@ -70,7 +70,7 @@ CREATE TABLE poi_markers (
 CREATE TABLE saved_groups (
     group_id SERIAL PRIMARY KEY,
     user_id TEXT NOT NULL,
-    group_name TEXT NOT NULL UNIQUE,  
+    group_name TEXT NOT NULL,  
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_saved_groups_user FOREIGN KEY (user_id)
         REFERENCES users(user_id)
