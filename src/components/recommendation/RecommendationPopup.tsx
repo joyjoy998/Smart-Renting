@@ -163,11 +163,11 @@ const RecommendationPopup = () => {
                 return (
                   <div
                     key={property.property_id}
-                    className="flex border rounded-lg overflow-hidden shadow-md "
+                    className="flex border rounded-lg overflow-hidden shadow-md relative"
                     onClick={() => handlePropertyClick(property)}>
-                    {/* Left side image slider */}
+                    {/* Left side image slider - prevent propagation */}
                     <div
-                      className="w-1/3 relative"
+                      className="w-1/3 relative z-10"
                       onClick={(e) => e.stopPropagation()}>
                       <Swiper
                         modules={[Navigation, Pagination]}
@@ -193,11 +193,16 @@ const RecommendationPopup = () => {
                         <p className="text-xl font-bold">
                           ${property.weekly_rent} per week
                         </p>
-                        <FavoriteButton
-                          propertyId={property.property_id}
-                          placeData={property}
-                          onFavorite={() => setShouldRefetchOnNextPage(true)}
-                        />
+                        {/* MODIFIED: Favorite button with stopPropagation */}
+                        <div
+                          className="z-10"
+                          onClick={(e) => e.stopPropagation()}>
+                          <FavoriteButton
+                            propertyId={property.property_id}
+                            placeData={property}
+                            onFavorite={() => setShouldRefetchOnNextPage(true)}
+                          />
+                        </div>
                       </div>
 
                       {/* Row 2 - Address */}
