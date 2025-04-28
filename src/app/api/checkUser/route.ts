@@ -18,7 +18,7 @@ export async function POST() {
       .from("users")
       .select("user_id")
       .eq("user_id", userId)
-      .single();
+      .maybeSingle();
 
     if (data) {
       const { error: lastSignInError } = await supabase
@@ -44,7 +44,7 @@ export async function POST() {
 
     if (insertUserError) {
       return NextResponse.json(
-        { error: insertUserError.message },
+        { error: insertUserError.message, details: insertUserError.details },
         { status: 500 }
       );
     } else {
