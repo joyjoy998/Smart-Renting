@@ -37,11 +37,15 @@ import { useRecommendationStore } from "@/stores/useRecommendationStore";
 import GroupSelector from "@/components/ratingSystem/GroupSelector";
 import { useState } from "react";
 import { useGroupSelectorStore } from "../../stores/useGroupSelectorStore";
+import { useTheme } from "next-themes";
+import { cn } from "@/lib/utils";
 
 export function Sidebar() {
   const { isOpen, setOpen } = useSidebarStore();
   const { isOpen: groupSelectorOpen, setOpen: setGroupSelectorOpen } =
     useGroupSelectorStore();
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
 
   return (
     <>
@@ -166,14 +170,24 @@ export function Sidebar() {
       {groupSelectorOpen && (
         <div className="fixed inset-0 z-[1500] bg-black/30 flex items-center justify-center">
           <div
-            className="bg-white rounded-lg p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto relative"
+            className={cn(
+              "rounded-lg p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto relative",
+              isDark
+                ? "bg-gray-800 text-gray-200 border border-gray-700 shadow-lg shadow-blue-900/20"
+                : "bg-white text-gray-800"
+            )}
             onClick={(e) => e.stopPropagation()}
           >
             <button
-              className="absolute top-2 right-2"
+              className={cn(
+                "absolute top-2 right-2 p-1 rounded-full hover:bg-opacity-20",
+                isDark
+                  ? "text-gray-300 hover:bg-gray-600"
+                  : "text-gray-500 hover:bg-gray-200"
+              )}
               onClick={() => setGroupSelectorOpen(false)}
             >
-              ✕
+              <X className="h-5 w-5" />
             </button>
             <GroupSelector />
           </div>
