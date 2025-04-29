@@ -12,7 +12,7 @@ export const useFetchGroups = () => {
   const { isChecked } = useCheckedStore();
 
   useEffect(() => {
-    if (!isLoaded || !isSignedIn) return;
+    if (!isLoaded || !isSignedIn || !userId) return;
 
     const fetchGroups = async () => {
       setError(null);
@@ -26,7 +26,7 @@ export const useFetchGroups = () => {
           if (groups.length > 0) {
             useGroupStore.getState().setGroups(groups);
             const currentGroup = groups[groups.length - 1];
-            setGroupId(currentGroup.group_id);
+            useGroupIdStore.getState().setGroupId(currentGroup.group_id);
           }
         } else {
           setError(response.data.error || "Failed to fetch groups");
