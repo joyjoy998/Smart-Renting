@@ -7,7 +7,7 @@ import { useCheckedStore } from "@/stores/useCheckedStore";
 
 export const useFetchGroups = () => {
   const { setGroupId } = useGroupIdStore();
-  const { isSignedIn, isLoaded } = useAuth();
+  const { isSignedIn, isLoaded, userId } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const { isChecked } = useCheckedStore();
 
@@ -16,6 +16,8 @@ export const useFetchGroups = () => {
 
     const fetchGroups = async () => {
       setError(null);
+      useGroupStore.getState().reset();
+      useGroupIdStore.getState().reset();
 
       try {
         const response = await axios.get("/api/groupId/get");
@@ -37,6 +39,6 @@ export const useFetchGroups = () => {
       }
     };
     fetchGroups();
-  }, [isSignedIn, isLoaded, isChecked]);
+  }, [isSignedIn, isLoaded, userId, isChecked]);
   return { error };
 };
