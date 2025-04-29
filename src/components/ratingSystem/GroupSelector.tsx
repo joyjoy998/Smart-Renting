@@ -3,6 +3,8 @@ import { useRatingStore } from "@/stores/ratingStore";
 import { useGroupIdStore } from "@/stores/useGroupStore";
 import { useGroupSelectorStore } from "@/stores/useGroupSelectorStore";
 import { useAuth } from "@clerk/nextjs";
+import { useTheme } from "next-themes";
+import { cn } from "@/lib/utils";
 
 export default function GroupSelector() {
   const [loading, setLoading] = useState(true);
@@ -12,6 +14,8 @@ export default function GroupSelector() {
   const { isSignedIn } = useAuth();
   const { currentGroupId } = useGroupIdStore();
   const { setOpen: setGroupSelectorOpen } = useGroupSelectorStore();
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
 
   useEffect(() => {
     if (!isSignedIn) {
@@ -86,9 +90,21 @@ export default function GroupSelector() {
 
   if (insufficientData) {
     content = (
-      <div className="bg-white rounded-lg p-6">
-        <h2 className="text-xl font-semibold mb-4">Insufficient Data</h2>
-        <p className="text-gray-700 mb-6">
+      <div
+        className={cn(
+          "rounded-lg p-6",
+          isDark ? "bg-gray-800 text-gray-200" : "bg-white text-gray-800"
+        )}
+      >
+        <h2
+          className={cn(
+            "text-xl font-semibold mb-4",
+            isDark ? "text-gray-100" : "text-gray-800"
+          )}
+        >
+          Insufficient Data
+        </h2>
+        <p className={cn("mb-6", isDark ? "text-gray-300" : "text-gray-700")}>
           Your current group doesn't have enough properties or POIs to generate
           a report. <br />
           <br />
@@ -98,7 +114,12 @@ export default function GroupSelector() {
         <div className="flex justify-end gap-2">
           <button
             onClick={handleClose}
-            className="px-4 py-2 border rounded-md hover:bg-gray-50"
+            className={cn(
+              "px-4 py-2 border rounded-md",
+              isDark
+                ? "border-gray-600 hover:bg-gray-700 text-gray-200"
+                : "border-gray-300 hover:bg-gray-50 text-gray-800"
+            )}
           >
             Close
           </button>
@@ -107,9 +128,23 @@ export default function GroupSelector() {
     );
   } else if (!isSignedIn) {
     content = (
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-        <h3 className="text-lg font-medium text-blue-800">Sign In Required</h3>
-        <p className="mt-2 text-blue-700">
+      <div
+        className={cn(
+          "border rounded-lg p-6",
+          isDark
+            ? "bg-blue-900/30 border-blue-800 text-blue-300"
+            : "bg-blue-50 border-blue-200 text-blue-800"
+        )}
+      >
+        <h3
+          className={cn(
+            "text-lg font-medium",
+            isDark ? "text-blue-300" : "text-blue-800"
+          )}
+        >
+          Sign In Required
+        </h3>
+        <p className={cn("mt-2", isDark ? "text-blue-400" : "text-blue-700")}>
           Please sign in to generate property comparison reports.
         </p>
       </div>
@@ -117,18 +152,48 @@ export default function GroupSelector() {
   } else if (loading) {
     content = (
       <div className="flex flex-col items-center justify-center p-8 min-h-[200px]">
-        <div className="w-16 h-16 border-4 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
-        <p className="mt-4 text-gray-600">Generating your report...</p>
+        <div
+          className={cn(
+            "w-16 h-16 border-4 rounded-full animate-spin",
+            isDark
+              ? "border-gray-700 border-t-blue-400"
+              : "border-gray-300 border-t-blue-500"
+          )}
+        ></div>
+        <p className={cn("mt-4", isDark ? "text-gray-400" : "text-gray-600")}>
+          Generating your report...
+        </p>
       </div>
     );
   } else if (error) {
     content = (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-        <h3 className="text-lg font-medium text-red-800">Error</h3>
-        <p className="mt-2 text-red-700">{error}</p>
+      <div
+        className={cn(
+          "border rounded-lg p-6",
+          isDark
+            ? "bg-red-900/30 border-red-800 text-red-300"
+            : "bg-red-50 border-red-200 text-red-800"
+        )}
+      >
+        <h3
+          className={cn(
+            "text-lg font-medium",
+            isDark ? "text-red-300" : "text-red-800"
+          )}
+        >
+          Error
+        </h3>
+        <p className={cn("mt-2", isDark ? "text-red-400" : "text-red-700")}>
+          {error}
+        </p>
         <button
           onClick={handleRetry}
-          className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          className={cn(
+            "mt-4 px-4 py-2 rounded",
+            isDark
+              ? "bg-red-800 hover:bg-red-700 text-white"
+              : "bg-red-600 hover:bg-red-700 text-white"
+          )}
         >
           Try Again
         </button>
@@ -136,9 +201,21 @@ export default function GroupSelector() {
     );
   } else {
     content = (
-      <div className="bg-white rounded-lg p-6">
-        <h2 className="text-xl font-semibold mb-4">Generating Report</h2>
-        <p className="text-gray-600 mb-4">
+      <div
+        className={cn(
+          "rounded-lg p-6",
+          isDark ? "bg-gray-800 text-gray-200" : "bg-white text-gray-800"
+        )}
+      >
+        <h2
+          className={cn(
+            "text-xl font-semibold mb-4",
+            isDark ? "text-gray-100" : "text-gray-800"
+          )}
+        >
+          Generating Report
+        </h2>
+        <p className={cn("mb-4", isDark ? "text-gray-400" : "text-gray-600")}>
           Preparing your property comparison report for the current group...
         </p>
       </div>
