@@ -302,7 +302,6 @@ const ScoreTable = () => {
             const poi = combo.poi;
             const propertyId = property.property_property_id;
             const poiId = poi.poi_id;
-            const distanceKey = `${propertyId}_${poiId}`;
             const isFirstPOIForProperty = index % pois.length === 0;
 
             return (

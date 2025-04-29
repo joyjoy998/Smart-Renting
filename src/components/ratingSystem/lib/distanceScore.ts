@@ -14,6 +14,7 @@ interface POI {
   latitude?: number;
   longitude?: number;
   name?: string;
+  type?: string;
 }
 
 type TravelMode = "WALKING" | "DRIVING" | "TRANSIT";
@@ -37,55 +38,128 @@ function durationToSeconds(duration: string): number {
 }
 
 /**
- * Calculate scores for a single property-POI pair
- * @param travelTimeSeconds Travel time in seconds
- * @param allTravelTimes Array of all travel times for normalization
- * @returns Normalized score for this property-POI pair
+ * Get weight for POI based on its type
+ * @param poiType Type of the POI
+ * @returns Weight for the POI type
  */
-function calculateSingleScore(
-  travelTimeSeconds: number,
-  allTravelTimes: number[]
-): number {
-  if (travelTimeSeconds === 9999) return 0; // Invalid route
+function getPOIWeight(poiType: string | undefined): number {
+  const weights: Record<string, number> = {
+    Work: 1.0,
+    School: 1.0,
+    Gym: 0.6,
+    Grocery: 0.8,
+    Other: 0.5,
+  };
 
-  const validTimes = allTravelTimes.filter((time) => time !== 9999);
-  if (validTimes.length === 0) return 0;
-
-  const maxTime = Math.max(...validTimes, 1);
-  const minTime = Math.min(...validTimes);
-
-  if (maxTime === minTime) return 1;
-
-  return 1 - (travelTimeSeconds - minTime) / (maxTime - minTime);
+  return weights[poiType?.toLowerCase() || ""] || 0.5; // Default weight for unknown types
 }
 
 /**
- * Calculate the comprehensive distance score using an exponential decay strategy
+ * Apply sigmoid function to normalize score between 0 and 1
+ * with a smoother transition and less extreme values
+ * @param value The value to normalize
+ * @param midpoint The midpoint of the sigmoid (value that maps to 0.5)
+ * @param steepness Controls how steep the sigmoid curve is
+ * @returns Normalized value between 0 and 1
+ */
+function sigmoidNormalize(
+  value: number,
+  midpoint: number,
+  steepness: number = 0.1
+): number {
+  return 1 / (1 + Math.exp(steepness * (value - midpoint)));
+}
+
+/**
+ * Calculate score for a single property-POI pair with time-based scoring
+ * @param travelTimeSeconds Travel time in seconds
+ * @param poiType Type of the POI
+ * @returns Score for this property-POI pair
+ */
+function calculateTimeBucketScore(
+  travelTimeSeconds: number,
+  poiType: string | undefined
+): number {
+  if (travelTimeSeconds === 9999) return 0; // Invalid route
+
+  // Define time thresholds in minutes (converted to seconds)
+  const excellent = 5 * 60; // 5 minutes
+  const good = 15 * 60; // 15 minutes
+  const fair = 30 * 60; // 30 minutes
+  const poor = 60 * 60; // 60 minutes
+
+  // Adjust thresholds based on POI type
+  const type = poiType?.toLowerCase() || "";
+  const multiplier = (() => {
+    if (type === "Work" || type === "School") return 1.5; // Allow longer times for work/school
+    if (type === "Grocery") return 1.0; // Standard time for grocery
+    if (type === "Gym") return 0.8; // Expect shorter times for gym
+    return 1.0; // Default multiplier
+  })();
+
+  // Apply the multiplier to the thresholds
+  const adjustedExcellent = excellent * multiplier;
+  const adjustedGood = good * multiplier;
+  const adjustedFair = fair * multiplier;
+  const adjustedPoor = poor * multiplier;
+
+  // Score based on time buckets (using sigmoid for smoother transitions)
+  if (travelTimeSeconds <= adjustedExcellent) {
+    // Excellent: 0.8-1.0
+    return (
+      0.8 +
+      0.2 * sigmoidNormalize(travelTimeSeconds, adjustedExcellent / 2, 0.02)
+    );
+  } else if (travelTimeSeconds <= adjustedGood) {
+    // Good: 0.6-0.8
+    const progress =
+      (travelTimeSeconds - adjustedExcellent) /
+      (adjustedGood - adjustedExcellent);
+    return 0.8 - 0.2 * progress;
+  } else if (travelTimeSeconds <= adjustedFair) {
+    // Fair: 0.4-0.6
+    const progress =
+      (travelTimeSeconds - adjustedGood) / (adjustedFair - adjustedGood);
+    return 0.6 - 0.2 * progress;
+  } else if (travelTimeSeconds <= adjustedPoor) {
+    // Poor: 0.2-0.4
+    const progress =
+      (travelTimeSeconds - adjustedFair) / (adjustedPoor - adjustedFair);
+    return 0.4 - 0.2 * progress;
+  } else {
+    // Very Poor: 0-0.2 (with sigmoid decay)
+    return 0.2 * sigmoidNormalize(travelTimeSeconds, adjustedPoor * 1.5, 0.01);
+  }
+}
+
+/**
+ * Calculate the comprehensive distance score using POI type-based weights
  * @param poiScores Object containing scores for each POI
+ * @param pois Array of POIs with their types
  * @returns Comprehensive score
  */
 function calculateExponentialDistanceScore(
-  poiScores: Record<string, number>
+  poiScores: Record<string, number>,
+  pois: POI[]
 ): number {
-  // Get all POI scores for this property
-  const scores = Object.values(poiScores);
+  const scores = Object.entries(poiScores);
   if (scores.length === 0) return 0;
-
-  // Sort scores in descending order (best scores first)
-  scores.sort((a, b) => b - a);
 
   let totalWeight = 0;
   let weightedSum = 0;
-  const decayFactor = 0.85; // Decay factor - can be adjusted
 
-  // Apply exponential decay weights
-  scores.forEach((score, index) => {
-    const weight = Math.pow(decayFactor, index); // Weight decays exponentially with rank
+  // Calculate weighted sum based on POI types
+  scores.forEach(([poiId, score]) => {
+    const poi = pois.find((p) => p.poi_id === poiId);
+    const weight = getPOIWeight(poi?.type);
     weightedSum += score * weight;
     totalWeight += weight;
   });
 
-  return weightedSum / totalWeight;
+  // Apply sigmoid normalization to keep scores in a reasonable range
+  // This prevents extreme values and centers the distribution
+  const rawScore = totalWeight > 0 ? weightedSum / totalWeight : 0;
+  return rawScore;
 }
 
 /**
@@ -99,11 +173,6 @@ export async function calculateDistanceScore(
   travelMode: TravelMode,
   properties: Property[]
 ) {
-  console.log("calculateDistanceScore called with:", {
-    travelMode,
-    propertyCount: properties.length,
-  });
-
   const { pois, setDistanceScores, setTravelTimes, setDistances } =
     useRatingStore.getState();
 
@@ -129,7 +198,6 @@ export async function calculateDistanceScore(
     // Prepare data structures for results
     const travelTimes: Record<string, number> = {};
     const distances: Record<string, number> = {};
-    const allTravelTimes: number[] = [];
     const poiScoresByProperty: Record<string, Record<string, number>> = {};
 
     // Initialize score objects
@@ -163,11 +231,10 @@ export async function calculateDistanceScore(
         const key = `${propertyId}_${poi.poi_id}`;
         travelTimes[key] = durationInSeconds;
         distances[key] = distanceKm;
-        allTravelTimes.push(durationInSeconds);
       });
     }
 
-    // Calculate individual scores for each property-POI pair
+    // Calculate individual scores for each property-POI pair using time-based scoring
     for (const property of validProperties) {
       const propertyId = property.property_property_id;
 
@@ -176,18 +243,37 @@ export async function calculateDistanceScore(
         const key = `${propertyId}_${poiId}`;
 
         if (travelTimes[key] !== undefined) {
-          const score = calculateSingleScore(travelTimes[key], allTravelTimes);
+          // Use time-bucket scoring instead of normalization across all properties
+          const score = calculateTimeBucketScore(travelTimes[key], poi.type);
           poiScoresByProperty[propertyId][poiId] = score;
         }
       }
     }
 
-    // Calculate comprehensive score for each property using exponential decay
+    // Calculate comprehensive score for each property using POI type-based weights
     const distanceScores: Record<string, number> = {};
     for (const propertyId in poiScoresByProperty) {
       distanceScores[propertyId] = calculateExponentialDistanceScore(
-        poiScoresByProperty[propertyId]
+        poiScoresByProperty[propertyId],
+        validPOIs
       );
+    }
+
+    // Apply final sigmoid normalization to all scores to avoid extreme distributions
+    const allScores = Object.values(distanceScores);
+    const median =
+      allScores.sort((a, b) => a - b)[Math.floor(allScores.length / 2)] || 0.5;
+
+    // Normalize all scores with a sigmoid centered at the median
+    for (const propertyId in distanceScores) {
+      distanceScores[propertyId] =
+        0.3 +
+        0.7 *
+          sigmoidNormalize(
+            1 - distanceScores[propertyId], // Invert because lower time is better
+            1 - median,
+            10 // Steepness factor
+          );
     }
 
     // Update the store with the results
