@@ -26,16 +26,15 @@ import {
   SignedOut,
   SignOutButton,
 } from "@clerk/nextjs";
+import GuidedTour from "@/components/sidebar/guidance/GuidedTour";
 import { ArchivePopup } from "./archiveManagement/ArchivePopup";
 import { SettingsPopup } from "./SettingsPopup";
 import { useArchiveStore } from "@/stores/useArchiveStore";
-import { set } from "lodash";
 import SavePoiModal from "./SavePoi";
 import SavedPropertyModal from "./SavedProperty";
 import RecommendationPopup from "@/components/recommendation/RecommendationPopup";
 import { useRecommendationStore } from "@/stores/useRecommendationStore";
 import GroupSelector from "@/components/ratingSystem/GroupSelector";
-import { useState } from "react";
 import { useGroupSelectorStore } from "../../stores/useGroupSelectorStore";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
@@ -128,10 +127,7 @@ export function Sidebar() {
         {/* Functional area for help, Settings and Login Logout */}
         <div className="p-4 border-t space-y-2 mt-auto">
           <SignedIn>
-            <button className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg">
-              <HelpCircle className="h-5 w-5" />
-              <span>Help/Guidance</span>
-            </button>
+            <GuidedTour />
 
             {/* Settings and Login/Logout */}
 
@@ -147,7 +143,12 @@ export function Sidebar() {
             </button>
 
             <SignOutButton>
-              <button className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg text-red-500">
+              <button
+                className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg text-red-500"
+                onClick={() => {
+                  useSidebarStore.getState().setOpen(false);
+                }}
+              >
                 <LogOut className="h-5 w-5" />
                 <span>Sign Out</span>
               </button>
