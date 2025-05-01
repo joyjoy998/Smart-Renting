@@ -181,7 +181,7 @@ CREATE TABLE property_vectors (
 -- =====================================================
 -- create user property vector table
 -- =====================================================
-CREATE TABLE IF NOT EXISTS user_saved_property_vectors (
+CCREATE TABLE IF NOT EXISTS user_saved_property_vectors (
 saved_property_id INT PRIMARY KEY,
 embedding VECTOR(1024),
 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, CONSTRAINT fk_user_vectors_saved_property FOREIGN KEY
@@ -189,6 +189,10 @@ updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, CONSTRAINT fk_user_vectors_saved
 REFERENCES saved_properties (saved_property_id)
 ON DELETE CASCADE
 );
+ALTER TABLE user_saved_property_vectors
+ADD COLUMN place_id TEXT;
+CREATE INDEX idx_user_vectors_place_id ON user_saved_property_vectors (place_id);
+
 
 
 
