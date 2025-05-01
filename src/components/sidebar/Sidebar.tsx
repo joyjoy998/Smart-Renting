@@ -92,47 +92,49 @@ export function Sidebar() {
               <History className="h-5 w-5" />
               <span>Archive Management</span>
             </button>
+
+            <SavePoiModal />
+
+            <SavedPropertyModal />
+            {/* </div> */}
+
+            {/* Main functional area for report generation, recommendation, and history management */}
+            {/* <div className="p-4 border-t space-y-2"> */}
+            <button
+              onClick={() => {
+                //useSidebarStore.getState().setOpen(false);
+                useRatingStore.getState().setOpen(false);
+                useGroupSelectorStore.getState().setOpen(true);
+              }}
+              className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg"
+            >
+              <FileText className="h-5 w-5" />
+              <span>Comparison Report</span>
+            </button>
+
+            <button
+              className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg"
+              onClick={() => {
+                useRecommendationStore.getState().setOpen(true);
+              }}
+            >
+              <Lightbulb className="h-5 w-5" />
+              <span>Recommendation</span>
+            </button>
+            <RecommendationPopup />
           </SignedIn>
-          <SavePoiModal />
-
-          <SavedPropertyModal />
-          {/* </div> */}
-
-          {/* Main functional area for report generation, recommendation, and history management */}
-          {/* <div className="p-4 border-t space-y-2"> */}
-          <button
-            onClick={() => {
-              //useSidebarStore.getState().setOpen(false);
-              useRatingStore.getState().setOpen(false);
-              useGroupSelectorStore.getState().setOpen(true);
-            }}
-            className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg"
-          >
-            <FileText className="h-5 w-5" />
-            <span>Comparison Report</span>
-          </button>
-
-          <button
-            className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg"
-            onClick={() => {
-              useRecommendationStore.getState().setOpen(true);
-            }}
-          >
-            <Lightbulb className="h-5 w-5" />
-            <span>Recommendation</span>
-          </button>
-          <RecommendationPopup />
         </div>
 
         {/* Functional area for help, Settings and Login Logout */}
         <div className="p-4 border-t space-y-2 mt-auto">
-          <button className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg">
-            <HelpCircle className="h-5 w-5" />
-            <span>Help/Guidance</span>
-          </button>
-
-          {/* Settings and Login/Logout */}
           <SignedIn>
+            <button className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg">
+              <HelpCircle className="h-5 w-5" />
+              <span>Help/Guidance</span>
+            </button>
+
+            {/* Settings and Login/Logout */}
+
             <button
               onClick={() => {
                 useSettingsStore.getState().setOpen(true);
