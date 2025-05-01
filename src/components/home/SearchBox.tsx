@@ -117,9 +117,10 @@ export const SearchBox: React.FC<SearchBoxProps> = ({ onSearch, onSelect }) => {
                 sx={{
                   "& .MuiOutlinedInput-root": {
                     borderRadius: "9999px",
+                    color: "#333",
                   },
                 }}
-                className="w-full rounded-full border border-gray-200 bg-white/80 py-1.5 pl-14 pr-4 shadow-lg outline-none focus:border-gray-300 text-gray-900 placeholder:text-gray-400 text-sm"
+                className="w-full rounded-full border border-gray-200 bg-white/80 py-1.5 pl-14 pr-4 shadow-lg outline-none focus:border-gray-300 placeholder:text-gray-400 text-sm"
               />
             )}
           />

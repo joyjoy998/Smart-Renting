@@ -97,7 +97,10 @@ const EditPropertyModal: React.FC<PropsWithChildren<Props>> = (props) => {
       latitude: placeData?.geometry?.location?.lat?.(),
       longitude: placeData?.geometry?.location?.lng?.(),
       weekly_rent: placeData?.savedProperty?.weekly_rent || 0,
-      photo: placeData?.photos?.map((item) => item.getUrl()) || [],
+      photo:
+        placeData?.photos?.map((item) => item.getUrl()) ||
+        placeData?.savedProperty?.photo ||
+        [],
       bedrooms: placeData?.savedProperty?.bedrooms || 0,
       bathrooms: placeData?.savedProperty?.bathrooms || 0,
       parking_spaces: placeData?.savedProperty?.parking_spaces || 0,
