@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/database/supabaseClient";
+
+// 调试模式
 const DEBUG = process.env.NODE_ENV === "development";
+
 // 格式化用户自定义房源信息
 function formatSavedPropertyData(property: any): string {
   return `This is a ${property.bedrooms || "unknown"}-bedroom, ${
