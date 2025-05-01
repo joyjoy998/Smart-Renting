@@ -1,6 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/database/supabaseClient";
 
+async function triggerVectorization(placeId: string) {
+  try {
+    console.log(`🔄 Triggering vectorization for place_id: ${placeId}`);
+
+    const response = await fetch("/api/vectorizeUserProperties", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ place_id: placeId }),
+    });
+
+    const result = await response.json();
+    console.log(`✅ Vectorization result:`, result);
+    return result;
+  } catch (error) {
+    console.error(
+      `❌ Failed to trigger vectorization for place_id ${placeId}:`,
+      error
+    );
+
+    return { success: false, error: (error as Error).message };
+  }
+}
+
 export async function GET(req: Request): Promise<Response> {
   const { searchParams } = new URL(req.url);
   const groupId = searchParams.get("group_id");
@@ -70,6 +93,15 @@ export async function POST(req: NextRequest) {
         { status: 500 }
       );
     }
+    // save the property successfully and trigger vectorization
+    if (body.place_id) {
+      triggerVectorization(body.place_id).catch((err) =>
+        console.error(
+          `❌ Vectorization error for place_id ${body.place_id}:`,
+          err
+        )
+      );
+    }
 
     return NextResponse.json(
       { message: "Property saved successfully", data },
@@ -92,7 +124,10 @@ export async function PUT(req: NextRequest) {
   try {
     // check if the request body is empty
     if (!req.body) {
-      return NextResponse.json({ error: "Request body missing" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Request body missing" },
+        { status: 400 }
+      );
     }
 
     // parse JSON, avoid `SyntaxError`
@@ -126,7 +161,15 @@ export async function PUT(req: NextRequest) {
         { status: 500 }
       );
     }
-
+    if (body.place_id) {
+      // if place_id is provided, trigger vectorization
+      triggerVectorization(body.place_id).catch((err) =>
+        console.error(
+          `❌ Vectorization error for place_id ${body.place_id}:`,
+          err
+        )
+      );
+    }
     // return success response
     return NextResponse.json(
       { message: "Property updated successfully", data },
@@ -161,6 +204,9 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
+    // 删除操作前，如果有 place_id，先保存它用于后续删除向量
+    const placeIdToDelete = placeId;
+
     let query = supabase
       .from("saved_properties")
       .delete()
@@ -175,6 +221,32 @@ export async function DELETE(req: NextRequest) {
     const { data, error } = await query;
 
     if (error) throw error;
+
+    // if placeIdToDelete is provided, delete the corresponding vector
+    if (placeIdToDelete) {
+      try {
+        console.log(`🗑️ Deleting vector for place_id: ${placeIdToDelete}`);
+        const vectorDeleteResponse = await supabase
+          .from("user_property_vectors")
+          .delete()
+          .eq("place_id", placeIdToDelete);
+
+        if (vectorDeleteResponse.error) {
+          console.error(
+            `❌ Failed to delete vector for place_id ${placeIdToDelete}:`,
+            vectorDeleteResponse.error
+          );
+        } else {
+          console.log(`✅ Vector deleted for place_id ${placeIdToDelete}`);
+        }
+      } catch (vectorError) {
+        console.error(
+          `❌ Error deleting vector for place_id ${placeIdToDelete}:`,
+          vectorError
+        );
+      }
+    }
+
     return NextResponse.json(data, { status: 200 });
   } catch (err) {
     return NextResponse.json(

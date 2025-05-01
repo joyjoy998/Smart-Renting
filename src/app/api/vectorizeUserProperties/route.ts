@@ -215,3 +215,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: (err as Error).message });
   }
 }
+// curl -X POST http://localhost:3000/api/vectorizeUserPropertiess
