@@ -8,6 +8,12 @@ interface DialogProps {
   children: React.ReactNode;
 }
 
+type AsTag = "p" | "div" | "span";
+
+type Props<T extends AsTag> = React.ComponentProps<T> & {
+  as?: T;
+};
+
 export function Dialog({ open, onOpenChange, children }: DialogProps) {
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
@@ -39,14 +45,16 @@ export function DialogContent({
             "dark:ring-1 dark:ring-blue-500/20 dark:ring-opacity-30",
             className
           )}
-          aria-describedby={description ? "dialog-description" : undefined}>
+          aria-describedby={description ? "dialog-description" : undefined}
+        >
           <DialogPrimitive.Title className="text-lg font-semibold">
             {title}
           </DialogPrimitive.Title>
           {description && (
             <DialogPrimitive.Description
               id="dialog-description"
-              className="text-sm  text-gray-500  dark:text-gray-300">
+              className="text-sm  text-gray-500  dark:text-gray-300"
+            >
               {description}
             </DialogPrimitive.Description>
           )}
@@ -72,8 +80,22 @@ export function DialogTitle({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function DialogDescription(props: React.ComponentProps<"p">) {
+export function DialogDescription<T extends AsTag = "p">({
+  as,
+  className,
+  children,
+  ...props
+}: Props<T>) {
+  const Comp = as || "span";
+
   return (
-    <DialogPrimitive.Description className="text-sm text-gray-500" {...props} />
+    <DialogPrimitive.Description asChild>
+      <Comp
+        className={cn("text-sm text-gray-500", className)}
+        {...(props as any)}
+      >
+        {children}
+      </Comp>
+    </DialogPrimitive.Description>
   );
 }
