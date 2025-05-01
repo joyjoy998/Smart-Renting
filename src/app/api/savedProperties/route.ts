@@ -123,9 +123,11 @@ async function vectorizeProperty(savedPropertyId: number, groupId: string) {
     if (DEBUG)
       console.log(`Got embedding vector with ${vector.length} dimensions`);
 
-    // 存储向量
+    // 存储向量 - 现在包含 place_id
     const now = new Date().toISOString();
     if (DEBUG) console.log(`Storing vector in user_saved_property_vectors...`);
+
+    // 添加 place_id 到向量存储
     const { error: upsertError } = await supabase
       .from("user_saved_property_vectors")
       .upsert([
@@ -133,6 +135,7 @@ async function vectorizeProperty(savedPropertyId: number, groupId: string) {
           saved_property_id: savedPropertyId,
           embedding: vector,
           updated_at: now,
+          place_id: property.place_id || null, // 添加 place_id
         },
       ]);
 
@@ -142,7 +145,9 @@ async function vectorizeProperty(savedPropertyId: number, groupId: string) {
     }
 
     console.log(
-      `✅ Vector stored successfully for saved_property_id ${savedPropertyId}`
+      `✅ Vector stored successfully for saved_property_id ${savedPropertyId}${
+        property.place_id ? `, place_id ${property.place_id}` : ""
+      }`
     );
     return { success: true };
   } catch (error) {
@@ -153,7 +158,6 @@ async function vectorizeProperty(savedPropertyId: number, groupId: string) {
     };
   }
 }
-
 // 直接在服务器端实现向量删除
 async function removeVector(savedPropertyId: number) {
   try {
