@@ -11,7 +11,7 @@ export function Header() {
           <SearchBox />
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <ThemeToggle />
           <SignedOut>
             <AvatarButton />
