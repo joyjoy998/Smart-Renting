@@ -83,6 +83,7 @@ export function Sidebar() {
         <div className="p-4 space-y-2">
           <SignedIn>
             <button
+              id="archive-management"
               className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg"
               onClick={() => {
                 useArchiveStore.getState().setArchiveOpen(true);
@@ -100,6 +101,7 @@ export function Sidebar() {
             {/* Main functional area for report generation, recommendation, and history management */}
             {/* <div className="p-4 border-t space-y-2"> */}
             <button
+              id="comparison-report"
               onClick={() => {
                 //useSidebarStore.getState().setOpen(false);
                 useRatingStore.getState().setOpen(false);
@@ -112,6 +114,7 @@ export function Sidebar() {
             </button>
 
             <button
+              id="recommendation"
               className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg"
               onClick={() => {
                 useRecommendationStore.getState().setOpen(true);
@@ -132,6 +135,7 @@ export function Sidebar() {
             {/* Settings and Login/Logout */}
 
             <button
+              id="settings"
               onClick={() => {
                 useSettingsStore.getState().setOpen(true);
                 useSidebarStore.getState().setOpen(false);

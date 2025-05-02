@@ -14,6 +14,7 @@ export function MenuButton() {
         size="icon"
         className="hover:bg-transparent"
         onClick={() => setOpen(true)}
+        id="sidebar-menu-button"
       >
         <Menu className="h-5 w-5 text-black" />
       </Button>

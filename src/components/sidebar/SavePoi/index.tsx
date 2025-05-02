@@ -63,6 +63,7 @@ const SavePoiModal = () => {
   return (
     <div>
       <button
+        id="saved-poi"
         className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg"
         onClick={toggle}
       >

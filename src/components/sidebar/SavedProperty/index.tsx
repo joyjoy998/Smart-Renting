@@ -79,6 +79,7 @@ const SavedPropertyModal = () => {
   return (
     <div>
       <button
+        id="saved-property"
         className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg"
         onClick={toggle}
       >
