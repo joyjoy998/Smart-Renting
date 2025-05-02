@@ -6,7 +6,6 @@ import type { Driver as DriverType, DriveStep } from "driver.js";
 import { useSidebarStore } from "@/stores/useSidebarStore";
 import { HelpCircle } from "lucide-react";
 import "driver.js/dist/driver.css";
-import { set } from "lodash";
 
 const GuidedTour = () => {
   const driverRef = useRef<DriverType | null>(null);
@@ -105,6 +104,12 @@ const GuidedTour = () => {
           "This is the settings section where you can adjust your rental preferences and budgets.",
         side: "right",
         align: "end",
+      },
+    },
+    {
+      popover: {
+        title: "Happy Renting!",
+        description: "Hope you enjoy using our app to find your dream home!",
       },
     },
   ];
