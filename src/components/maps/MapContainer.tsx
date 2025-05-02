@@ -29,6 +29,19 @@ export function MapContainer() {
 
   return (
     <div style={{ width: "100%", height: "100vh", position: "relative" }}>
+      <div
+        id="map-guide-anchor"
+        style={{
+          position: "absolute",
+          top: 60,
+          left: 60,
+          right: 60,
+          bottom: 60,
+          pointerEvents: "none",
+          zIndex: -1,
+        }}
+      />
+
       <Map
         defaultCenter={MAPS_CONFIG.defaultCenter}
         defaultZoom={MAPS_CONFIG.defaultZoom}
