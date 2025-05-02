@@ -74,10 +74,7 @@ export function SettingsPopup() {
           </div>
 
           <div className="mt-6 flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={() => setOpen(false)}>Save Changes</Button>
+            <Button onClick={() => setOpen(false)}>Close</Button>
           </div>
         </div>
       </div>

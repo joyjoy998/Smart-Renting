@@ -14,8 +14,8 @@ interface PreferencesState {
 
 export const usePreferencesStore = create<PreferencesState>((set) => ({
   preferences: {
-    distance: 1,
-    price: 1,
+    distance: 0.5,
+    price: 0.5,
     neighborhoodSafety: 0.5,
     amenity: 0.5,
   },
