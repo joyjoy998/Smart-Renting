@@ -6,8 +6,8 @@ CREATE TABLE users (
     user_id TEXT PRIMARY KEY,       -- 来自 Clerk 的用户ID
     username VARCHAR(20) NOT NULL,         
     email VARCHAR(255) NOT NULL UNIQUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_sign_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT (now() AT TIME ZONE 'utc'::text),
+    last_sign_at TIMESTAMPTZ DEFAULT (now() AT TIME ZONE 'utc'::text)
 );
 
 CREATE TABLE user_preferences (
@@ -42,7 +42,7 @@ CREATE TABLE properties (
     parking_spaces INT,
     property_type TEXT,  -- each property has only one type
     safety_score NUMERIC(3,2) NOT NULL CHECK (safety_score >= 0 AND safety_score <= 1),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ DEFAULT (now() AT TIME ZONE 'utc'::text),
     place_id TEXT -- Google Place ID
 );
 
@@ -70,7 +70,7 @@ CREATE TABLE saved_groups (
     group_id SERIAL PRIMARY KEY,
     user_id TEXT NOT NULL,
     group_name TEXT NOT NULL,  
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ DEFAULT (now() AT TIME ZONE 'utc'::text),
     CONSTRAINT fk_saved_groups_user FOREIGN KEY (user_id)
         REFERENCES users(user_id)
         ON DELETE CASCADE
@@ -95,7 +95,7 @@ CREATE TABLE saved_properties (
     property_type TEXT,
     safety_score NUMERIC(3,2) NOT NULL CHECK (safety_score >= 0 AND safety_score <= 1),
     note TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ DEFAULT (now() AT TIME ZONE 'utc'::text),
     place_id TEXT,
     CONSTRAINT fk_saved_properties_group FOREIGN KEY (group_id)
         REFERENCES saved_groups(group_id)
@@ -120,7 +120,7 @@ CREATE TABLE saved_pois (
     longitude DOUBLE PRECISION,
     photo TEXT[] DEFAULT '{}',
     note TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ DEFAULT (now() AT TIME ZONE 'utc'::text),
     place_id TEXT,
     CONSTRAINT fk_saved_pois_group FOREIGN KEY (group_id)
         REFERENCES saved_groups(group_id)
@@ -184,7 +184,7 @@ CREATE TABLE property_vectors (
 CCREATE TABLE IF NOT EXISTS user_saved_property_vectors (
 saved_property_id INT PRIMARY KEY,
 embedding VECTOR(1024),
-updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, CONSTRAINT fk_user_vectors_saved_property FOREIGN KEY
+updated_at TIMESTAMPTZ DEFAULT (now() AT TIME ZONE 'utc'::text), CONSTRAINT fk_user_vectors_saved_property FOREIGN KEY
 (saved_property_id)
 REFERENCES saved_properties (saved_property_id)
 ON DELETE CASCADE
