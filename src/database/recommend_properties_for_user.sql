@@ -10,10 +10,16 @@ BEGIN
     END LOOP;
     RETURN result;
 END;
+
 $$ LANGUAGE plpgsql;
 
--- Create or replace the recommendation function using Cosine Similarity
-CREATE OR REPLACE FUNCTION recommend_properties_for_user(user_id text, group_id INT) 
+
+CREATE OR REPLACE FUNCTION recommend_properties_for_user(
+    user_id text, 
+    group_id INT,
+    map_lat FLOAT DEFAULT NULL,  
+    map_lng FLOAT DEFAULT NULL   
+) 
 RETURNS TABLE(property_id INT, final_score FLOAT)  
 LANGUAGE SQL AS $$
 
@@ -49,6 +55,34 @@ user_custom_properties AS (
        AND sg.user_id = recommend_properties_for_user.user_id
        AND sp.property_id IS NULL
        AND sp.place_id IS NOT NULL
+),
+
+-- check whether user has saved data
+user_has_any_data AS (
+    SELECT 
+        EXISTS (SELECT 1 FROM user_pois) OR
+        EXISTS (SELECT 1 FROM user_system_properties) OR
+        EXISTS (SELECT 1 FROM user_custom_properties) AS has_data
+),
+
+-- if no saved data but has mapcenter data, then calculate distnace score
+map_center_proximity AS (
+    SELECT 
+        p.property_id,
+        CASE 
+         
+            WHEN NOT (SELECT has_data FROM user_has_any_data) AND 
+                 map_lat IS NOT NULL AND 
+                 map_lng IS NOT NULL
+            THEN (
+                1 / (1 + ST_DistanceSphere(
+                    ST_MakePoint(p.longitude::NUMERIC, p.latitude::NUMERIC)::GEOMETRY,
+                    ST_MakePoint(map_lng::NUMERIC, map_lat::NUMERIC)::GEOMETRY
+                ) / 1000) 
+            )
+            ELSE 0
+        END AS proximity_score
+    FROM properties p
 ),
 
 -- Compute weight coefficients: α (semantic similarity weight) and β (geographical distance weight)
@@ -91,6 +125,7 @@ weights AS (
             ELSE 0.0
         END AS beta
 ),
+
 -- Compute the average vector for user-saved system properties
 user_system_avg_embedding AS (
     SELECT AVG(embedding)::vector AS avg_vec
@@ -101,7 +136,7 @@ user_system_avg_embedding AS (
 -- Compute the average vector for user-saved custom properties
 user_custom_avg_embedding AS (
     SELECT AVG(embedding)::vector AS avg_vec
-    FROM user_property_vectors
+    FROM user_saved_property_vectors
     WHERE place_id IN (SELECT place_id FROM user_custom_properties)
 ),
 
@@ -127,45 +162,60 @@ combined_avg_embedding AS (
         END AS avg_vec
 ),
 
-
 -- Compute scores for all properties
 property_scores AS (
     SELECT 
         p.property_id,
-        -- Total score = α * semantic score + β * geographical score
-        (SELECT alpha FROM weights) * (
-            CASE
-                -- When we have a combined average embedding
-                WHEN EXISTS (SELECT 1 FROM combined_avg_embedding WHERE avg_vec IS NOT NULL)
-                THEN (
-                    -- Compute the similarity to the aggregated average vector
-                    1 - (pv.embedding <=> (SELECT avg_vec FROM combined_avg_embedding))
+        -- user has saved data, using semantic score and distance score
+        CASE 
+            WHEN (SELECT has_data FROM user_has_any_data) THEN
+                -- Total score = α * semantic score + β * geographical score
+                (SELECT alpha FROM weights) * (
+                    CASE
+                        -- When we have a combined average embedding
+                        WHEN EXISTS (SELECT 1 FROM combined_avg_embedding WHERE avg_vec IS NOT NULL)
+                        THEN (
+                            -- Compute the similarity to the aggregated average vector
+                            1 - (pv.embedding <=> (SELECT avg_vec FROM combined_avg_embedding))
+                        )
+                        ELSE 0  -- If there is no valid average vector, the score is 0.
+                    END
                 )
-                ELSE 0  -- f there is no valid average vector, the score is 0.
-            END
-        )
-        +
-        (SELECT beta FROM weights) * (
-            CASE
-                WHEN EXISTS (SELECT 1 FROM user_pois)
-                -- Compute geographical score using inverse distance as similarity measure
-                THEN (1 / (1 + (
-                    SELECT AVG(ST_DistanceSphere(
-                        ST_MakePoint(p.longitude::NUMERIC, p.latitude::NUMERIC)::GEOMETRY,
-                        ST_MakePoint(sp.longitude::NUMERIC, sp.latitude::NUMERIC)::GEOMETRY
-                    ))
-                    FROM user_pois sp
-                )))
-                ELSE 0
-            END
-        )
-        AS final_score
+                +
+                (SELECT beta FROM weights) * (
+                    CASE
+                        WHEN EXISTS (SELECT 1 FROM user_pois)
+                        -- Compute geographical score using inverse distance as similarity measure
+                        THEN (1 / (1 + (
+                            SELECT AVG(ST_DistanceSphere(
+                                ST_MakePoint(p.longitude::NUMERIC, p.latitude::NUMERIC)::GEOMETRY,
+                                ST_MakePoint(sp.longitude::NUMERIC, sp.latitude::NUMERIC)::GEOMETRY
+                            ))
+                            FROM user_pois sp
+                        )))
+                        ELSE 0
+                    END
+                )
+            -- if user has no data,recommend based on mapcenter
+            ELSE (
+                SELECT proximity_score 
+                FROM map_center_proximity 
+                WHERE map_center_proximity.property_id = p.property_id
+            )
+        END AS final_score
     FROM properties p
     LEFT JOIN property_vectors pv ON p.property_id = pv.property_id
     WHERE
-        -- Exclude properties already saved by the user
-        p.property_id NOT IN (SELECT property_id FROM user_system_properties)
-        AND p.place_id NOT IN (SELECT place_id FROM user_custom_properties WHERE place_id IS NOT NULL)
+        -- 用户有数据时，排除已保存的房源
+        (
+            (SELECT has_data FROM user_has_any_data) = FALSE
+            OR
+            (
+                p.property_id NOT IN (SELECT property_id FROM user_system_properties)
+                AND 
+                (p.place_id IS NULL OR p.place_id NOT IN (SELECT place_id FROM user_custom_properties WHERE place_id IS NOT NULL))
+            )
+        )
 ),
 
 -- Handle NULL values and ensure final_score is a valid number
@@ -185,14 +235,7 @@ SELECT property_id, final_score
 FROM cleaned_scores 
 WHERE final_score > 0  -- Only include properties with positive scores
 ORDER BY final_score DESC 
--- If the user has not saved any properties or POIs, return all properties; otherwise, return the top 5
-LIMIT CASE
-    WHEN NOT EXISTS (SELECT 1 FROM user_system_properties) 
-         AND NOT EXISTS (SELECT 1 FROM user_custom_properties)
-         AND NOT EXISTS (SELECT 1 FROM user_pois)
-    THEN (SELECT COUNT(*) FROM properties)
-    ELSE 50
-END;
+LIMIT 50;  
 
 
 $$;
