@@ -133,6 +133,7 @@ const GuidedTour = () => {
 
   return (
     <button
+      id="help-guidance"
       className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg"
       onClick={startTour}
     >
