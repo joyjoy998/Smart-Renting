@@ -267,12 +267,31 @@ export const ArchivePopup = () => {
     setConfirmPopup((prev) => ({ ...prev, isOpen: false }));
   };
 
-  const formatDateToMinute = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toISOString().slice(0, 16).replace("T", " ");
+  const formatToSydneyTime = (utcDateString: string): string => {
+    const date = new Date(utcDateString);
+    const options: Intl.DateTimeFormatOptions = {
+      timeZone: "Australia/Sydney",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    };
+
+    const formatter = new Intl.DateTimeFormat("en-CA", options); // 'en-CA' gives YYYY-MM-DD format
+    const parts = formatter.formatToParts(date);
+
+    const extract = (type: string) =>
+      parts.find((p) => p.type === type)?.value.padStart(2, "0") ?? "00";
+
+    return `${extract("year")}-${extract("month")}-${extract("day")} ${extract(
+      "hour"
+    )}:${extract("minute")}`;
   };
 
   if (!isArchiveOpen) return null;
+
   return (
     <>
       {/* 背景遮罩层，当打开ArchivePopup时显示 */}
@@ -364,7 +383,7 @@ export const ArchivePopup = () => {
                       </div>
                     )}
                     <div className="text-sm text-gray-500">
-                      {formatDateToMinute(group.created_at)}
+                      {formatToSydneyTime(group.created_at)}
                     </div>
                   </div>
                 </div>
