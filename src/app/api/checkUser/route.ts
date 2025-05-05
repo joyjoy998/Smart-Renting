@@ -53,7 +53,7 @@ export async function POST() {
         .insert([
           {
             user_id: userId,
-            group_name: "Archive 1",
+            group_name: "Group 1",
           },
         ]);
       if (insertGroupError) {
