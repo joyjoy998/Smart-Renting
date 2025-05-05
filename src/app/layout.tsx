@@ -3,14 +3,10 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/providers/theme/ThemeProvider";
-import { ThemeProvider as MaterialUIThemeProvider } from "@mui/material/styles";
+import { Analytics } from "@vercel/analytics/react";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
 import { ClerkProvider } from "@clerk/nextjs";
-import { SnackbarProvider, VariantType, useSnackbar } from "notistack";
-import { getTheme } from "../theme";
 import { InitializeApp } from "./InitializeApp";
-import { useTheme } from "next-themes";
-import { useMemo } from "react";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
@@ -43,6 +39,7 @@ export default function RootLayout({
             >
               <InitializeApp />
               {children}
+              <Analytics />
             </ThemeProvider>
           </AppRouterCacheProvider>
         </body>
