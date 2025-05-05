@@ -59,8 +59,22 @@ const RecommendationPopup = () => {
         lng: property.longitude,
       });
 
-      // Set info window data
-      setCurrentInfoWindow(property);
+      // Set info window data with all necessary fields
+      const infoWindowData = {
+        ...property,
+        name: `${property.street}, ${property.suburb}`,
+        formatted_address: `${property.street}, ${property.suburb}`,
+        geometry: {
+          location: new google.maps.LatLng(property.latitude, property.longitude),
+        },
+        types: ["property"],
+        place_id: property.place_id,
+        image: property.photo?.[0] || DEFAULT_IMAGE_URL,
+        address: `${property.street}, ${property.suburb}`,
+        savedProperty: property,
+      } as google.maps.places.PlaceResult;
+
+      setCurrentInfoWindow(infoWindowData);
 
       // Close recommendation popup
       toggleRecommendation();
