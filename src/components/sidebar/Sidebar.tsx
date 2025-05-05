@@ -27,7 +27,7 @@ import {
   SignOutButton,
 } from "@clerk/nextjs";
 import GuidedTour from "@/components/sidebar/guidance/GuidedTour";
-import { ArchivePopup } from "./archiveManagement/ArchivePopup";
+import { GroupPopup } from "./groupManagement/GroupPopup";
 import { SettingsPopup } from "./SettingsPopup";
 import { useArchiveStore } from "@/stores/useArchiveStore";
 import SavePoiModal from "./SavePoi";
@@ -90,7 +90,7 @@ export function Sidebar() {
               }}
             >
               <History className="h-5 w-5" />
-              <span>Archive Management</span>
+              <span>Group Management</span>
             </button>
 
             <SavePoiModal />
@@ -169,7 +169,7 @@ export function Sidebar() {
           </SignedOut>
         </div>
       </aside>
-      <ArchivePopup />
+      <GroupPopup />
       <SettingsPopup />
       <RatingReport />
 
