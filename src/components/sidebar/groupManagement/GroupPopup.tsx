@@ -7,7 +7,7 @@ import { useGroupIdStore, useGroupStore, Group } from "@/stores/useGroupStore";
 import { useAuth } from "@clerk/clerk-react";
 import { useSnackbar, closeSnackbar } from "notistack";
 
-export const ArchivePopup = () => {
+export const GroupPopup = () => {
   const { enqueueSnackbar } = useSnackbar();
   const { userId } = useAuth();
   const { isArchiveOpen, setArchiveOpen } = useArchiveStore();
@@ -28,7 +28,7 @@ export const ArchivePopup = () => {
   const createNewGroup = async () => {
     if (groups.length >= 3) {
       enqueueSnackbar(
-        "You can only create up to 3 archives. Please delete one before creating a new one.",
+        "You can only create up to 3 groups. Please delete one before creating a new one.",
         {
           variant: "error",
           autoHideDuration: 3000,
@@ -39,7 +39,7 @@ export const ArchivePopup = () => {
       );
       return;
     }
-    const groupName = `Archive ${groups.length + 1}`;
+    const groupName = `Group ${groups.length + 1}`;
     try {
       const response = await fetch("/api/groupId/post", {
         method: "POST",
@@ -52,7 +52,7 @@ export const ArchivePopup = () => {
         }),
       });
       if (!response.ok) {
-        enqueueSnackbar("Failed to create new archive. Please try again.", {
+        enqueueSnackbar("Failed to create new group. Please try again.", {
           variant: "error",
           autoHideDuration: 3000,
           action: (key) => (
@@ -66,7 +66,7 @@ export const ArchivePopup = () => {
       const newGroup = responseData.data?.[0];
 
       if (!newGroup) {
-        enqueueSnackbar("Failed to create new archive. Please try again.", {
+        enqueueSnackbar("Failed to create new group. Please try again.", {
           variant: "error",
           autoHideDuration: 3000,
           action: (key) => (
@@ -78,7 +78,7 @@ export const ArchivePopup = () => {
 
       setGroups([...groups, newGroup] as Group[]);
       enqueueSnackbar(
-        `New archive "${newGroup.group_name}" created successfully.`,
+        `New group "${newGroup.group_name}" created successfully.`,
         {
           variant: "success",
           autoHideDuration: 3000,
@@ -88,7 +88,7 @@ export const ArchivePopup = () => {
         }
       );
     } catch (error) {
-      enqueueSnackbar("Failed to create new archive. Please try again.", {
+      enqueueSnackbar("Failed to create new group. Please try again.", {
         variant: "error",
         autoHideDuration: 3000,
         action: (key) => <button onClick={() => closeSnackbar(key)}>x</button>,
@@ -100,7 +100,7 @@ export const ArchivePopup = () => {
   const deleteGroup = async (id: number) => {
     if (groups.length <= 1) {
       enqueueSnackbar(
-        "You need at least one archive. Please create a new one before deleting.",
+        "You need at least one group. Please create a new one before deleting.",
         {
           variant: "warning",
           autoHideDuration: 3000,
@@ -113,7 +113,7 @@ export const ArchivePopup = () => {
     }
     if (currentGroupId === id) {
       enqueueSnackbar(
-        "You cannot delete the currently loaded archive. Please load another archive first.",
+        "You cannot delete the currently loaded group. Please load another group first.",
         {
           variant: "warning",
           autoHideDuration: 3000,
@@ -137,7 +137,7 @@ export const ArchivePopup = () => {
         }),
       });
       if (!response.ok) {
-        enqueueSnackbar("Failed to delete archive. Please try again.", {
+        enqueueSnackbar("Failed to delete group. Please try again.", {
           variant: "error",
           autoHideDuration: 3000,
           action: (key) => (
@@ -148,13 +148,13 @@ export const ArchivePopup = () => {
       }
       const newGroups = groups.filter((group) => group.group_id !== id);
       setGroups(newGroups as Group[]);
-      enqueueSnackbar(`Archive deleted successfully.`, {
+      enqueueSnackbar(`Group deleted successfully.`, {
         variant: "success",
         autoHideDuration: 3000,
         action: (key) => <button onClick={() => closeSnackbar(key)}>x</button>,
       });
     } catch (error) {
-      enqueueSnackbar("Failed to delete archive. Please try again.", {
+      enqueueSnackbar("Failed to delete group. Please try again.", {
         variant: "error",
         autoHideDuration: 3000,
         action: (key) => <button onClick={() => closeSnackbar(key)}>x</button>,
@@ -294,7 +294,7 @@ export const ArchivePopup = () => {
 
   return (
     <>
-      {/* 背景遮罩层，当打开ArchivePopup时显示 */}
+      {/* 背景遮罩层，当打开GroupPopup时显示 */}
       {isArchiveOpen && (
         <div
           className="fixed inset-0 bg-black/20 transition-opacity z-[1003]"
@@ -319,7 +319,7 @@ export const ArchivePopup = () => {
         {/* 标题栏 */}
         <div className="p-4 border-b">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-medium">Archive</h2>
+            <h2 className="text-xl font-medium">Groups</h2>
             <button
               className="text-gray-500 hover:text-gray-700"
               onClick={() => setArchiveOpen(false)}
@@ -337,7 +337,7 @@ export const ArchivePopup = () => {
               className="w-full py-2 bg-green-500 text-white rounded hover:bg-green-600 transition"
               onClick={createNewGroup}
             >
-              New Archive
+              New Group
             </button>
           </div>
 
