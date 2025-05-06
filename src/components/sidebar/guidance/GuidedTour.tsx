@@ -49,9 +49,9 @@ const GuidedTour = () => {
     {
       element: "#archive-management",
       popover: {
-        title: "Archive Management",
+        title: "Group Management",
         description:
-          "This is the archive management section where you can use it to manage POIs and properties saved in different scenarios.",
+          "This is the group management section where you can use it to manage POIs and properties saved in different scenarios.",
         side: "right",
         align: "start",
       },
