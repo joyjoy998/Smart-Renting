@@ -139,7 +139,7 @@ const EditPropertyModal: React.FC<PropsWithChildren<Props>> = (props) => {
 
   const state = placeData?.address_components?.find((item) =>
     item.types.includes("administrative_area_level_1")
-  )?.short_name;
+  )?.short_name || "NSW";
   const refreshData = () => {
     axios.get("/api/savedProperties").then((res) => {
       if (res.status === 200) {
@@ -154,22 +154,20 @@ const EditPropertyModal: React.FC<PropsWithChildren<Props>> = (props) => {
       saved_property_id:
         placeData?.savedProperty?.saved_property_id ||
         Math.floor(Math.random() * 1000000),
-      street: addressParts[0],
-      suburb: suburb,
-      state: state,
-      postcode: postcode,
-      latitude: placeData?.geometry?.location?.lat?.() || null,
-      longitude: placeData?.geometry?.location?.lng?.() || null,
-      weekly_rent: Number(values.weekly_rent), // ✅ 必须是 `NUMERIC(10,2)`
-      photo: placeData?.photos?.map((item) => item.getUrl()) || [], // ✅ 必须是数组
-      bedrooms: values.bedrooms, // ✅ 必须是 `INT`
-      bathrooms: values.bathrooms, // ✅ 必须是 `INT`
-      parking_spaces: values.parking_spaces, // ✅ 必须是 `INT`
-      property_type: "Apartment",
-      safety_score: values.safety_score || 0, // ✅ 必须在 `0.00 - 1.00` 之间
-      // note: "Great location!",
-      // created_at: new Date().toISOString(), // ✅ 必须是 `TIMESTAMP`
-      place_id: placeData?.place_id || "", // ✅ Ensure this exists
+      street: addressParts[0] || "",
+      suburb: suburb || "",
+      state: state || "NSW",
+      postcode: postcode || "",
+      latitude: placeData?.geometry?.location?.lat?.() || placeData?.savedProperty?.latitude || null,
+      longitude: placeData?.geometry?.location?.lng?.() || placeData?.savedProperty?.longitude || null,
+      weekly_rent: Number(values.weekly_rent),
+      photo: placeData?.photos?.map((item) => item.getUrl()) || placeData?.savedProperty?.photo || [],
+      bedrooms: values.bedrooms,
+      bathrooms: values.bathrooms,
+      parking_spaces: values.parking_spaces,
+      property_type: values.property_type || "Apartment",
+      safety_score: values.safety_score || 0,
+      place_id: placeData?.place_id || "",
     };
 
     console.log("🚀 Sending Payload:", payload); // ✅ Debugging log
