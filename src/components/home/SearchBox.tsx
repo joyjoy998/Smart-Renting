@@ -1,3 +1,4 @@
+"use client";
 import React, { useEffect, useState } from "react";
 import { MenuButton } from "./MenuButton";
 import { Sidebar } from "../sidebar/Sidebar";

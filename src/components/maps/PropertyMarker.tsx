@@ -1,66 +1,48 @@
+import React, { useCallback } from "react";
 import { AdvancedMarker } from "@vis.gl/react-google-maps";
-import React, { PropsWithChildren } from "react";
-import { PropertyInfo } from "./MapContent";
-import { getPlaceDetail, usePlacesService } from "@/hooks/map/usePlacesService";
+import { SavedPropertyProps } from "@/stores/useSavedData";
 import useMapStore from "@/stores/useMapStore";
-import { geocode, useGeocoder } from "@/hooks/map/useGeocoder";
 
-type Props = {
-  property: any;
+type PropertyMarkerProps = {
+  property: SavedPropertyProps | any; // 接受任何带有经纬度的对象
+  children: React.ReactNode;
+  onClick?: () => void;
 };
 
-const PropertyMarker: React.FC<PropsWithChildren<Props>> = (props) => {
-  const placesSerivce = usePlacesService();
-  const gecoder = useGeocoder();
-  const setCurrentGeometry = useMapStore.use.setCurrentGeometry();
+const PropertyMarker: React.FC<PropertyMarkerProps> = ({
+  property,
+  children,
+  onClick,
+}) => {
   const setCurrentInfoWindow = useMapStore.use.setCurrentInfoWindow();
-  const property = props.property;
+  const setCurrentGeometry = useMapStore.use.setCurrentGeometry();
 
-  if (
-    !property ||
-    typeof property.latitude !== "number" ||
-    typeof property.longitude !== "number"
-  ) {
-    console.warn("Invalid property coordinates:", property);
+  // 提取位置信息，确保兼容不同数据结构
+  const position = {
+    lat: property.latitude || property.geometry?.location?.lat(),
+    lng: property.longitude || property.geometry?.location?.lng(),
+  };
+
+  // 仅在确认有有效的位置数据时渲染
+  if (!position.lat || !position.lng) {
     return null;
   }
 
-  // @ts-ignore
-  const latLng = { lat: property?.latitude, lng: property?.longitude };
-  return (
-    <AdvancedMarker
-      key={`${property?.place_id}`}
-      position={latLng}
-      onClick={async (event) => {
-        // @ts-ignore
-        event.stop();
-        if (property?.place_id) {
-          // Call event.stop() on the event to prevent the default info window from showing.
-          const detail = await getPlaceDetail(
-            placesSerivce!,
-            property.place_id
-          );
-          setCurrentGeometry(latLng);
+  const handleClick = useCallback(() => {
+    if (onClick) {
+      onClick();
+      return;
+    }
 
-          setCurrentInfoWindow(detail);
-        } else {
-          if (gecoder) {
-            const result = await geocode(gecoder, latLng);
-            if (result) {
-              const detail = await getPlaceDetail(
-                placesSerivce!,
-                result.place_id
-              );
-              setCurrentGeometry(latLng);
-              setCurrentInfoWindow(detail);
-            }
-          }
-        }
-      }}
-    >
-      {props.children}
+    setCurrentInfoWindow(property);
+    setCurrentGeometry(position);
+  }, [property, position, onClick, setCurrentInfoWindow, setCurrentGeometry]);
+
+  return (
+    <AdvancedMarker position={position} onClick={handleClick}>
+      {children}
     </AdvancedMarker>
   );
 };
 
-export default PropertyMarker;
+export default React.memo(PropertyMarker);

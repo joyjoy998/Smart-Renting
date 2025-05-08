@@ -1,12 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import {
-  APIProvider,
-  Map,
-  useMap,
-  useMapsLibrary,
-} from "@vis.gl/react-google-maps";
+import { Map } from "@vis.gl/react-google-maps";
 import { MAPS_CONFIG } from "@/lib/constants/mapConfigure";
 import {
   GOOGLE_DARK_MAPS_ID,

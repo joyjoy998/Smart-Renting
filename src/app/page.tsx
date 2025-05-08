@@ -3,10 +3,11 @@
 import { MapContainer } from "@/components/maps/MapContainer";
 import { Header } from "@/components/home/Header";
 import { APIProvider } from "@vis.gl/react-google-maps";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Loading from "@/components/ui/Loading";
 import { useAuth } from "@clerk/nextjs";
 import axios from "axios";
+import useSWR from "swr";
 import useSavedDataStore from "@/stores/useSavedData";
 import { SnackbarProvider } from "notistack";
 import { useGroupIdStore } from "@/stores/useGroupStore";
@@ -14,55 +15,76 @@ import { ThemeProvider } from "@mui/material";
 import { useTheme } from "next-themes";
 import { getTheme } from "@/theme";
 
+// 创建 fetcher 函数用于 SWR
+const fetcher = (url: string) => axios.get(url).then((res) => res.data);
+
 export default function Home() {
   const userInfo = useAuth();
   const savedPois = useSavedDataStore.use.savedPois();
   const savedProperties = useSavedDataStore.use.savedProperties();
   const setSavedPois = useSavedDataStore.use.setSavedPois();
   const setSavedProperties = useSavedDataStore.use.setSavedProperties();
-  const properties = useSavedDataStore.use.properties();
   const setProperties = useSavedDataStore.use.setProperties();
   const currentGroupId = useGroupIdStore((state) => state.currentGroupId);
 
-  const [person, setPerson] = useState("Alice");
-  const [bio, setBio] = useState(null);
+  // 使用 SWR 获取 properties 数据
+  const { data: propertiesData, error: propertiesError } = useSWR(
+    "/api/properties",
+    fetcher,
+    { revalidateOnFocus: true, revalidateOnReconnect: true }
+  );
 
-  useEffect(() => {
-    axios.get("/api/properties").then((res) => {
-      if (res.status === 200) {
-        //TODO: 临时取前100个，后续优化代讨论
-        setProperties(res.data?.slice(0, 100));
-      }
-    });
-  }, []);
-  useEffect(() => {
-    if (userInfo.userId && currentGroupId) {
-      //groupid 读取
-      axios.defaults.params = {
-        user_id: userInfo.userId,
-        group_id: currentGroupId,
-      };
-      axios.get("/api/savedProperties").then((res) => {
-        if (res.status === 200) {
-          setSavedProperties(res.data);
-        }
-      });
-
-      axios.get("/api/savedPois").then((res) => {
-        if (res.status === 200) {
-          setSavedPois(res.data);
-        }
-      });
+  // 当数据加载成功时更新 store
+  useMemo(() => {
+    if (propertiesData) {
+      setProperties(propertiesData);
     }
-  }, [currentGroupId, userInfo.userId]);
-  console.log("savedProperties=======", savedProperties);
-  console.log("savedPois=======", savedPois);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isError, setIsError] = useState<boolean>(false);
+  }, [propertiesData, setProperties]);
+
+  // 构建 savedProperties 和 savedPois 的 SWR 键
+  const savedPropertiesKey =
+    userInfo.userId && currentGroupId
+      ? `/api/savedProperties?user_id=${userInfo.userId}&group_id=${currentGroupId}`
+      : null;
+
+  const savedPoisKey =
+    userInfo.userId && currentGroupId
+      ? `/api/savedPois?user_id=${userInfo.userId}&group_id=${currentGroupId}`
+      : null;
+
+  // 使用 SWR 获取 savedProperties 数据
+  const { data: savedPropertiesData } = useSWR(savedPropertiesKey, fetcher, {
+    revalidateOnFocus: true,
+    revalidateOnReconnect: true,
+  });
+
+  // 使用 SWR 获取 savedPois 数据
+  const { data: savedPoisData } = useSWR(savedPoisKey, fetcher, {
+    revalidateOnFocus: true,
+    revalidateOnReconnect: true,
+  });
+
+  // 当数据加载成功时更新 store
+  useMemo(() => {
+    if (savedPropertiesData) {
+      setSavedProperties(savedPropertiesData);
+    }
+  }, [savedPropertiesData, setSavedProperties]);
+
+  useMemo(() => {
+    if (savedPoisData) {
+      setSavedPois(savedPoisData);
+    }
+  }, [savedPoisData, setSavedPois]);
+
+  const [isMapLoading, setIsMapLoading] = useState<boolean>(true);
+  const [isMapError, setIsMapError] = useState<boolean>(false);
+
   const { theme } = useTheme();
   const materialTheme = useMemo(() => getTheme(theme), [theme]);
 
-  console.log("theme========", theme);
+  const isLoading = isMapLoading || (!propertiesData && !propertiesError);
+
   return (
     <ThemeProvider theme={materialTheme}>
       <SnackbarProvider maxSnack={3}>
@@ -70,24 +92,29 @@ export default function Home() {
           apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ""}
           libraries={["places", "marker", "geocoding"]}
           onError={() => {
-            setIsLoading(false);
-            setIsError(true);
+            setIsMapLoading(false);
+            setIsMapError(true);
           }}
           onLoad={() => {
-            setIsLoading(false);
+            setIsMapLoading(false);
           }}
         >
           <main className="h-screen w-screen relative">
             <Header />
             {isLoading && <Loading />}
-            {isError && (
+            {isMapError && (
               <div className="flex h-screen w-full items-center justify-center bg-gray-100">
                 <div className="text-center">
                   <h2 className="text-xl font-semibold text-red-600">
                     Map cannot be loaded right now, sorry.
                   </h2>
-                  <p className="mt-2 text-gray-600">{isError}</p>
+                  <p className="mt-2 text-gray-600">{isMapError}</p>
                 </div>
+              </div>
+            )}
+            {propertiesError && (
+              <div className="absolute top-16 left-0 right-0 bg-red-100 p-2 text-center text-red-700">
+                Failed to load properties data
               </div>
             )}
 

@@ -28,10 +28,11 @@ import { useSnackbar } from "notistack";
 import { divide } from "lodash";
 import { triggerVectorization } from "@/utils/vectorization";
 import { useGroupIdStore } from "@/stores/useGroupStore";
+import { useAuth } from "@clerk/nextjs";
+
 type Props = {
   placeData: PropertyInfo;
 };
-import { useAuth } from "@clerk/nextjs";
 
 const style = {
   position: "absolute",
@@ -137,9 +138,10 @@ const EditPropertyModal: React.FC<PropsWithChildren<Props>> = (props) => {
       item.types.includes("postal_code")
     )?.long_name || "";
 
-  const state = placeData?.address_components?.find((item) =>
-    item.types.includes("administrative_area_level_1")
-  )?.short_name || "NSW";
+  const state =
+    placeData?.address_components?.find((item) =>
+      item.types.includes("administrative_area_level_1")
+    )?.short_name || "NSW";
   const refreshData = () => {
     axios.get("/api/savedProperties").then((res) => {
       if (res.status === 200) {
@@ -158,10 +160,19 @@ const EditPropertyModal: React.FC<PropsWithChildren<Props>> = (props) => {
       suburb: suburb || "",
       state: state || "NSW",
       postcode: postcode || "",
-      latitude: placeData?.geometry?.location?.lat?.() || placeData?.savedProperty?.latitude || null,
-      longitude: placeData?.geometry?.location?.lng?.() || placeData?.savedProperty?.longitude || null,
+      latitude:
+        placeData?.geometry?.location?.lat?.() ||
+        placeData?.savedProperty?.latitude ||
+        null,
+      longitude:
+        placeData?.geometry?.location?.lng?.() ||
+        placeData?.savedProperty?.longitude ||
+        null,
       weekly_rent: Number(values.weekly_rent),
-      photo: placeData?.photos?.map((item) => item.getUrl()) || placeData?.savedProperty?.photo || [],
+      photo:
+        placeData?.photos?.map((item) => item.getUrl()) ||
+        placeData?.savedProperty?.photo ||
+        [],
       bedrooms: values.bedrooms,
       bathrooms: values.bathrooms,
       parking_spaces: values.parking_spaces,

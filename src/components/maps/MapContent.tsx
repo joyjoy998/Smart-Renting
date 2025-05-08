@@ -1,4 +1,3 @@
-"client";
 import dynamic from "next/dynamic";
 const RoutePolylineLayer = dynamic(
   () => import("@/components/maps/RoutePolylineLayer"),
@@ -8,20 +7,18 @@ const RoutePolylineLayer = dynamic(
   }
 );
 
-import { use, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AdvancedMarker, useMap } from "@vis.gl/react-google-maps";
 import { MAPS_CONFIG } from "@/lib/constants/mapConfigure";
-import { UserLocationMarker } from "./UserLocationMarker";
 import PropertyInfoWindow from "@/components/InfoWindow/InfoWindow";
 import useMapStore from "@/stores/useMapStore";
 import useSavedDataStore, { SavedPropertyProps } from "@/stores/useSavedData";
 import PropertyMarker from "./PropertyMarker";
 import FavoriteRoundedIcon from "@mui/icons-material/FavoriteRounded";
 import HouseIcon from "@mui/icons-material/House";
-import { blue, green, red, yellow } from "@mui/material/colors";
+import { blue, green, red } from "@mui/material/colors";
 import { Badge } from "@mui/material";
 import { useMapLocationStore } from "@/stores/useMapLocationStore";
-import { set } from "lodash";
 
 export type PropertyInfo =
   | (google.maps.places.PlaceResult & {
@@ -34,6 +31,29 @@ export type PropertyInfo =
     })
   | null;
 
+// 辅助函数：随机选择最多N个元素
+function getRandomSample<Type>(array: Type[], maxCount: number): Type[] {
+  if (array.length <= maxCount) {
+    return array;
+  }
+
+  // 创建原数组的副本
+  const arrayCopy = [...array];
+  const result: Type[] = [];
+
+  // 使用Fisher-Yates洗牌算法随机选择元素
+  for (let i = 0; i < maxCount; i++) {
+    // 生成一个随机索引
+    const randomIndex = Math.floor(Math.random() * arrayCopy.length);
+    // 将该索引的元素添加到结果中
+    result.push(arrayCopy[randomIndex]);
+    // 从原数组中移除该元素（避免重复选择）
+    arrayCopy.splice(randomIndex, 1);
+  }
+
+  return result;
+}
+
 export function MapContent() {
   const map = useMap();
   const { setMapLocation } = useMapLocationStore();
@@ -44,22 +64,39 @@ export function MapContent() {
   const savedProperties = useSavedDataStore.use.savedProperties();
   const properties = useSavedDataStore.use.properties();
 
+  // 存储当前地图边界的状态
+  const [mapBounds, setMapBounds] = useState<google.maps.LatLngBounds | null>(
+    null
+  );
+
+  // 添加状态记录渲染标记的种子，当需要重新随机选择房产时更新
+  const [renderSeed, setRenderSeed] = useState(Date.now());
+
   const allProperties = useMemo(() => {
     return [...(savedProperties || []), ...(properties || [])];
-  }, [savedProperties, properties]); //combine all the properties
+  }, [savedProperties, properties]);
 
+  // 监听地图边界变化
   useEffect(() => {
     if (map) {
-      const idleListener = map.addListener("idle", () => {
+      const initialBounds = map.getBounds();
+      setMapBounds(initialBounds || null);
+
+      // 地图平移和缩放结束后更新边界
+      const boundsChangedListener = map.addListener("idle", () => {
+        const bounds = map.getBounds();
+        setMapBounds(bounds || null);
+        // 每次地图边界变化时更新渲染种子，重新随机选择要显示的房产
+        setRenderSeed(Date.now());
+
         const center = map.getCenter();
-        // console.log("latitude=====", center?.lat());
-        // console.log("longitude=====", center?.lng());
         if (center) {
           setMapLocation({ lat: center.lat(), lng: center.lng() });
         }
       });
+
       return () => {
-        idleListener.remove();
+        boundsChangedListener.remove();
       };
     }
   }, [map, setMapLocation]);
@@ -90,7 +127,7 @@ export function MapContent() {
     if (!currentInfoWindow) {
       return null;
     }
-    // console.log("currentInfoWindow===========", currentInfoWindow);
+
     const currentPlaceId = currentInfoWindow?.place_id;
     const matchedPoi = savedPois?.find(
       (poi) => poi.place_id === currentPlaceId
@@ -117,9 +154,73 @@ export function MapContent() {
       savedPoi: matchedPoi,
       savedProperty: matchedProperty,
     };
-  }, [currentInfoWindow, savedPois, savedProperties]);
+  }, [currentInfoWindow, savedPois, allProperties]);
 
-  // console.log("currentGeometry====", currentGeometry);
+  // 过滤在当前视野内的房产，并随机最多选择50个
+  const visibleProperties = useMemo(() => {
+    if (!mapBounds || !allProperties?.length) {
+      return [];
+    }
+
+    // 先筛选在视野内的所有房产
+    const propertiesInView = allProperties.filter((property) => {
+      // 检查该点是否在当前地图边界内
+      return (
+        property.latitude &&
+        property.longitude &&
+        mapBounds.contains({
+          lat: property.latitude,
+          lng: property.longitude,
+        })
+      );
+    });
+
+    // 确保当前选中的房产（如果有）一定会被包含在渲染列表中
+    let selectedProperties: PropertyInfo[] = [];
+    if (currentPropertyData && currentPropertyData.place_id) {
+      const selectedProperty = propertiesInView.find(
+        (prop) => prop.place_id === currentPropertyData.place_id
+      );
+      if (selectedProperty) {
+        selectedProperties = [selectedProperty];
+      }
+    }
+
+    // 从剩余房产中随机选择，确保总数不超过50个
+    let remainingProperties = propertiesInView.filter(
+      (prop) =>
+        !selectedProperties.some(
+          (selected) => selected?.place_id === prop.place_id
+        )
+    );
+
+    // 随机选择剩余的房产（最多选择50-已选房产数）
+    const randomProperties = getRandomSample(
+      remainingProperties,
+      50 - selectedProperties.length
+    );
+
+    // 合并已选和随机选择的房产
+    return [...selectedProperties, ...randomProperties];
+  }, [mapBounds, allProperties, currentPropertyData, renderSeed]);
+
+  const visiblePois = useMemo(() => {
+    if (!mapBounds || !savedPois?.length) {
+      return [];
+    }
+
+    return savedPois.filter((poi) => {
+      return (
+        poi.latitude &&
+        poi.longitude &&
+        mapBounds.contains({
+          lat: poi.latitude,
+          lng: poi.longitude,
+        })
+      );
+    });
+  }, [mapBounds, savedPois]);
+
   return (
     <>
       <RoutePolylineLayer />
@@ -130,9 +231,10 @@ export function MapContent() {
           <AdvancedMarker position={currentGeometry} />
         )}
 
-      {allProperties?.map((property, index) => {
+      {/* 只渲染随机选择的最多50个视野内的房产标记 */}
+      {visibleProperties?.map((property, index) => {
         const matchedSaved = savedProperties?.find(
-          (saved) => saved.place_id === property.place_id
+          (saved) => saved.place_id === property?.place_id
         );
 
         const weeklyRent =
@@ -145,11 +247,11 @@ export function MapContent() {
         return (
           <PropertyMarker
             property={property}
-            key={`${property.place_id}-${index}`}
+            key={`${property?.place_id}-${index}`}
           >
             <Badge badgeContent={weeklyRent} color="primary" max={10000}>
               <HouseIcon
-                id={property.place_id}
+                id={property?.place_id}
                 sx={{ color: isSaved ? green[400] : blue[400] }}
                 fontSize="large"
               />
@@ -157,7 +259,8 @@ export function MapContent() {
           </PropertyMarker>
         );
       })}
-      {savedPois?.map((property) => {
+
+      {visiblePois?.map((property) => {
         return (
           <PropertyMarker property={property} key={property.saved_poi_id}>
             <FavoriteRoundedIcon sx={{ color: red[400] }} fontSize="large" />
