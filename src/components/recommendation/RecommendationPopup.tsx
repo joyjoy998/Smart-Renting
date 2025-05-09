@@ -65,7 +65,10 @@ const RecommendationPopup = () => {
         name: `${property.street}, ${property.suburb}`,
         formatted_address: `${property.street}, ${property.suburb}`,
         geometry: {
-          location: new google.maps.LatLng(property.latitude, property.longitude),
+          location: new google.maps.LatLng(
+            property.latitude,
+            property.longitude
+          ),
         },
         types: ["property"],
         place_id: property.place_id,
