@@ -12,12 +12,18 @@ export function Header() {
         </div>
 
         <div className="flex items-center gap-3">
-          <ThemeToggle />
+          <div className="w-11 h-11 flex items-center justify-center">
+            <ThemeToggle />
+          </div>
           <SignedOut>
-            <AvatarButton />
+            <div className="w-11 h-11 flex items-center justify-center">
+              <AvatarButton />
+            </div>
           </SignedOut>
           <SignedIn>
-            <UserButton />
+            <div className="w-11 h-11 flex items-center justify-center">
+              <UserButton />
+            </div>
           </SignedIn>
         </div>
       </div>
