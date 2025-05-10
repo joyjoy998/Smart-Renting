@@ -51,11 +51,13 @@ export function MapContent() {
     if (map) {
       const bounds = map.getBounds();
       return bounds
-        ? allProperties.filter((place) => {
-            const lat = place.latitude;
-            const lng = place.longitude;
-            return bounds?.contains(new google.maps.LatLng(lat, lng));
-          })
+        ? allProperties
+            .filter((place) => {
+              const lat = place.latitude;
+              const lng = place.longitude;
+              return bounds?.contains(new google.maps.LatLng(lat, lng));
+            })
+            ?.slice(0, 50)
         : allProperties?.slice(0, 100);
     }
   }, [mapLocation]);
