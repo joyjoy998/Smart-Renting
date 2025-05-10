@@ -129,11 +129,11 @@ const SavePoi = (props: Props) => {
   return (
     <div>
       {!placeData?.savedPoi ? (
-        <Button variant="contained" onClick={handleClick}>
+        <Button id="savePOIButton" variant="contained" onClick={handleClick}>
           Save poi
         </Button>
       ) : (
-        <Button variant="contained" onClick={handleRemove}>
+        <Button id="removePOIButton" variant="contained" onClick={handleRemove}>
           Remove Poi
         </Button>
       )}

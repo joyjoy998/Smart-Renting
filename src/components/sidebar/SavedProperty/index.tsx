@@ -79,7 +79,7 @@ const SavedPropertyModal = () => {
   return (
     <div>
       <button
-        id="saved-property"
+        id="openSavedPropertyButton"
         className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg"
         onClick={toggle}
       >
@@ -145,6 +145,7 @@ const SavedPropertyModal = () => {
                           : "No rent info"}
                       </Typography>
                       <IconButton
+                        id={`delete-property-${item.place_id}`}
                         aria-label="delete"
                         onClick={() => handleRemoveSaved(item)}
                       >
