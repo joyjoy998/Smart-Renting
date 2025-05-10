@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // 查询 properties 表中已具备经纬度但 place_id 为空或为 PlaceIdPlaceHolder 的记录
+    // query the properties table where place_id is null or PlaceIdPlaceHolder
     const { data: properties, error: fetchError } = await supabase
       .from("properties")
       .select("*")
@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
       throw fetchError;
     }
 
-    // 添加调试日志
+    // add debug log
     console.log("Query conditions:", {
       or_filter: 'place_id.is.null,place_id.eq."",place_id.eq.PlaceIdPlaceHolder'
     });
@@ -51,7 +51,7 @@ export async function GET(req: NextRequest) {
     let successCount = 0;
     let errorCount = 0;
 
-    // 对每个房源记录调用反向地理编码 API
+    // call the reverse geocoding API for each property
     for (let i = 0; i < properties.length; i++) {
       const property = properties[i];
       console.log(
@@ -61,7 +61,7 @@ export async function GET(req: NextRequest) {
       const { latitude, longitude } = property;
 
       try {
-        // 使用 latitude 和 longitude 构造反向地理编码 API 的请求 URL
+        // use latitude and longitude to construct the request URL for the reverse geocoding API
         const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${googleMapsApiKey}`;
         const response = await fetch(url);
         const geocodeData = await response.json();
@@ -71,10 +71,10 @@ export async function GET(req: NextRequest) {
           geocodeData.results &&
           geocodeData.results.length > 0
         ) {
-          // 获取第一个结果的 place_id
+          // get the place_id of the first result
           const place_id = geocodeData.results[0].place_id;
 
-          // 更新数据库中对应记录的 place_id
+          // update the place_id in the database
           const { error: updateError } = await supabase
             .from("properties")
             .update({ place_id })
@@ -111,7 +111,7 @@ export async function GET(req: NextRequest) {
         });
       }
 
-      // 遵循 API 调用频率限制，每次请求之间等待200毫秒
+      // follow the API call frequency limit, wait 200 milliseconds between requests
       if (i < properties.length - 1) {
         await new Promise((resolve) => setTimeout(resolve, 200));
       }

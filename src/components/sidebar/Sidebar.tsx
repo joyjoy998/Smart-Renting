@@ -26,22 +26,25 @@ import {
   SignedOut,
   SignOutButton,
 } from "@clerk/nextjs";
-import { ArchivePopup } from "./historyManagement/ArchivePopup";
+import GuidedTour from "@/components/sidebar/guidance/GuidedTour";
+import { GroupPopup } from "./groupManagement/GroupPopup";
 import { SettingsPopup } from "./SettingsPopup";
 import { useArchiveStore } from "@/stores/useArchiveStore";
-import { set } from "lodash";
 import SavePoiModal from "./SavePoi";
 import SavedPropertyModal from "./SavedProperty";
 import RecommendationPopup from "@/components/recommendation/RecommendationPopup";
 import { useRecommendationStore } from "@/stores/useRecommendationStore";
 import GroupSelector from "@/components/ratingSystem/GroupSelector";
-import { useState } from "react";
 import { useGroupSelectorStore } from "../../stores/useGroupSelectorStore";
+import { useTheme } from "next-themes";
+import { cn } from "@/lib/utils";
 
 export function Sidebar() {
   const { isOpen, setOpen } = useSidebarStore();
   const { isOpen: groupSelectorOpen, setOpen: setGroupSelectorOpen } =
     useGroupSelectorStore();
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
 
   return (
     <>
@@ -78,59 +81,61 @@ export function Sidebar() {
         </div>
 
         <div className="p-4 space-y-2">
-          <SavePoiModal />
-
-          <SavedPropertyModal />
-          {/* </div> */}
-
-          {/* Main functional area for report generation, recommendation, and history management */}
-          {/* <div className="p-4 border-t space-y-2"> */}
-          <button
-            onClick={() => {
-              //useSidebarStore.getState().setOpen(false);
-              useRatingStore.getState().setOpen(false);
-              useGroupSelectorStore.getState().setOpen(true);
-            }}
-            className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg"
-          >
-            <FileText className="h-5 w-5" />
-            <span>Comparison Report</span>
-          </button>
-
-          <button
-            className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg"
-            onClick={() => {
-              useRecommendationStore.getState().setOpen(true);
-            }}
-          >
-            <Lightbulb className="h-5 w-5" />
-            <span>Recommendation</span>
-          </button>
-          <RecommendationPopup />
-
           <SignedIn>
             <button
+              id="archive-management"
               className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg"
               onClick={() => {
                 useArchiveStore.getState().setArchiveOpen(true);
               }}
             >
               <History className="h-5 w-5" />
-              <span>History Management</span>
+              <span>Group Management</span>
             </button>
+
+            <SavePoiModal />
+
+            <SavedPropertyModal />
+            {/* </div> */}
+
+            {/* Main functional area for report generation, recommendation, and history management */}
+            {/* <div className="p-4 border-t space-y-2"> */}
+            <button
+              id="comparison-report"
+              onClick={() => {
+                //useSidebarStore.getState().setOpen(false);
+                useRatingStore.getState().setOpen(false);
+                useGroupSelectorStore.getState().setOpen(true);
+              }}
+              className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg"
+            >
+              <FileText className="h-5 w-5" />
+              <span>Comparison Report</span>
+            </button>
+
+            <button
+              id="recommendation"
+              className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg"
+              onClick={() => {
+                useRecommendationStore.getState().setOpen(true);
+              }}
+            >
+              <Lightbulb className="h-5 w-5" />
+              <span>Recommendation</span>
+            </button>
+            <RecommendationPopup />
           </SignedIn>
         </div>
 
         {/* Functional area for help, Settings and Login Logout */}
         <div className="p-4 border-t space-y-2 mt-auto">
-          <button className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg">
-            <HelpCircle className="h-5 w-5" />
-            <span>Help/Guidance</span>
-          </button>
-
-          {/* Settings and Login/Logout */}
           <SignedIn>
+            <GuidedTour />
+
+            {/* Settings and Login/Logout */}
+
             <button
+              id="settings"
               onClick={() => {
                 useSettingsStore.getState().setOpen(true);
                 useSidebarStore.getState().setOpen(false);
@@ -142,7 +147,12 @@ export function Sidebar() {
             </button>
 
             <SignOutButton>
-              <button className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg text-red-500">
+              <button
+                className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg text-red-500"
+                onClick={() => {
+                  useSidebarStore.getState().setOpen(false);
+                }}
+              >
                 <LogOut className="h-5 w-5" />
                 <span>Sign Out</span>
               </button>
@@ -159,7 +169,7 @@ export function Sidebar() {
           </SignedOut>
         </div>
       </aside>
-      <ArchivePopup />
+      <GroupPopup />
       <SettingsPopup />
       <RatingReport />
 
@@ -167,14 +177,24 @@ export function Sidebar() {
       {groupSelectorOpen && (
         <div className="fixed inset-0 z-[1500] bg-black/30 flex items-center justify-center">
           <div
-            className="bg-white rounded-lg p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto relative"
+            className={cn(
+              "rounded-lg p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto relative",
+              isDark
+                ? "bg-gray-800 text-gray-200 border border-gray-700 shadow-lg shadow-blue-900/20"
+                : "bg-white text-gray-800"
+            )}
             onClick={(e) => e.stopPropagation()}
           >
             <button
-              className="absolute top-2 right-2"
+              className={cn(
+                "absolute top-2 right-2 p-1 rounded-full hover:bg-opacity-20",
+                isDark
+                  ? "text-gray-300 hover:bg-gray-600"
+                  : "text-gray-500 hover:bg-gray-200"
+              )}
               onClick={() => setGroupSelectorOpen(false)}
             >
-              ✕
+              <X className="h-5 w-5" />
             </button>
             <GroupSelector />
           </div>

@@ -34,8 +34,6 @@ const RecommendationPopup = () => {
     fetchRecommendations,
   } = useRecommendationStore();
 
-  const setCurrentGeometry = useMapStore.use.setCurrentGeometry();
-  const setCurrentInfoWindow = useMapStore.use.setCurrentInfoWindow();
   const savedProperties = useSavedDataStore.use.savedProperties();
   const hasStarredProperties = savedProperties.length > 0;
   const { user } = useUser();
@@ -50,7 +48,8 @@ const RecommendationPopup = () => {
   const ITEMS_PER_PAGE = 5;
   const [shouldRefetchOnNextPage, setShouldRefetchOnNextPage] = useState(false);
   const { mapLocation } = useMapLocationStore();
-
+  const setCurrentGeometry = useMapStore.use.setCurrentGeometry();
+  const setCurrentInfoWindow = useMapStore.use.setCurrentInfoWindow();
   // Use useCallback to wrap the handler function to avoid unnecessary recreations
   const handlePropertyClick = useCallback(
     (property: Property) => {
@@ -60,8 +59,25 @@ const RecommendationPopup = () => {
         lng: property.longitude,
       });
 
-      // Set info window data
-      setCurrentInfoWindow(property);
+      // Set info window data with all necessary fields
+      const infoWindowData = {
+        ...property,
+        name: `${property.street}, ${property.suburb}`,
+        formatted_address: `${property.street}, ${property.suburb}`,
+        geometry: {
+          location: new google.maps.LatLng(
+            property.latitude,
+            property.longitude
+          ),
+        },
+        types: ["property"],
+        place_id: property.place_id,
+        image: property.photo?.[0] || DEFAULT_IMAGE_URL,
+        address: `${property.street}, ${property.suburb}`,
+        savedProperty: property,
+      } as google.maps.places.PlaceResult;
+
+      setCurrentInfoWindow(infoWindowData);
 
       // Close recommendation popup
       toggleRecommendation();
@@ -138,7 +154,9 @@ const RecommendationPopup = () => {
         <DialogHeader>
           <DialogTitle>Recommended Properties</DialogTitle>
           <DialogDescription>
-            {showWarning ? "Please login to see recommendations." : ""}
+            <DialogDescription>
+              {showWarning ? "Please login to see recommendations." : ""}
+            </DialogDescription>
           </DialogDescription>
         </DialogHeader>
 
@@ -162,11 +180,11 @@ const RecommendationPopup = () => {
                 return (
                   <div
                     key={property.property_id}
-                    className="flex border rounded-lg overflow-hidden shadow-md cursor-pointer hover:bg-gray-50"
+                    className="flex border rounded-lg overflow-hidden shadow-md relative"
                     onClick={() => handlePropertyClick(property)}>
-                    {/* Left side image slider */}
+                    {/* Left side image slider - prevent propagation */}
                     <div
-                      className="w-1/3 relative"
+                      className="w-1/3 relative z-10"
                       onClick={(e) => e.stopPropagation()}>
                       <Swiper
                         modules={[Navigation, Pagination]}
@@ -189,10 +207,13 @@ const RecommendationPopup = () => {
                     <div className="w-2/3 p-4 flex flex-col justify-between">
                       {/* Row 1 - Price & Favorite */}
                       <div className="flex justify-between items-center">
-                        <p className="text-xl font-bold text-gray-900 dark:text-gray-600">
+                        <p className="text-xl font-bold">
                           ${property.weekly_rent} per week
                         </p>
-                        <div onClick={(e) => e.stopPropagation()}>
+                        {/* MODIFIED: Favorite button with stopPropagation */}
+                        <div
+                          className="z-10"
+                          onClick={(e) => e.stopPropagation()}>
                           <FavoriteButton
                             propertyId={property.property_id}
                             placeData={property}
@@ -202,12 +223,12 @@ const RecommendationPopup = () => {
                       </div>
 
                       {/* Row 2 - Address */}
-                      <p className="text-gray-700 dark:text-gray-600 text-lg">
+                      <p className="text-gray-700 dark:text-gray-300 text-lg">
                         {property.street}, {property.suburb}
                       </p>
 
                       {/* Row 3 - Property Details */}
-                      <div className="flex items-center space-x-4 text-gray-600 dark:text-gray-600 mt-2">
+                      <div className="flex items-center space-x-4 text-gray-600  dark:text-gray-300 mt-2">
                         <span>
                           🛏 {property.bedrooms}{" "}
                           {property.bedrooms === 1 ? "Bed" : "Beds"}
@@ -225,7 +246,7 @@ const RecommendationPopup = () => {
                       </div>
 
                       {/* Property Type */}
-                      <p className="text-gray-600 dark:text-gray-600 mt-2">
+                      <p className="text-gray-600  dark:text-gray-300 mt-2">
                         {property.property_type}
                       </p>
                     </div>
@@ -234,15 +255,15 @@ const RecommendationPopup = () => {
               })}
             </div>
           ) : (
-            <p className="text-center text-gray-500 dark:text-gray-600">
+            <p className="text-center text-gray-500  dark:text-gray-300">
               No recommended properties available
             </p>
           )}
 
           {/* Bottom button section */}
-          <div className="flex justify-between mt-4">
+          <div className="flex justify-around">
             <Button
-              className="w-1/2 bg-gray-900 text-white hover:bg-gray-700 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-600"
+              className="w-2/5"
               onClick={async () => {
                 const { currentGroupId } = useRecommendationStore.getState();
                 if (!currentGroupId) {
@@ -263,15 +284,11 @@ const RecommendationPopup = () => {
                   alert("Failed to get group data");
                 }
               }}
-              // only login user can use Comparison Report
               disabled={!userId}>
               Comparison Report
             </Button>
             {recommendedProperties.length > (page + 1) * ITEMS_PER_PAGE && (
-              <Button
-                className="w-1/2 bg-gray-900 text-white hover:bg-gray-700 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-600"
-                onClick={handleNext}
-                disabled={!userId}>
+              <Button className="w-2/5" onClick={handleNext} disabled={!userId}>
                 Next Page
               </Button>
             )}

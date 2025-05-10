@@ -17,7 +17,8 @@ export function loadSafetyScores() {
   const safetyScores: Record<string, number> = {};
 
   properties.forEach((property) => {
-    safetyScores[property.property_property_id] = property.safetyScore ?? 0;
+    const score = property.safetyScore;
+    safetyScores[property.property_property_id] = score ? score : 0.4;
   });
 
   setSafetyScores(safetyScores);

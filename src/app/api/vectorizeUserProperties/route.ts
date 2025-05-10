@@ -38,23 +38,24 @@ function calculateSafetyDescription(safety_score?: number): string {
   return "This property has a low safety rating, tenants are advised to consider additional security measures.";
 }
 
-// format properties
-function formatPropertyData(property: any): string {
+// format user-defined properties
+function formatSavedPropertyData(property: any): string {
   return `This is a ${property.bedrooms || "unknown"}-bedroom, ${
     property.bathrooms || "unknown"
   }-bathroom, ${property.parking_spaces || "unknown"}-parking space ${
     property.property_type || "residence"
   }.
-  It is located in ${property.suburb}, ${property.state}, postal code ${
-    property.postcode
-  }.
+  It is located at ${property.street}, ${property.suburb}, ${
+    property.state
+  }, postal code ${property.postcode}.
   ${calculatePerRoomRent(
     property.weekly_rent,
     property.bedrooms,
     property.bathrooms
   )}
   ${calculateSafetyDescription(property.safety_score)}
-  Additional details: This property is ideal for tenants looking for a ${
+  Additional notes: ${property.note || "No additional notes provided."} 
+  This property is ideal for tenants looking for a ${
     property.bedrooms || "unknown"
   }-bedroom ${
     property.property_type || "property"
@@ -93,8 +94,9 @@ async function generateEmbedding(text: string) {
 
 export async function POST(req: NextRequest) {
   try {
-    let placeIds: string[] = [];
+    let savedPropertyIds: number[] = [];
     let body = null;
+    let groupId = null;
 
     try {
       const contentType = req.headers.get("content-type");
@@ -102,102 +104,188 @@ export async function POST(req: NextRequest) {
         const text = await req.text();
         if (text) {
           body = JSON.parse(text);
+          console.log("Request body:", body);
+
+          // Extract group_id from request
+          groupId = body.group_id;
         }
       }
     } catch (e) {
-      console.log(
-        "No valid JSON body provided, processing all unvectorized place_ids"
+      console.log("No valid JSON body provided, but group_id is required");
+    }
+
+    // Validate group_id
+    if (!groupId) {
+      return NextResponse.json(
+        { success: false, error: "group_id is required" },
+        { status: 400 }
       );
     }
 
+    console.log(`Processing properties for group_id ${groupId}`);
+
     // Supports two invocation modes:
-    // 1. Pass in a specific place_id for processing
-    // 2. No parameters passed – process all place_ids that have not been vectorized
+    // 1. Pass in a specific saved_property_id for processing
+    // 2. No parameters passed – process all user-defined properties in the group that have not been vectorized
 
-    if (body && body.place_id) {
-      // handle specific place_id
-      placeIds = [body.place_id];
-    } else {
-      // Retrieve all place_ids that need processing (present in saved_properties but not in user_property_vectors)
-      const { data, error } = await supabase.rpc("get_unvectorized_place_ids");
+    if (body && body.saved_property_id) {
+      // Verify the saved_property_id belongs to the specified group
+      const { data: propertyCheck, error: checkError } = await supabase
+        .from("saved_properties")
+        .select("saved_property_id")
+        .eq("saved_property_id", body.saved_property_id)
+        .eq("group_id", groupId)
+        .limit(1);
 
-      if (error)
-        throw new Error(
-          `Failed to fetch unvectorized place_ids: ${error.message}`
+      if (checkError || !propertyCheck || propertyCheck.length === 0) {
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              "Property not found or does not belong to the specified group",
+          },
+          { status: 403 }
         );
+      }
+
+      // handle specific saved_property_id
+      savedPropertyIds = [body.saved_property_id];
+      console.log(
+        `Processing specific saved_property_id: ${body.saved_property_id}`
+      );
+    } else {
+      // Retrieve all user-defined saved properties in the group that need vectorization
+      const { data, error } = await supabase
+        .from("saved_properties")
+        .select("saved_property_id")
+        .is("property_id", null) // Only select user-defined properties
+        .eq("group_id", groupId) // Filter by specified group
+        .not("saved_property_id", "in", (rq: any) =>
+          rq.from("user_saved_property_vectors").select("saved_property_id")
+        );
+
+      if (error) {
+        throw new Error(
+          `Failed to fetch unvectorized saved properties: ${error.message}`
+        );
+      }
+
       if (!data || data.length === 0) {
         return NextResponse.json({
           success: true,
-          message: "No new place_ids to process",
+          message: "No new user-defined properties to process in this group",
         });
       }
 
-      placeIds = data.map((item: any) => item.place_id);
+      savedPropertyIds = data.map((item) => item.saved_property_id);
     }
 
-    console.log(`Processing ${placeIds.length} place_ids...`);
+    console.log(
+      `Processing ${savedPropertyIds.length} user-defined properties...`
+    );
 
-    // handle specific place_id
+    // Process saved_property_ids
     const results = await Promise.all(
-      placeIds.map(async (place_id) => {
+      savedPropertyIds.map(async (saved_property_id) => {
         try {
-          //get the property info of the given place_id
+          // get the saved property info
           const { data: properties, error } = await supabase
             .from("saved_properties")
             .select("*")
-            .eq("place_id", place_id)
+            .eq("saved_property_id", saved_property_id)
+            .eq("group_id", groupId) // Ensure property belongs to specified group
             .limit(1);
 
           if (error || !properties || properties.length === 0) {
-            console.error(`No property found for place_id ${place_id}`);
-            return { place_id, success: false };
+            console.error(
+              `No property found for saved_property_id ${saved_property_id}`
+            );
+            return {
+              saved_property_id,
+              success: false,
+              error: "Property not found",
+            };
           }
 
           const property = properties[0];
-          const text = formatPropertyData(property);
-          console.log(`Formatted text for place_id ${place_id}`);
+
+          // Check if it's a user-defined property
+          if (property.property_id !== null) {
+            console.error(
+              `Property ${saved_property_id} is not user-defined, skipping vectorization`
+            );
+            return {
+              saved_property_id,
+              success: false,
+              error: "Not a user-defined property",
+            };
+          }
+
+          const text = formatSavedPropertyData(property);
+          console.log(
+            `Formatted text for saved_property_id ${saved_property_id}`
+          );
 
           // generate vector
           const vector = await generateEmbedding(text);
           if (!vector) {
-            console.error(`Embedding API failed for place_id ${place_id}`);
-            return { place_id, success: false };
+            console.error(
+              `Embedding API failed for saved_property_id ${saved_property_id}`
+            );
+            return {
+              saved_property_id,
+              success: false,
+              error: "Embedding generation failed",
+            };
           }
 
           console.log(
-            `Embedding generated for place_id ${place_id}:`,
-            vector.slice(0, 5),
-            "..."
+            `Embedding generated for saved_property_id ${saved_property_id}`
           );
 
           // store in database
+          const now = new Date().toISOString();
           const { error: upsertError } = await supabase
-            .from("user_property_vectors")
+            .from("user_saved_property_vectors")
             .upsert([
               {
-                place_id: place_id,
+                saved_property_id: saved_property_id,
                 embedding: vector,
+                updated_at: now,
               },
             ]);
 
           if (upsertError) {
             console.error(
-              `Failed to store vector for place_id ${place_id}:`,
+              `Failed to store vector for saved_property_id ${saved_property_id}:`,
               upsertError.message
             );
-            return { place_id, success: false };
+            return {
+              saved_property_id,
+              success: false,
+              error: upsertError.message,
+            };
           }
 
-          console.log(`Vector stored successfully for place_id ${place_id}`);
-          return { place_id, success: true };
+          console.log(
+            `Vector stored successfully for saved_property_id ${saved_property_id}`
+          );
+          return { saved_property_id, success: true };
         } catch (error) {
-          console.error(`Error processing place_id ${place_id}:`, error);
-          return { place_id, success: false };
+          console.error(
+            `Error processing saved_property_id ${saved_property_id}:`,
+            error
+          );
+          return {
+            saved_property_id,
+            success: false,
+            error: error instanceof Error ? error.message : String(error),
+          };
         }
       })
     );
 
-    // count success or failure
+    // Count success/failure
     const successCount = results.filter((r) => r.success).length;
     const failedCount = results.length - successCount;
 
@@ -215,3 +303,74 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: (err as Error).message });
   }
 }
+
+// Support for deleting vectors
+export async function DELETE(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const savedPropertyId = searchParams.get("saved_property_id");
+    const groupId = searchParams.get("group_id");
+
+    if (!savedPropertyId) {
+      return NextResponse.json(
+        { success: false, error: "saved_property_id is required" },
+        { status: 400 }
+      );
+    }
+
+    if (!groupId) {
+      return NextResponse.json(
+        { success: false, error: "group_id is required" },
+        { status: 400 }
+      );
+    }
+
+    // Verify the saved_property_id belongs to the specified group
+    const { data: propertyCheck, error: checkError } = await supabase
+      .from("saved_properties")
+      .select("saved_property_id")
+      .eq("saved_property_id", savedPropertyId)
+      .eq("group_id", groupId)
+      .limit(1);
+
+    if (checkError || !propertyCheck || propertyCheck.length === 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Property not found or does not belong to the specified group",
+        },
+        { status: 403 }
+      );
+    }
+
+    // Delete from user_saved_property_vectors
+    const { error } = await supabase
+      .from("user_saved_property_vectors")
+      .delete()
+      .eq("saved_property_id", savedPropertyId);
+
+    if (error) {
+      console.error(
+        `Failed to delete vector for saved_property_id ${savedPropertyId}:`,
+        error
+      );
+      return NextResponse.json(
+        { success: false, error: `Failed to delete vector: ${error.message}` },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: `Vector deleted successfully for saved_property_id ${savedPropertyId}`,
+    });
+  } catch (err) {
+    console.error("DELETE Error:", (err as Error).message);
+    return NextResponse.json({ success: false, error: (err as Error).message });
+  }
+}
+
+// Example usage:
+// curl -X POST -H "Content-Type: application/json" -d '{"group_id": 456, "saved_property_id": 789}' http://localhost:3000/api/vectorizeUserProperties
+// curl -X POST -H "Content-Type: application/json" -d '{"group_id": 456}' http://localhost:3000/api/vectorizeUserProperties
+// curl -X DELETE "http://localhost:3000/api/vectorizeUserProperties?saved_property_id=789&group_id=456"

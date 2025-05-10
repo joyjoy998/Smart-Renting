@@ -14,7 +14,6 @@ import {
 } from "@/lib/constants/mapId";
 import Loading from "@/components/ui/Loading";
 import { useTheme } from "next-themes";
-import { useUserLocation } from "@/hooks/map/useUserLocation";
 import { MapContent } from "./MapContent";
 import { SettingsPopup } from "@/components/sidebar/SettingsPopup";
 import { getPlaceDetail, usePlacesService } from "@/hooks/map/usePlacesService";
@@ -30,6 +29,19 @@ export function MapContainer() {
 
   return (
     <div style={{ width: "100%", height: "100vh", position: "relative" }}>
+      <div
+        id="map-guide-anchor"
+        style={{
+          position: "absolute",
+          top: 60,
+          left: 60,
+          right: 60,
+          bottom: 60,
+          pointerEvents: "none",
+          zIndex: -1,
+        }}
+      />
+
       <Map
         defaultCenter={MAPS_CONFIG.defaultCenter}
         defaultZoom={MAPS_CONFIG.defaultZoom}

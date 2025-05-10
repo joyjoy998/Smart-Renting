@@ -21,6 +21,7 @@ import HouseIcon from "@mui/icons-material/House";
 import { blue, green, orange, red, yellow } from "@mui/material/colors";
 import { Badge } from "@mui/material";
 import { useMapLocationStore } from "@/stores/useMapLocationStore";
+import { set } from "lodash";
 
 export type PropertyInfo =
   | (google.maps.places.PlaceResult & {

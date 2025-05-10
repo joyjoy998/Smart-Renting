@@ -6,9 +6,8 @@ CREATE TABLE users (
     user_id TEXT PRIMARY KEY,       -- 来自 Clerk 的用户ID
     username VARCHAR(20) NOT NULL,         
     email VARCHAR(255) NOT NULL UNIQUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_sign_at TIMESTAMP,
-    delete_at TIMESTAMP DEFAULT NULL
+    created_at TIMESTAMPTZ DEFAULT (now() AT TIME ZONE 'utc'::text),
+    last_sign_at TIMESTAMPTZ DEFAULT (now() AT TIME ZONE 'utc'::text)
 );
 
 CREATE TABLE user_preferences (
@@ -43,7 +42,7 @@ CREATE TABLE properties (
     parking_spaces INT,
     property_type TEXT,  -- each property has only one type
     safety_score NUMERIC(3,2) NOT NULL CHECK (safety_score >= 0 AND safety_score <= 1),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ DEFAULT (now() AT TIME ZONE 'utc'::text),
     place_id TEXT -- Google Place ID
 );
 
@@ -70,8 +69,8 @@ CREATE TABLE poi_markers (
 CREATE TABLE saved_groups (
     group_id SERIAL PRIMARY KEY,
     user_id TEXT NOT NULL,
-    group_name TEXT NOT NULL UNIQUE,  
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    group_name TEXT NOT NULL,  
+    created_at TIMESTAMPTZ DEFAULT (now() AT TIME ZONE 'utc'::text),
     CONSTRAINT fk_saved_groups_user FOREIGN KEY (user_id)
         REFERENCES users(user_id)
         ON DELETE CASCADE
@@ -96,14 +95,14 @@ CREATE TABLE saved_properties (
     property_type TEXT,
     safety_score NUMERIC(3,2) NOT NULL CHECK (safety_score >= 0 AND safety_score <= 1),
     note TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ DEFAULT (now() AT TIME ZONE 'utc'::text),
     place_id TEXT,
     CONSTRAINT fk_saved_properties_group FOREIGN KEY (group_id)
         REFERENCES saved_groups(group_id)
         ON DELETE CASCADE,
     CONSTRAINT fk_property_id FOREIGN KEY (property_id)
         REFERENCES properties(property_id)
-        ON DELETE CASCADE
+        ON DELETE SET NULL
 );
 
 -- user saved POIs (detailed info stored in this table)
@@ -121,14 +120,14 @@ CREATE TABLE saved_pois (
     longitude DOUBLE PRECISION,
     photo TEXT[] DEFAULT '{}',
     note TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ DEFAULT (now() AT TIME ZONE 'utc'::text),
     place_id TEXT,
     CONSTRAINT fk_saved_pois_group FOREIGN KEY (group_id)
         REFERENCES saved_groups(group_id)
         ON DELETE CASCADE,
     CONSTRAINT fk_poi_id FOREIGN KEY (poi_id)
         REFERENCES poi_markers(poi_id)
-        ON DELETE CASCADE
+        ON DELETE SET NULL
 );
 
 -- =====================================================
@@ -182,12 +181,26 @@ CREATE TABLE property_vectors (
 -- =====================================================
 -- create user property vector table
 -- =====================================================
-CREATE TABLE user_property_vectors (
-    place_id TEXT PRIMARY KEY REFERENCES saved_properties(place_id) ON DELETE CASCADE,
-    embedding vector(1024),
+CCREATE TABLE IF NOT EXISTS user_saved_property_vectors (
+saved_property_id INT PRIMARY KEY,
+embedding VECTOR(1024),
+updated_at TIMESTAMPTZ DEFAULT (now() AT TIME ZONE 'utc'::text), CONSTRAINT fk_user_vectors_saved_property FOREIGN KEY
+(saved_property_id)
+REFERENCES saved_properties (saved_property_id)
+ON DELETE CASCADE
 );
+ALTER TABLE user_saved_property_vectors
+ADD COLUMN place_id TEXT;
+CREATE INDEX idx_user_vectors_place_id ON user_saved_property_vectors (place_id);
 
 
+
+
+ALTER TABLE user_saved_property_vectors
+ADD CONSTRAINT fk_user_vectors_place_id
+FOREIGN KEY (place_id)
+REFERENCES saved_properties (place_id)
+ON DELETE CASCADE;
 
 -- =====================================================
 -- Alter tables

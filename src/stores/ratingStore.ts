@@ -33,6 +33,10 @@ interface WeightConfig {
   amenity: number;
 }
 
+interface PropertyPOIMap {
+  [key: string]: number;
+}
+
 interface RatingState {
   isOpen: boolean;
   properties: Property[];
@@ -40,8 +44,8 @@ interface RatingState {
   selectedPOI: POI | null;
   travelMode: TravelMode;
   distanceScores: Record<string, number>;
-  travelTimes: Record<string, number>;
-  distances: Record<string, number>;
+  travelTimes: PropertyPOIMap;
+  distances: PropertyPOIMap;
   priceScores: Record<string, number>;
   safetyScores: Record<string, number>;
   amenitiesScores: Record<string, number>;
@@ -67,8 +71,8 @@ interface RatingState {
   setSelectedPOI: (poi: POI) => void;
   setTravelMode: (mode: TravelMode) => void;
   setDistanceScores: (scores: Record<string, number>) => void;
-  setTravelTimes: (times: Record<string, number>) => void;
-  setDistances: (distances: Record<string, number>) => void;
+  setTravelTimes: (times: PropertyPOIMap) => void;
+  setDistances: (distances: PropertyPOIMap) => void;
   setPriceScores: (scores: Record<string, number>) => void;
   setSafetyScores: (scores: Record<string, number>) => void;
   setAmenitiesScores: (scores: Record<string, number>) => void;
@@ -79,6 +83,15 @@ interface RatingState {
   updateWeight: (key: keyof WeightConfig, value: number) => void;
   loadData: (groupData?: any) => Promise<void>;
   syncWithPreferences: () => void;
+
+  getTravelTimeForPropertyAndPOI: (
+    propertyId: string,
+    poiId: string
+  ) => number | null;
+  getDistanceForPropertyAndPOI: (
+    propertyId: string,
+    poiId: string
+  ) => number | null;
 }
 
 const fallbackWeightConfig: WeightConfig = {
@@ -297,5 +310,15 @@ export const useRatingStore = create<RatingState>((set, get) => ({
         error: error instanceof Error ? error.message : "Failed to load data",
       });
     }
+  },
+
+  getTravelTimeForPropertyAndPOI: (propertyId: string, poiId: string) => {
+    const key = `${propertyId}_${poiId}`;
+    return get().travelTimes[key] || null;
+  },
+
+  getDistanceForPropertyAndPOI: (propertyId: string, poiId: string) => {
+    const key = `${propertyId}_${poiId}`;
+    return get().distances[key] || null;
   },
 }));

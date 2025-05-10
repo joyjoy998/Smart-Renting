@@ -23,6 +23,8 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import { useSnackbar } from "notistack";
 import useMapStore from "@/stores/useMapStore";
+import { useSavedModalStore } from "@/stores/useSavedModalStore";
+
 const DEFAULT_IMAGE_URL = "/property-unavailable.png";
 type Props = { placeData: PropertyInfo };
 
@@ -42,7 +44,8 @@ const SavedPropertyModal = () => {
   const { enqueueSnackbar } = useSnackbar();
   const setCurrentGeometry = useMapStore.use.setCurrentGeometry();
   const setCurrentInfoWindow = useMapStore.use.setCurrentInfoWindow();
-  const [open, setOpen] = React.useState(false);
+  const { isSavedPropertyModalOpen, setSavedPropertyModalOpen } =
+    useSavedModalStore();
   const savedProperties = useSavedDataStore.use.savedProperties();
   const setSavedProperties = useSavedDataStore.use.setSavedProperties();
 
@@ -71,7 +74,7 @@ const SavedPropertyModal = () => {
   };
 
   const toggle = () => {
-    setOpen(!open);
+    setSavedPropertyModalOpen(!isSavedPropertyModalOpen);
   };
   return (
     <div>
@@ -84,7 +87,7 @@ const SavedPropertyModal = () => {
         <span>Saved Property</span>
       </button>
       <Modal
-        open={open}
+        open={isSavedPropertyModalOpen}
         onClose={toggle}
         aria-labelledby="modal-modal-title"
         aria-describedby="modal-modal-description"
@@ -110,7 +113,7 @@ const SavedPropertyModal = () => {
                       lng: item.longitude,
                     });
                     setCurrentInfoWindow(item);
-                    setOpen(false);
+                    setSavedPropertyModalOpen(false);
                   }}
                 >
                   {/* Left: Swiper Image */}

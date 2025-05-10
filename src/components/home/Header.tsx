@@ -11,13 +11,19 @@ export function Header() {
           <SearchBox />
         </div>
 
-        <div className="flex items-center gap-2">
-          <ThemeToggle />
+        <div className="flex items-center">
+          <div className="w-11 h-11 flex items-center justify-center">
+            <ThemeToggle />
+          </div>
           <SignedOut>
-            <AvatarButton />
+            <div className="w-full flex items-center justify-between px-6 py-3">
+              <AvatarButton />
+            </div>
           </SignedOut>
           <SignedIn>
-            <UserButton />
+            <div className="w-11 h-11 flex items-center justify-center">
+              <UserButton />
+            </div>
           </SignedIn>
         </div>
       </div>

@@ -1,6 +1,6 @@
-import { useUser } from '@clerk/nextjs';
-import { useEffect, useState } from 'react';
-import { supabase } from '@/database/supabaseClient';
+import { useUser } from "@clerk/nextjs";
+import { useEffect, useState } from "react";
+import { supabase } from "@/database/supabaseClient";
 
 export function useUserGroup() {
   const { user, isLoaded } = useUser();
@@ -16,11 +16,10 @@ export function useUserGroup() {
       }
 
       try {
-        // 假设有一个用户-组映射表
         const { data, error: fetchError } = await supabase
-          .from('user_groups')
-          .select('group_id')
-          .eq('user_id', user.id)
+          .from("user_groups")
+          .select("group_id")
+          .eq("user_id", user.id)
           .single();
 
         if (fetchError) {
@@ -31,7 +30,7 @@ export function useUserGroup() {
           setGroupId(data.group_id);
         }
       } catch (err: any) {
-        console.error('Error fetching user group:', err);
+        console.error("Error fetching user group:", err);
         setError(err.message);
       } finally {
         setLoading(false);

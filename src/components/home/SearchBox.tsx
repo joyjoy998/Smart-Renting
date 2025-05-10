@@ -1,14 +1,13 @@
-import React, { useEffect, useState } from "react";
+"use client";
+import React, { useState } from "react";
 import { MenuButton } from "./MenuButton";
 import { Sidebar } from "../sidebar/Sidebar";
-import { useMap } from "@vis.gl/react-google-maps";
 import { useMapLocationStore } from "@/stores/useMapLocationStore";
 import Autocomplete from "@mui/material/Autocomplete";
 import TextField from "@mui/material/TextField";
 import debounce from "lodash/debounce";
 import { getPlaceDetail, usePlacesService } from "@/hooks/map/usePlacesService";
 import useMapStore from "@/stores/useMapStore";
-import { map } from "lodash";
 
 interface SearchBoxProps {
   onSearch?: (value: string) => void;

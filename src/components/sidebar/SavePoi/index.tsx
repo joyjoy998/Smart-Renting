@@ -9,6 +9,7 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import useMapStore from "@/stores/useMapStore";
+import { useSavedModalStore } from "@/stores/useSavedModalStore";
 import { useSnackbar } from "notistack";
 import { PropertyInfo } from "@/components/maps/MapContent";
 
@@ -29,7 +30,7 @@ const style = {
 
 const SavePoiModal = () => {
   const { enqueueSnackbar } = useSnackbar();
-  const [open, setOpen] = React.useState(false);
+  const { isSavedPOIModalOpen, setSavedPOIModalOpen } = useSavedModalStore();
   const savedPois = useSavedDataStore.use.savedPois() as PropertyInfo[];
   const setSavedPois = useSavedDataStore.use.setSavedPois();
   const setCurrentGeometry = useMapStore.use.setCurrentGeometry();
@@ -56,7 +57,7 @@ const SavePoiModal = () => {
   };
 
   const toggle = () => {
-    setOpen(!open);
+    setSavedPOIModalOpen(!isSavedPOIModalOpen);
   };
 
   return (
@@ -70,7 +71,7 @@ const SavePoiModal = () => {
         <span>Saved POI</span>
       </button>
 
-      <Modal open={open} onClose={toggle}>
+      <Modal open={isSavedPOIModalOpen} onClose={toggle}>
         <Box sx={style}>
           <Typography sx={{ mt: 2, mb: 2 }} variant="h6" component="div">
             Saved POIs
@@ -94,7 +95,7 @@ const SavePoiModal = () => {
                       lng: item.longitude,
                     });
                     setCurrentInfoWindow(item);
-                    setOpen(false);
+                    setSavedPOIModalOpen(false);
                   }}
                 >
                   {/* Left: Swiper */}

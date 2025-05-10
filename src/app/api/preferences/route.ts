@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/database/supabaseClient';
 
-// GET: 返回指定 user_id 的所有偏好记录
+// GET: return all preferences of the specified user_id
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -20,17 +20,6 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// POST: 插入当前用户的一组偏好数据
-// 请求体示例：
-// {
-//   "user_id": "clrk_abc123",
-//   "preferences": [
-//      { "preference_type": "distance", "weight": 0.8, "preference_order": 1 },
-//      { "preference_type": "price", "weight": 0.6, "preference_order": 2 },
-//      { "preference_type": "amenity", "weight": 0.7, "preference_order": 3 },
-//      { "preference_type": "neighborhood_safety", "weight": 0.9, "preference_order": 4 }
-//   ]
-// }
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -38,7 +27,7 @@ export async function POST(req: NextRequest) {
     if (!user_id || !preferences) {
       return NextResponse.json({ error: "user_id and preferences are required" }, { status: 400 });
     }
-    // 构造每一条记录都带上 user_id
+    // construct each record to include user_id
     const preferencesToInsert = preferences.map((pref: any) => ({
       ...pref,
       user_id
@@ -53,7 +42,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// PUT: 更新指定偏好，要求 URL 中有 user_id 和 preference_type 参数
+// PUT: update the specified preference, require user_id and preference_type in the URL
 export async function PUT(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -75,7 +64,7 @@ export async function PUT(req: NextRequest) {
   }
 }
 
-// DELETE: 删除指定偏好，要求 URL 中有 user_id 和 preference_type 参数
+// DELETE: delete the specified preference, require user_id and preference_type in the URL
 export async function DELETE(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);

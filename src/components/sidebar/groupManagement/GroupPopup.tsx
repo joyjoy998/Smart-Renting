@@ -5,19 +5,19 @@ import ConfirmPopup from "./ConfirmPopup";
 import { useArchiveStore } from "@/stores/useArchiveStore";
 import { useGroupIdStore, useGroupStore, Group } from "@/stores/useGroupStore";
 import { useAuth } from "@clerk/clerk-react";
+import { useSnackbar, closeSnackbar } from "notistack";
 
-export const ArchivePopup = () => {
+export const GroupPopup = () => {
+  const { enqueueSnackbar } = useSnackbar();
   const { userId } = useAuth();
   const { isArchiveOpen, setArchiveOpen } = useArchiveStore();
   const { currentGroupId, setGroupId } = useGroupIdStore();
   const { groups, setGroups } = useGroupStore();
   // console.log(groups.length);
 
-  // 添加编辑状态
-  const [editingId, setEditingId] = useState(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [editingName, setEditingName] = useState("");
 
-  // 确认弹窗状态
   const [confirmPopup, setConfirmPopup] = useState({
     isOpen: false,
     message: "",
@@ -27,11 +27,19 @@ export const ArchivePopup = () => {
 
   const createNewGroup = async () => {
     if (groups.length >= 3) {
-      alert("You can only create up to 3 archives.");
+      enqueueSnackbar(
+        "You can only create up to 3 groups. Please delete one before creating a new one.",
+        {
+          variant: "error",
+          autoHideDuration: 3000,
+          action: (key) => (
+            <button onClick={() => closeSnackbar(key)}>x</button>
+          ),
+        }
+      );
       return;
     }
-    // 这里要用 API 对新档案进行创建
-    const groupName = `Archive ${groups.length + 1}`;
+    const groupName = `Group ${groups.length + 1}`;
     try {
       const response = await fetch("/api/groupId/post", {
         method: "POST",
@@ -44,6 +52,13 @@ export const ArchivePopup = () => {
         }),
       });
       if (!response.ok) {
+        enqueueSnackbar("Failed to create new group. Please try again.", {
+          variant: "error",
+          autoHideDuration: 3000,
+          action: (key) => (
+            <button onClick={() => closeSnackbar(key)}>x</button>
+          ),
+        });
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
 
@@ -51,24 +66,61 @@ export const ArchivePopup = () => {
       const newGroup = responseData.data?.[0];
 
       if (!newGroup) {
+        enqueueSnackbar("Failed to create new group. Please try again.", {
+          variant: "error",
+          autoHideDuration: 3000,
+          action: (key) => (
+            <button onClick={() => closeSnackbar(key)}>x</button>
+          ),
+        });
         throw new Error("API did not return a valid group.");
       }
 
       setGroups([...groups, newGroup] as Group[]);
-      alert("New group created successfully.");
+      enqueueSnackbar(
+        `New group "${newGroup.group_name}" created successfully.`,
+        {
+          variant: "success",
+          autoHideDuration: 3000,
+          action: (key) => (
+            <button onClick={() => closeSnackbar(key)}>x</button>
+          ),
+        }
+      );
     } catch (error) {
+      enqueueSnackbar("Failed to create new group. Please try again.", {
+        variant: "error",
+        autoHideDuration: 3000,
+        action: (key) => <button onClick={() => closeSnackbar(key)}>x</button>,
+      });
       console.error("Error creating new group:", error);
     }
   };
 
   const deleteGroup = async (id: number) => {
     if (groups.length <= 1) {
-      alert("You must keep at least one archive.");
+      enqueueSnackbar(
+        "You need at least one group. Please create a new one before deleting.",
+        {
+          variant: "warning",
+          autoHideDuration: 3000,
+          action: (key) => (
+            <button onClick={() => closeSnackbar(key)}>x</button>
+          ),
+        }
+      );
       return;
     }
     if (currentGroupId === id) {
-      alert(
-        "You cannot delete the currently loaded archive. Please load another archive first."
+      enqueueSnackbar(
+        "You cannot delete the currently loaded group. Please load another group first.",
+        {
+          variant: "warning",
+          autoHideDuration: 3000,
+          action: (key) => (
+            <button onClick={() => closeSnackbar(key)}>x</button>
+          ),
+        }
       );
       return;
     }
@@ -85,12 +137,28 @@ export const ArchivePopup = () => {
         }),
       });
       if (!response.ok) {
+        enqueueSnackbar("Failed to delete group. Please try again.", {
+          variant: "error",
+          autoHideDuration: 3000,
+          action: (key) => (
+            <button onClick={() => closeSnackbar(key)}>x</button>
+          ),
+        });
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
       const newGroups = groups.filter((group) => group.group_id !== id);
       setGroups(newGroups as Group[]);
-      alert("Group deleted successfully.");
+      enqueueSnackbar(`Group deleted successfully.`, {
+        variant: "success",
+        autoHideDuration: 3000,
+        action: (key) => <button onClick={() => closeSnackbar(key)}>x</button>,
+      });
     } catch (error) {
+      enqueueSnackbar("Failed to delete group. Please try again.", {
+        variant: "error",
+        autoHideDuration: 3000,
+        action: (key) => <button onClick={() => closeSnackbar(key)}>x</button>,
+      });
       console.error("Error deleting group:", error);
     }
   };
@@ -98,16 +166,13 @@ export const ArchivePopup = () => {
   const loadGroup = (id: number) => {
     // console.log(`Loading archive with ID: ${id}`);
     setGroupId(id);
-    // 这里要用 API 进行档案的加载
   };
 
-  // 开始编辑存档名称
-  const startEditing = (group) => {
+  const startEditing = (group: Group) => {
     setEditingId(group.group_id);
     setEditingName(group.group_name);
   };
 
-  // 保存编辑后的名称
   const saveGroupName = async () => {
     if (editingId !== null) {
       try {
@@ -123,6 +188,13 @@ export const ArchivePopup = () => {
           }),
         });
         if (!response.ok) {
+          enqueueSnackbar("Failed to update group name. Please try again.", {
+            variant: "error",
+            autoHideDuration: 3000,
+            action: (key) => (
+              <button onClick={() => closeSnackbar(key)}>x</button>
+            ),
+          });
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
         const updatedGroups = groups.map((group) =>
@@ -131,8 +203,21 @@ export const ArchivePopup = () => {
             : group
         );
         setGroups(updatedGroups as Group[]);
-        alert("Group name updated successfully.");
+        enqueueSnackbar(`Group name updated successfully.`, {
+          variant: "success",
+          autoHideDuration: 3000,
+          action: (key) => (
+            <button onClick={() => closeSnackbar(key)}>x</button>
+          ),
+        });
       } catch (error) {
+        enqueueSnackbar("Failed to update group name. Please try again.", {
+          variant: "error",
+          autoHideDuration: 3000,
+          action: (key) => (
+            <button onClick={() => closeSnackbar(key)}>x</button>
+          ),
+        });
         console.error("Error updating group name:", error);
       }
       setEditingId(null);
@@ -140,7 +225,6 @@ export const ArchivePopup = () => {
     }
   };
 
-  // 处理按下Enter键保存
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
       saveGroupName();
@@ -149,18 +233,16 @@ export const ArchivePopup = () => {
     }
   };
 
-  // 确认删除存档
   const confirmDeleteGroup = (id: number) => {
     const group = groups.find((group) => group.group_id === id);
     setConfirmPopup({
       isOpen: true,
-      message: `Are you sure to delete ${group.group_name}?`,
+      message: `Are you sure to delete ${group!.group_name}?`,
       action: "delete",
       targetId: id,
     });
   };
 
-  // 确认加载存档
   const confirmLoadGroup = (id: number) => {
     const group = groups.find((group) => group.group_id === id);
     setConfirmPopup({
@@ -171,7 +253,6 @@ export const ArchivePopup = () => {
     });
   };
 
-  // 确认弹窗的确认操作
   const handleConfirm = () => {
     const { action, targetId } = confirmPopup;
     if (action === "delete") {
@@ -182,20 +263,38 @@ export const ArchivePopup = () => {
     closeConfirmPopup();
   };
 
-  // 关闭确认弹窗
   const closeConfirmPopup = () => {
     setConfirmPopup((prev) => ({ ...prev, isOpen: false }));
   };
 
-  const formatDateToMinute = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toISOString().slice(0, 16).replace("T", " ");
+  const formatToSydneyTime = (utcDateString: string): string => {
+    const date = new Date(utcDateString);
+    const options: Intl.DateTimeFormatOptions = {
+      timeZone: "Australia/Sydney",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    };
+
+    const formatter = new Intl.DateTimeFormat("en-CA", options); // 'en-CA' gives YYYY-MM-DD format
+    const parts = formatter.formatToParts(date);
+
+    const extract = (type: string) =>
+      parts.find((p) => p.type === type)?.value.padStart(2, "0") ?? "00";
+
+    return `${extract("year")}-${extract("month")}-${extract("day")} ${extract(
+      "hour"
+    )}:${extract("minute")}`;
   };
 
   if (!isArchiveOpen) return null;
+
   return (
     <>
-      {/* 背景遮罩层，当打开ArchivePopup时显示 */}
+      {/* 背景遮罩层，当打开GroupPopup时显示 */}
       {isArchiveOpen && (
         <div
           className="fixed inset-0 bg-black/20 transition-opacity z-[1003]"
@@ -207,9 +306,10 @@ export const ArchivePopup = () => {
       {/* Archive弹出面板 */}
       <div
         className={`
-        fixed top-1/4 left-64  
+        fixed top-[84px] left-64  
         h-[50vh] w-80
         bg-background border-r 
+        rounded-tr-lg rounded-br-lg
         transform transition-transform duration-300 ease-in-out 
         z-[1004]
         overflow-hidden
@@ -219,7 +319,7 @@ export const ArchivePopup = () => {
         {/* 标题栏 */}
         <div className="p-4 border-b">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-medium">Archive</h2>
+            <h2 className="text-xl font-medium">Groups</h2>
             <button
               className="text-gray-500 hover:text-gray-700"
               onClick={() => setArchiveOpen(false)}
@@ -237,7 +337,7 @@ export const ArchivePopup = () => {
               className="w-full py-2 bg-green-500 text-white rounded hover:bg-green-600 transition"
               onClick={createNewGroup}
             >
-              New Archive
+              New Group
             </button>
           </div>
 
@@ -247,7 +347,9 @@ export const ArchivePopup = () => {
               <div
                 key={group.group_id}
                 className={`flex items-center p-4 ${
-                  currentGroupId === group.group_id ? "bg-blue-50" : ""
+                  currentGroupId === group.group_id
+                    ? "bg-blue-50 dark:bg-blue-900/30"
+                    : "dark:hover:bg-gray-800"
                 }`}
               >
                 <div className="flex items-center flex-1">
@@ -281,7 +383,7 @@ export const ArchivePopup = () => {
                       </div>
                     )}
                     <div className="text-sm text-gray-500">
-                      {formatDateToMinute(group.created_at)}
+                      {formatToSydneyTime(group.created_at)}
                     </div>
                   </div>
                 </div>

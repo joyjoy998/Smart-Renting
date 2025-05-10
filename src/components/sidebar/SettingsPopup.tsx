@@ -65,22 +65,7 @@ export function SettingsPopup() {
               </div>
             </div>
 
-            {/* Custom Habits and Budget Section */}
             <div className="flex flex-col gap-6">
-              {/* Custom Habits */}
-              <div>
-                <h3 className="font-medium mb-4">Custom Habits</h3>
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    <input type="checkbox" id="notifications" />
-                    <label htmlFor="notifications">Enable Notifications</label>
-                  </div>
-                </div>
-              </div>
-
-              {/* Divider Line */}
-              <div className="h-px bg-gray-300"></div>
-
               {/* User Budget */}
               <div>
                 <UserBudget />
@@ -89,10 +74,7 @@ export function SettingsPopup() {
           </div>
 
           <div className="mt-6 flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={() => setOpen(false)}>Save Changes</Button>
+            <Button onClick={() => setOpen(false)}>Close</Button>
           </div>
         </div>
       </div>

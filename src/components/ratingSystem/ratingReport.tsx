@@ -16,7 +16,6 @@ const RatingReport = () => {
 
   if (!isOpen) return null;
 
-  // 根据主题创建样式类，加强深色模式下的文本对比度
   const isDark = theme === "dark";
 
   return (
