@@ -18,7 +18,7 @@ import useSavedDataStore, { SavedPropertyProps } from "@/stores/useSavedData";
 import PropertyMarker from "./PropertyMarker";
 import FavoriteRoundedIcon from "@mui/icons-material/FavoriteRounded";
 import HouseIcon from "@mui/icons-material/House";
-import { blue, green, red, yellow } from "@mui/material/colors";
+import { blue, green, orange, red, yellow } from "@mui/material/colors";
 import { Badge } from "@mui/material";
 import { useMapLocationStore } from "@/stores/useMapLocationStore";
 
@@ -35,7 +35,7 @@ export type PropertyInfo =
 
 export function MapContent() {
   const map = useMap();
-  const { setMapLocation } = useMapLocationStore();
+  const { setMapLocation, mapLocation } = useMapLocationStore();
   const currentInfoWindow = useMapStore.use.currentInfoWindow();
   const currentGeometry = useMapStore.use.currentGeometry();
   const clearCurrentInfo = useMapStore.use.clearCurrentInfo();
@@ -47,6 +47,18 @@ export function MapContent() {
     return [...(savedProperties || []), ...(properties || [])];
   }, [savedProperties, properties]); //combine all the properties
 
+  const visibleProperties = useMemo(() => {
+    if (map) {
+      const bounds = map.getBounds();
+      return bounds
+        ? allProperties.filter((place) => {
+            const lat = place.latitude;
+            const lng = place.longitude;
+            return bounds?.contains(new google.maps.LatLng(lat, lng));
+          })
+        : allProperties?.slice(0, 100);
+    }
+  }, [mapLocation]);
   useEffect(() => {
     if (map) {
       const idleListener = map.addListener("idle", () => {
@@ -129,7 +141,7 @@ export function MapContent() {
           <AdvancedMarker position={currentGeometry} />
         )}
 
-      {allProperties?.map((property, index) => {
+      {visibleProperties?.map((property, index) => {
         const matchedSaved = savedProperties?.find(
           (saved) => saved.place_id === property.place_id
         );
@@ -149,7 +161,7 @@ export function MapContent() {
             <Badge badgeContent={weeklyRent} color="primary" max={10000}>
               <HouseIcon
                 id={property.place_id}
-                sx={{ color: isSaved ? green[400] : blue[400] }}
+                sx={{ color: isSaved ? orange[400] : blue[400] }}
                 fontSize="large"
               />
             </Badge>
