@@ -20,7 +20,6 @@ export default function Home() {
   const savedProperties = useSavedDataStore.use.savedProperties();
   const setSavedPois = useSavedDataStore.use.setSavedPois();
   const setSavedProperties = useSavedDataStore.use.setSavedProperties();
-  const properties = useSavedDataStore.use.properties();
   const setProperties = useSavedDataStore.use.setProperties();
   const currentGroupId = useGroupIdStore((state) => state.currentGroupId);
 
@@ -31,7 +30,7 @@ export default function Home() {
     axios.get("/api/properties").then((res) => {
       if (res.status === 200) {
         //TODO: 临时取前100个，后续优化代讨论
-        setProperties(res.data?.slice(0, 100));
+        setProperties(res.data);
       }
     });
   }, []);
