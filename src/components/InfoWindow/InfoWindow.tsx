@@ -95,6 +95,7 @@ export const PropertyInfoWindow: React.FC<PropertyInfoWindowProps> = ({
             currentGroupId &&
             placeData.savedProperty.group_id === currentGroupId && (
               <Button
+                id="showRouteButton"
                 variant="contained"
                 color="primary"
                 startIcon={<Navigation />}

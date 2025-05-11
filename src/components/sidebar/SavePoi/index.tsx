@@ -63,7 +63,7 @@ const SavePoiModal = () => {
   return (
     <div>
       <button
-        id="saved-poi"
+        id="openSavedPOIButton"
         className="w-full flex items-center gap-3 p-2 hover:bg-accent rounded-lg"
         onClick={toggle}
       >
@@ -124,7 +124,10 @@ const SavePoiModal = () => {
                       <Typography className="text-lg font-semibold">
                         {item.name ?? "Unnamed POI"}
                       </Typography>
-                      <IconButton onClick={() => handleRemove(item)}>
+                      <IconButton
+                        id={`delete-poi-button-${item.place_id}`}
+                        onClick={() => handleRemove(item)}
+                      >
                         <DeleteIcon />
                       </IconButton>
                     </div>

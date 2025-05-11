@@ -262,23 +262,36 @@ const EditPropertyModal: React.FC<PropsWithChildren<Props>> = (props) => {
         {/*New Google Place：upload table */}
         {!placeData?.savedProperty?.group_id &&
           !placeData?.savedProperty?.weekly_rent && (
-            <Button variant="contained" onClick={toggle}>
+            <Button
+              id="savePropertyButton"
+              variant="contained"
+              onClick={toggle}
+            >
               Save Property
             </Button>
           )}
         {/* without group_id and rent：Save Property quickyly save */}
         {!hasGroupId && hasWeeklyRent && (
-          <Button variant="contained" onClick={handleQuickSave}>
+          <Button
+            id="savePropertyButton"
+            variant="contained"
+            onClick={handleQuickSave}
+          >
             Save Property
           </Button>
         )}
         {/* have group_id and rent：can edit */}
         {placeData?.savedProperty?.group_id && (
           <>
-            <Button variant="contained" onClick={toggle}>
+            <Button
+              id="editPropertyButton"
+              variant="contained"
+              onClick={toggle}
+            >
               Edit Property
             </Button>
             <Button
+              id="detelePropertyButton"
               variant="contained"
               color="error"
               className="flex-auto"
@@ -393,7 +406,12 @@ const EditPropertyModal: React.FC<PropsWithChildren<Props>> = (props) => {
                 )}
               />
               <Box className="flex flex-row gap-2">
-                <Button variant="contained" type="submit" className="flex-auto">
+                <Button
+                  id="submitPropertyButton"
+                  variant="contained"
+                  type="submit"
+                  className="flex-auto"
+                >
                   Submit
                 </Button>
               </Box>
