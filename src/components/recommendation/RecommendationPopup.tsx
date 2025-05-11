@@ -170,89 +170,104 @@ const RecommendationPopup = () => {
               Loading recommendations...
             </p>
           ) : recommendedProperties.length > 0 ? (
-            <div className="flex flex-col space-y-4">
-              {currentPageProperties.map((property) => {
-                const images =
-                  Array.isArray(property.photo) && property.photo.length > 0
-                    ? property.photo
-                    : [DEFAULT_IMAGE_URL];
+            <div>
+              <p
+                data-testid="recommendation-source"
+                className="text-sm text-gray-500 dark:text-gray-400 mb-4"
+              >
+                Based on map center
+              </p>
+              <div className="flex flex-col space-y-4">
+                {currentPageProperties.map((property) => {
+                  const images =
+                    Array.isArray(property.photo) && property.photo.length > 0
+                      ? property.photo
+                      : [DEFAULT_IMAGE_URL];
 
-                return (
-                  <div
-                    key={property.property_id}
-                    className="flex border rounded-lg overflow-hidden shadow-md relative"
-                    onClick={() => handlePropertyClick(property)}>
-                    {/* Left side image slider - prevent propagation */}
+                  return (
                     <div
-                      className="w-1/3 relative z-10"
-                      onClick={(e) => e.stopPropagation()}>
-                      <Swiper
-                        modules={[Navigation, Pagination]}
-                        navigation
-                        pagination={{ clickable: true }}
-                        className="h-full">
-                        {images.map((image, index) => (
-                          <SwiperSlide key={index}>
-                            <img
-                              src={image}
-                              alt={`${property.street}, ${property.suburb}`}
-                              className="w-full h-full max-h-48 object-cover rounded-lg aspect-[4/5]"
+                      key={property.property_id}
+                      data-testid="property-card"
+                      className="flex border rounded-lg overflow-hidden shadow-md relative"
+                      onClick={() => handlePropertyClick(property)}
+                    >
+                      {/* Left side image slider - prevent propagation */}
+                      <div
+                        className="w-1/3 relative z-10"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Swiper
+                          modules={[Navigation, Pagination]}
+                          navigation
+                          pagination={{ clickable: true }}
+                          className="h-full"
+                        >
+                          {images.map((image, index) => (
+                            <SwiperSlide key={index}>
+                              <img
+                                src={image}
+                                alt={`${property.street}, ${property.suburb}`}
+                                className="w-full h-full max-h-48 object-cover rounded-lg aspect-[4/5]"
+                              />
+                            </SwiperSlide>
+                          ))}
+                        </Swiper>
+                      </div>
+
+                      {/* Right side property details */}
+                      <div className="w-2/3 p-4 flex flex-col justify-between">
+                        {/* Row 1 - Price & Favorite */}
+                        <div className="flex justify-between items-center">
+                          <p className="text-xl font-bold">
+                            ${property.weekly_rent} per week
+                          </p>
+                          {/* MODIFIED: Favorite button with stopPropagation */}
+                          <div
+                            className="z-10"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <FavoriteButton
+                              propertyId={property.property_id}
+                              placeData={property}
+                              onFavorite={() =>
+                                setShouldRefetchOnNextPage(true)
+                              }
                             />
-                          </SwiperSlide>
-                        ))}
-                      </Swiper>
-                    </div>
-
-                    {/* Right side property details */}
-                    <div className="w-2/3 p-4 flex flex-col justify-between">
-                      {/* Row 1 - Price & Favorite */}
-                      <div className="flex justify-between items-center">
-                        <p className="text-xl font-bold">
-                          ${property.weekly_rent} per week
-                        </p>
-                        {/* MODIFIED: Favorite button with stopPropagation */}
-                        <div
-                          className="z-10"
-                          onClick={(e) => e.stopPropagation()}>
-                          <FavoriteButton
-                            propertyId={property.property_id}
-                            placeData={property}
-                            onFavorite={() => setShouldRefetchOnNextPage(true)}
-                          />
+                          </div>
                         </div>
+
+                        {/* Row 2 - Address */}
+                        <p className="text-gray-700 dark:text-gray-300 text-lg">
+                          {property.street}, {property.suburb}
+                        </p>
+
+                        {/* Row 3 - Property Details */}
+                        <div className="flex items-center space-x-4 text-gray-600  dark:text-gray-300 mt-2">
+                          <span>
+                            🛏 {property.bedrooms}{" "}
+                            {property.bedrooms === 1 ? "Bed" : "Beds"}
+                          </span>
+                          <span>
+                            🛁 {property.bathrooms}{" "}
+                            {property.bathrooms === 1 ? "Bath" : "Baths"}
+                          </span>
+                          <span>
+                            🚗 {property.parking_spaces}{" "}
+                            {property.parking_spaces === 1
+                              ? "Parking Space"
+                              : "Parking Spaces"}
+                          </span>
+                        </div>
+
+                        {/* Property Type */}
+                        <p className="text-gray-600  dark:text-gray-300 mt-2">
+                          {property.property_type}
+                        </p>
                       </div>
-
-                      {/* Row 2 - Address */}
-                      <p className="text-gray-700 dark:text-gray-300 text-lg">
-                        {property.street}, {property.suburb}
-                      </p>
-
-                      {/* Row 3 - Property Details */}
-                      <div className="flex items-center space-x-4 text-gray-600  dark:text-gray-300 mt-2">
-                        <span>
-                          🛏 {property.bedrooms}{" "}
-                          {property.bedrooms === 1 ? "Bed" : "Beds"}
-                        </span>
-                        <span>
-                          🛁 {property.bathrooms}{" "}
-                          {property.bathrooms === 1 ? "Bath" : "Baths"}
-                        </span>
-                        <span>
-                          🚗 {property.parking_spaces}{" "}
-                          {property.parking_spaces === 1
-                            ? "Parking Space"
-                            : "Parking Spaces"}
-                        </span>
-                      </div>
-
-                      {/* Property Type */}
-                      <p className="text-gray-600  dark:text-gray-300 mt-2">
-                        {property.property_type}
-                      </p>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
           ) : (
             <p className="text-center text-gray-500  dark:text-gray-300">
@@ -284,7 +299,8 @@ const RecommendationPopup = () => {
                   alert("Failed to get group data");
                 }
               }}
-              disabled={!userId}>
+              disabled={!userId}
+            >
               Comparison Report
             </Button>
             {recommendedProperties.length > (page + 1) * ITEMS_PER_PAGE && (

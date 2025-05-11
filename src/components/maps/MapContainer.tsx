@@ -43,6 +43,7 @@ export function MapContainer() {
       />
 
       <Map
+        data-testid="map"
         defaultCenter={MAPS_CONFIG.defaultCenter}
         defaultZoom={MAPS_CONFIG.defaultZoom}
         mapId={theme === "dark" ? GOOGLE_DARK_MAPS_ID : GOOGLE_LIGHT_MAPS_ID}

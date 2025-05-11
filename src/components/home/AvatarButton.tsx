@@ -9,6 +9,7 @@ export function AvatarButton() {
         variant="ghost"
         size="icon"
         className="rounded-full w-11 h-11 [&_svg]:!size-5"
+        data-testid="avatar-button"
       >
         <UserPlus size={24} strokeWidth={2} />
       </Button>

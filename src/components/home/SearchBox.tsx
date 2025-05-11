@@ -105,6 +105,10 @@ export const SearchBox: React.FC<SearchBoxProps> = ({ onSearch, onSelect }) => {
               <TextField
                 {...params}
                 fullWidth
+                inputProps={{
+                  ...params.inputProps,
+                  "data-testid": "search-input",
+                }}
                 // 这里的 InputProps 虽说被 MUI 弃用,但如果用新的,就会把 autocomplete 的功能给破坏掉,所以保留
                 InputProps={{
                   ...params.InputProps,

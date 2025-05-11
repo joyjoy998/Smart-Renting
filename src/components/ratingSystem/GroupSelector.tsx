@@ -104,7 +104,10 @@ export default function GroupSelector() {
         >
           Insufficient Data
         </h2>
-        <p className={cn("mb-6", isDark ? "text-gray-300" : "text-gray-700")}>
+        <p
+          data-testid="insufficient-data-message"
+          className={cn("mb-6", isDark ? "text-gray-300" : "text-gray-700")}
+        >
           Your current group doesn't have enough properties or POIs to generate
           a report. <br />
           <br />

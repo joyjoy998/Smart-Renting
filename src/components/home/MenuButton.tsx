@@ -22,7 +22,12 @@ export function MenuButton() {
 
   return (
     <SignInButton mode="modal">
-      <Button variant="ghost" size="icon" className="hover:bg-transparent">
+      <Button
+        variant="ghost"
+        size="icon"
+        className="hover:bg-transparent"
+        id="sidebar-menu-button"
+      >
         <Menu className="h-5 w-5 text-black" />
       </Button>
     </SignInButton>

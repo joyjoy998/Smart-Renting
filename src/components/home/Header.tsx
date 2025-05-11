@@ -22,7 +22,7 @@ export function Header() {
           </SignedOut>
           <SignedIn>
             <div className="w-11 h-11 flex items-center justify-center">
-              <UserButton />
+              <UserButton data-testid="avatar-button" />
             </div>
           </SignedIn>
         </div>

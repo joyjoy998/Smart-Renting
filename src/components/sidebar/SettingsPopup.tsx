@@ -25,7 +25,8 @@ export function SettingsPopup() {
       />
       <div className="fixed inset-0 flex items-center justify-center z-[2001]">
         <div
-          className="bg-background rounded-lg p-6 w-full max-w-2xl"
+          data-testid="settings-dialog"
+          className="bg-background rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex justify-between items-center mb-6">
@@ -35,46 +36,47 @@ export function SettingsPopup() {
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Preferences Section */}
-            <div>
-              <h3 className="font-medium mb-4">Preferences</h3>
-              <div className="space-y-4">
-                <SliderWithPlusAndMinus
-                  label="Distance"
-                  initialValue={preferences.distance}
-                  onChange={(value: number) => setPreference("distance", value)}
-                />
-                <SliderWithPlusAndMinus
-                  label="Price"
-                  initialValue={preferences.price}
-                  onChange={(value: number) => setPreference("price", value)}
-                />
-                <SliderWithPlusAndMinus
-                  label="Neighborhood Safety"
-                  initialValue={preferences.neighborhoodSafety}
-                  onChange={(value: number) =>
-                    setPreference("neighborhoodSafety", value)
-                  }
-                />
-                <SliderWithPlusAndMinus
-                  label="Amenity"
-                  initialValue={preferences.amenity}
-                  onChange={(value: number) => setPreference("amenity", value)}
-                />
-              </div>
+          <div className="space-y-8">
+            <div data-testid="distance-setting">
+              <h3 className="font-medium mb-4">Distance to POIs</h3>
+              <SliderWithPlusAndMinus
+                label="Distance"
+                initialValue={preferences.distance}
+                onChange={(value) => setPreference("distance", value)}
+              />
             </div>
 
-            <div className="flex flex-col gap-6">
-              {/* User Budget */}
-              <div>
-                <UserBudget />
-              </div>
+            <div data-testid="price-sensitivity-setting">
+              <h3 className="font-medium mb-4">Price Sensitivity</h3>
+              <SliderWithPlusAndMinus
+                label="Price"
+                initialValue={preferences.price}
+                onChange={(value) => setPreference("price", value)}
+              />
             </div>
-          </div>
 
-          <div className="mt-6 flex justify-end gap-2">
-            <Button onClick={() => setOpen(false)}>Close</Button>
+            <div data-testid="safety-setting">
+              <h3 className="font-medium mb-4">Neighborhood Safety</h3>
+              <SliderWithPlusAndMinus
+                label="Neighborhood Safety"
+                initialValue={preferences.neighborhoodSafety}
+                onChange={(value) => setPreference("neighborhoodSafety", value)}
+              />
+            </div>
+
+            <div data-testid="amenity-setting">
+              <h3 className="font-medium mb-4">Amenity Priorities</h3>
+              <SliderWithPlusAndMinus
+                label="Amenity"
+                initialValue={preferences.amenity}
+                onChange={(value) => setPreference("amenity", value)}
+              />
+            </div>
+
+            <div data-testid="budget-setting">
+              <h3 className="font-medium mb-4">Budget Range</h3>
+              <UserBudget />
+            </div>
           </div>
         </div>
       </div>
