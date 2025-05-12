@@ -7,6 +7,7 @@ import { geocode, useGeocoder } from "@/hooks/map/useGeocoder";
 
 type Props = {
   property: any;
+  id?: string;
 };
 
 const PropertyMarker: React.FC<PropsWithChildren<Props>> = (props) => {
@@ -28,38 +29,38 @@ const PropertyMarker: React.FC<PropsWithChildren<Props>> = (props) => {
   // @ts-ignore
   const latLng = { lat: property?.latitude, lng: property?.longitude };
   return (
-    <AdvancedMarker
-      key={`${property?.place_id}`}
-      position={latLng}
-      onClick={async (event) => {
-        // @ts-ignore
-        event.stop();
-        if (property?.place_id) {
-          // Call event.stop() on the event to prevent the default info window from showing.
-          const detail = await getPlaceDetail(
-            placesSerivce!,
-            property.place_id
-          );
-          setCurrentGeometry(latLng);
-
-          setCurrentInfoWindow(detail);
-        } else {
-          if (gecoder) {
-            const result = await geocode(gecoder, latLng);
-            if (result) {
-              const detail = await getPlaceDetail(
-                placesSerivce!,
-                result.place_id
-              );
-              setCurrentGeometry(latLng);
-              setCurrentInfoWindow(detail);
+    <div data-testid={`property-marker-${property?.place_id}`}>
+      <AdvancedMarker
+        key={`${property?.place_id}`}
+        position={latLng}
+        onClick={async (event) => {
+          // @ts-ignore
+          event.stop();
+          if (property?.place_id) {
+            const detail = await getPlaceDetail(
+              placesSerivce!,
+              property.place_id
+            );
+            setCurrentGeometry(latLng);
+            setCurrentInfoWindow(detail);
+          } else {
+            if (gecoder) {
+              const result = await geocode(gecoder, latLng);
+              if (result) {
+                const detail = await getPlaceDetail(
+                  placesSerivce!,
+                  result.place_id
+                );
+                setCurrentGeometry(latLng);
+                setCurrentInfoWindow(detail);
+              }
             }
           }
-        }
-      }}
-    >
-      {props.children}
-    </AdvancedMarker>
+        }}
+      >
+        {props.children}
+      </AdvancedMarker>
+    </div>
   );
 };
 
