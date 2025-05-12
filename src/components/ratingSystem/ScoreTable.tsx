@@ -6,6 +6,7 @@ import { loadSafetyScores } from "./lib/safetyScore";
 import { calculateAmenitiesScore } from "./lib/amenitiesScore";
 import { calculateTotalScore } from "./lib/finalScore";
 import TravelModeSelector from "./TravelModeSelector";
+import StarRating from "./StarRating";
 import useMapStore from "@/stores/useMapStore";
 import { useGroupSelectorStore } from "@/stores/useGroupSelectorStore";
 import { getPlaceDetail, usePlacesService } from "@/hooks/map/usePlacesService";
@@ -283,7 +284,10 @@ const ScoreTable = () => {
             <th className="p-2 w-1/16">🏠 Property</th>
             <th className="p-2 w-1/16">💰 Price</th>
             <th className="p-2 w-2/16">🏚️ Layout</th>
-            <th className="p-2 w-2/16">🏪 Amenities</th>
+            <th className="p-2 w-2/16">
+              🏪 Amenities
+              <p className="text-xs">(counts within 3km)</p>
+            </th>
             <th className="p-2 w-2/16">📍 POI</th>
             <th className="p-2 w-2/16">🚶 Distance</th>
             <th className="p-2 w-2/16 relative">
@@ -399,14 +403,14 @@ const ScoreTable = () => {
                   >
                     <div className="flex flex-col">
                       <div className="flex justify-between items-center">
-                        <span
+                        <div
                           className={cn(
                             "text-lg font-bold",
                             isDark && "text-white"
                           )}
                         >
                           {totalScores[propertyId]?.toFixed(1) || "N/A"}
-                        </span>
+                        </div>
 
                         <div className="relative">
                           <button
@@ -487,6 +491,10 @@ const ScoreTable = () => {
                             </div>
                           )}
                         </div>
+                      </div>
+
+                      <div className="flex justify-between items-center">
+                        <StarRating totalScore={totalScores[propertyId]} />
                       </div>
                     </div>
                   </td>
