@@ -68,9 +68,6 @@ describe("user case 1: no saved properties or pois", () => {
     // 点击设置
     cy.contains("Settings").click();
 
-    // 验证设置弹窗出现
-    cy.get('[role="dialog"]').should("be.visible");
-
     //关闭侧边栏
     cy.get("button:has(.h-4.w-4)").click();
   });

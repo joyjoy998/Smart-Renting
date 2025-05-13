@@ -1,7 +1,6 @@
-import { LargeNumberLike } from "crypto";
 import { create } from "zustand";
 import { Property } from "@/types/property";
-import { useGroupStore } from "./useGroupStore";
+
 interface RecommendationState {
   isRecommendationOpen: boolean;
   recommendedProperties: Property[];

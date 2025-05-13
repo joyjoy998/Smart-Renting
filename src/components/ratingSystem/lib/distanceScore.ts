@@ -1,4 +1,4 @@
-import { useRatingStore } from "@/stores/ratingStore";
+import { useRatingStore } from "../../../stores/ratingStore";
 import axios from "axios";
 
 interface Property {
@@ -30,7 +30,7 @@ interface RouteData {
  * @param duration Duration string in format "1200s" or "PT20M" (ISO 8601)
  * @returns Duration in seconds
  */
-function durationToSeconds(duration: string): number {
+export function durationToSeconds(duration: string): number {
   if (duration.endsWith("s")) {
     return parseInt(duration.slice(0, -1));
   }
@@ -42,7 +42,7 @@ function durationToSeconds(duration: string): number {
  * @param poiType Type of the POI
  * @returns Weight for the POI type
  */
-function getPOIWeight(poiType: string | undefined): number {
+export function getPOIWeight(poiType: string | undefined): number {
   const weights: Record<string, number> = {
     Work: 1.0,
     School: 1.0,
@@ -62,7 +62,7 @@ function getPOIWeight(poiType: string | undefined): number {
  * @param steepness Controls how steep the sigmoid curve is
  * @returns Normalized value between 0 and 1
  */
-function sigmoidNormalize(
+export function sigmoidNormalize(
   value: number,
   midpoint: number,
   steepness: number = 0.1
@@ -76,7 +76,7 @@ function sigmoidNormalize(
  * @param poiType Type of the POI
  * @returns Score for this property-POI pair
  */
-function calculateTimeBucketScore(
+export function calculateTimeBucketScore(
   travelTimeSeconds: number,
   poiType: string | undefined
 ): number {
@@ -138,7 +138,7 @@ function calculateTimeBucketScore(
  * @param pois Array of POIs with their types
  * @returns Comprehensive score
  */
-function calculateExponentialDistanceScore(
+export function calculateExponentialDistanceScore(
   poiScores: Record<string, number>,
   pois: POI[]
 ): number {

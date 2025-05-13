@@ -1,6 +1,6 @@
 import { create } from "zustand";
-import { fetchGroupRatingData } from "@/services/ratingService";
-import { usePreferencesStore } from "@/stores/usePreferencesStore";
+import { fetchGroupRatingData } from "../services/ratingService";
+import { usePreferencesStore } from "../stores/usePreferencesStore";
 
 interface Property {
   property_property_id: string;

@@ -1,4 +1,4 @@
-import { useRatingStore } from "@/stores/ratingStore";
+import { useRatingStore } from "../../../stores/ratingStore";
 
 interface Property {
   property_property_id: string;
@@ -42,7 +42,10 @@ const AMENITY_THRESHOLDS: Record<string, number> = {
  * @param threshold ideal maximun number
  * @returns a score between 0-1
  */
-function calculateSingleAmenityScore(count: number, threshold: number): number {
+export function calculateSingleAmenityScore(
+  count: number,
+  threshold: number
+): number {
   // Sigmoid function provides a smooth S-curve
   // when the count reaches 2/3 of the threshold, the score reaches 0.8
   // when the count reaches threshold, the score reaches 0.9 and then the growth becomes slow
@@ -59,7 +62,7 @@ function calculateSingleAmenityScore(count: number, threshold: number): number {
  * @param ceiling maximum allowed score after normalization (default: 1.0)
  * @returns normalized score between floor and ceiling
  */
-function normalizeScoreWithFloor(
+export function normalizeScoreWithFloor(
   rawScore: number,
   minScore: number,
   maxScore: number,
@@ -79,7 +82,7 @@ function normalizeScoreWithFloor(
  * @param scores array of scores to compress
  * @returns object with transformed scores
  */
-function applyLogarithmicCompression(
+export function applyLogarithmicCompression(
   scores: Record<string, number>
 ): Record<string, number> {
   const transformedScores: Record<string, number> = {};
