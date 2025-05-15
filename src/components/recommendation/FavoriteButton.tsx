@@ -70,6 +70,7 @@ const FavoriteButton = ({
             payload,
           ]);
 
+          // Call onFavorite after successfully saving
           if (onFavorite) {
             onFavorite();
           }
@@ -87,12 +88,20 @@ const FavoriteButton = ({
           "propertyId:",
           propertyId
         );
+        
+        // Call onFavorite BEFORE removing the property
+        // This ensures the loading state is shown during removal as well
+        if (onFavorite) {
+          onFavorite();
+        }
+        
         const response = await axios.delete("/api/savedProperties", {
           params: {
             group_id: groupId,
             property_id: propertyId,
           },
         });
+        
         if (response.status === 200) {
           enqueueSnackbar("Property removed successfully", {
             variant: "success",
