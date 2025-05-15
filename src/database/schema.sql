@@ -4,7 +4,7 @@
 
 CREATE TABLE users (
     user_id TEXT PRIMARY KEY,       -- 来自 Clerk 的用户ID
-    username VARCHAR(20) NOT NULL,         
+    username TEXT NOT NULL,         
     email VARCHAR(255) NOT NULL UNIQUE,
     created_at TIMESTAMPTZ DEFAULT (now() AT TIME ZONE 'utc'::text),
     last_sign_at TIMESTAMPTZ DEFAULT (now() AT TIME ZONE 'utc'::text)

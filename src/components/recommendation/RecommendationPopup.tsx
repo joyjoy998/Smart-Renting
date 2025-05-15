@@ -25,6 +25,10 @@ import useMapStore from "@/stores/useMapStore";
 import type { Property } from "@/types/property";
 
 const DEFAULT_IMAGE_URL = "/property-unavailable.png";
+// Define loading times
+const MINIMUM_LOADING_TIME = 200; // 1 second minimum loading display
+const DATABASE_DELAY = 2000; // 3 seconds database delay for synchronization
+const FAVORITE_UPDATE_DELAY = 2000; // 2 seconds for favorite update message
 
 const RecommendationPopup = () => {
   const {
@@ -44,12 +48,19 @@ const RecommendationPopup = () => {
 
   const [showWarning, setShowWarning] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState("Finding properties that match your preferences...");
+  const [loadingStage, setLoadingStage] = useState(0); // For tracking loading stages
   const [page, setPage] = useState(0);
   const ITEMS_PER_PAGE = 5;
   const [shouldRefetchOnNextPage, setShouldRefetchOnNextPage] = useState(false);
   const { mapLocation } = useMapLocationStore();
   const setCurrentGeometry = useMapStore.use.setCurrentGeometry();
   const setCurrentInfoWindow = useMapStore.use.setCurrentInfoWindow();
+  const [initialOpen, setInitialOpen] = useState(false); // Track if this is the initial opening
+  
+  // New state to track when a favorite action was performed
+  const [favoriteActionPerformed, setFavoriteActionPerformed] = useState(false);
+  
   // Use useCallback to wrap the handler function to avoid unnecessary recreations
   const handlePropertyClick = useCallback(
     (property: Property) => {
@@ -85,6 +96,50 @@ const RecommendationPopup = () => {
     [setCurrentGeometry, setCurrentInfoWindow, toggleRecommendation]
   );
 
+  // Handle favorite action
+  const handleFavoriteAction = useCallback(() => {
+    setFavoriteActionPerformed(true);
+    setLoading(true);
+    setLoadingMessage("Updating your recommendations...");
+    setLoadingStage(1);
+    
+    // Delay to show the update message
+    setTimeout(() => {
+      // Now fetch updated recommendations
+      const startTime = Date.now();
+      
+      fetchRecommendations(
+        userId!,
+        groupId!,
+        minPrice,
+        maxPrice,
+        mapLocation?.lat,
+        mapLocation?.lng
+      ).then(() => {
+        // Calculate how long the fetch took
+        const fetchTime = Date.now() - startTime;
+        
+        // Ensure minimum display time for the update message
+        if (fetchTime < MINIMUM_LOADING_TIME) {
+          return new Promise(resolve => setTimeout(resolve, MINIMUM_LOADING_TIME - fetchTime));
+        }
+      }).finally(() => {
+        setLoading(false);
+        setFavoriteActionPerformed(false);
+        setShouldRefetchOnNextPage(false);
+      });
+    }, FAVORITE_UPDATE_DELAY);
+  }, [userId, groupId, minPrice, maxPrice, mapLocation, fetchRecommendations]);
+
+  // Effect to track when the dialog opens
+  useEffect(() => {
+    if (isRecommendationOpen && !initialOpen) {
+      setInitialOpen(true);
+    } else if (!isRecommendationOpen) {
+      setInitialOpen(false);
+    }
+  }, [isRecommendationOpen]);
+
   useEffect(() => {
     if (isRecommendationOpen) {
       setPage(0);
@@ -96,16 +151,39 @@ const RecommendationPopup = () => {
         }, 2000);
       } else {
         setLoading(true);
-        fetchRecommendations(
-          userId,
-          groupId,
-          minPrice,
-          maxPrice,
-          mapLocation?.lat,
-          mapLocation?.lng
-        ).finally(() => {
-          setLoading(false);
-        });
+        setLoadingStage(0);
+        setLoadingMessage("Finding properties that match your preferences...");
+        
+        // First wait for database to sync
+        setTimeout(() => {
+          setLoadingStage(1);
+          
+          // Now fetch recommendations after the database sync delay
+          const startTime = Date.now();
+          
+          fetchRecommendations(
+            userId,
+            groupId,
+            minPrice,
+            maxPrice,
+            mapLocation?.lat,
+            mapLocation?.lng
+          ).then(() => {
+            setLoadingStage(2);
+            
+            // Calculate how long the fetch took
+            const fetchTime = Date.now() - startTime;
+            
+            // Ensure total time meets minimum loading time
+            const totalTimeSpent = fetchTime + DATABASE_DELAY;
+            if (totalTimeSpent < MINIMUM_LOADING_TIME + DATABASE_DELAY) {
+              const remainingTime = MINIMUM_LOADING_TIME + DATABASE_DELAY - totalTimeSpent;
+              return new Promise(resolve => setTimeout(resolve, remainingTime));
+            }
+          }).finally(() => {
+            setLoading(false);
+          });
+        }, DATABASE_DELAY);
       }
     }
   }, [
@@ -127,26 +205,31 @@ const RecommendationPopup = () => {
 
   const handleNext = async () => {
     if (shouldRefetchOnNextPage) {
-      setLoading(true);
-      await fetchRecommendations(
-        userId!,
-        groupId!,
-        minPrice,
-        maxPrice,
-        mapLocation?.lat,
-        mapLocation?.lng
-      );
-      setShouldRefetchOnNextPage(false);
-      setLoading(false);
+      handleFavoriteAction(); // Use the same handler for consistency
+    } else {
+      setPage((prev) => {
+        const nextPage = prev + 1;
+        const maxPage =
+          Math.ceil(recommendedProperties.length / ITEMS_PER_PAGE) - 1;
+        return Math.min(nextPage, maxPage);
+      });
     }
-
-    setPage((prev) => {
-      const nextPage = prev + 1;
-      const maxPage =
-        Math.ceil(recommendedProperties.length / ITEMS_PER_PAGE) - 1;
-      return Math.min(nextPage, maxPage);
-    });
   };
+
+  // Enhanced loading message with animation and stages
+  const loadingUI = (
+    <div className="flex flex-col items-center justify-center py-8">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
+      <p className="text-center text-blue-500 font-medium">
+        {loadingMessage}
+      </p>
+      <div className="w-full max-w-xs bg-gray-200 rounded-full h-2.5 mt-4">
+        <div 
+          className="bg-blue-600 h-2.5 rounded-full transition-all duration-300" 
+          style={{ width: `${(loadingStage + 1) * 33.3}%` }}></div>
+      </div>
+    </div>
+  );
 
   return (
     <Dialog open={isRecommendationOpen} onOpenChange={toggleRecommendation}>
@@ -154,9 +237,7 @@ const RecommendationPopup = () => {
         <DialogHeader>
           <DialogTitle>Recommended Properties</DialogTitle>
           <DialogDescription>
-            <DialogDescription>
-              {showWarning ? "Please login to see recommendations." : ""}
-            </DialogDescription>
+            {showWarning ? "Please login to see recommendations." : ""}
           </DialogDescription>
         </DialogHeader>
 
@@ -166,9 +247,7 @@ const RecommendationPopup = () => {
               Please login to see recommendations.
             </p>
           ) : loading ? (
-            <p className="text-center text-blue-400 font-bold">
-              Loading recommendations...
-            </p>
+            loadingUI
           ) : recommendedProperties.length > 0 ? (
             <div className="flex flex-col space-y-4">
               {currentPageProperties.map((property) => {
@@ -180,7 +259,7 @@ const RecommendationPopup = () => {
                 return (
                   <div
                     key={property.property_id}
-                    className="flex border rounded-lg overflow-hidden shadow-md relative"
+                    className="flex border rounded-lg overflow-hidden shadow-md relative hover:shadow-lg transition-shadow duration-300 cursor-pointer"
                     onClick={() => handlePropertyClick(property)}>
                     {/* Left side image slider - prevent propagation */}
                     <div
@@ -210,14 +289,14 @@ const RecommendationPopup = () => {
                         <p className="text-xl font-bold">
                           ${property.weekly_rent} per week
                         </p>
-                        {/* MODIFIED: Favorite button with stopPropagation */}
+                        {/* MODIFIED: Favorite button with stopPropagation and updated handler */}
                         <div
                           className="z-10"
                           onClick={(e) => e.stopPropagation()}>
                           <FavoriteButton
                             propertyId={property.property_id}
                             placeData={property}
-                            onFavorite={() => setShouldRefetchOnNextPage(true)}
+                            onFavorite={handleFavoriteAction}
                           />
                         </div>
                       </div>
@@ -228,7 +307,7 @@ const RecommendationPopup = () => {
                       </p>
 
                       {/* Row 3 - Property Details */}
-                      <div className="flex items-center space-x-4 text-gray-600  dark:text-gray-300 mt-2">
+                      <div className="flex items-center space-x-4 text-gray-600 dark:text-gray-300 mt-2">
                         <span>
                           🛏 {property.bedrooms}{" "}
                           {property.bedrooms === 1 ? "Bed" : "Beds"}
@@ -246,7 +325,7 @@ const RecommendationPopup = () => {
                       </div>
 
                       {/* Property Type */}
-                      <p className="text-gray-600  dark:text-gray-300 mt-2">
+                      <p className="text-gray-600 dark:text-gray-300 mt-2">
                         {property.property_type}
                       </p>
                     </div>
@@ -255,8 +334,8 @@ const RecommendationPopup = () => {
               })}
             </div>
           ) : (
-            <p className="text-center text-gray-500  dark:text-gray-300">
-              No recommended properties available
+            <p className="text-center text-gray-500 dark:text-gray-300">
+              No recommended properties available. Try saving more properties to get recommendations.
             </p>
           )}
 
@@ -284,11 +363,11 @@ const RecommendationPopup = () => {
                   alert("Failed to get group data");
                 }
               }}
-              disabled={!userId}>
+              disabled={!userId || loading}>
               Comparison Report
             </Button>
             {recommendedProperties.length > (page + 1) * ITEMS_PER_PAGE && (
-              <Button className="w-2/5" onClick={handleNext} disabled={!userId}>
+              <Button className="w-2/5" onClick={handleNext} disabled={!userId || loading}>
                 Next Page
               </Button>
             )}
