@@ -409,7 +409,7 @@ const ScoreTable = () => {
                             isDark && "text-white"
                           )}
                         >
-                          {totalScores[propertyId]?.toFixed(1) || "N/A"}
+                          {totalScores[propertyId]?.toFixed(2) || "N/A"}
                         </div>
 
                         <div className="relative">
@@ -447,7 +447,7 @@ const ScoreTable = () => {
                                 >
                                   <span>🛡 Safety:</span>
                                   <span className="font-medium">
-                                    {safetyScores[propertyId]?.toFixed(1) ||
+                                    {safetyScores[propertyId]?.toFixed(2) ||
                                       "N/A"}
                                   </span>
                                 </div>
@@ -459,7 +459,7 @@ const ScoreTable = () => {
                                 >
                                   <span>📏 Distance:</span>
                                   <span className="font-medium">
-                                    {distanceScores[propertyId]?.toFixed(1) ||
+                                    {distanceScores[propertyId]?.toFixed(2) ||
                                       "N/A"}
                                   </span>
                                 </div>
@@ -471,7 +471,7 @@ const ScoreTable = () => {
                                 >
                                   <span>💰 Price:</span>
                                   <span className="font-medium">
-                                    {priceScores[propertyId]?.toFixed(1) ||
+                                    {priceScores[propertyId]?.toFixed(2) ||
                                       "N/A"}
                                   </span>
                                 </div>
@@ -483,7 +483,7 @@ const ScoreTable = () => {
                                 >
                                   <span>🏪 Amenities:</span>
                                   <span className="font-medium">
-                                    {amenitiesScores[propertyId]?.toFixed(1) ||
+                                    {amenitiesScores[propertyId]?.toFixed(2) ||
                                       "N/A"}
                                   </span>
                                 </div>
