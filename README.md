@@ -64,6 +64,10 @@ The keys with the prefix `NEXT_PUBLIC_` need to be exposed to the frontend, and 
 npm run dev
 ```
 
+5. Follow the instructions
+
+It is vrey recommended to follow the instructions clicking Help/Guidance function within the sidebar after signing in, which could help users to learn how to use this app to help find suitable rental property rapidly.
+
 ## 🏆 Contribution
 
 This project was developed in collaboration with [ClaireWu27](https://github.com/ClaireWu27), [mushroom18](https://github.com/mushroom18), [YaraWang999](https://github.com/YaraWang999) and [quilla3](https://github.com/quilla3).
