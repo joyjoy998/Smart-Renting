@@ -27,7 +27,7 @@ const GuidedTour = () => {
       popover: {
         title: "Map Container",
         description:
-          "This is the map container where you can view the map. You can click on the map to save POIs and properties of interest.",
+          "This is the map container where you can view the map. You can click on the map to save Points of Interest (POIs) and properties of interest.",
         side: "top",
         align: "center",
       },
@@ -61,7 +61,7 @@ const GuidedTour = () => {
       popover: {
         title: "Saved POI",
         description:
-          "This is the saved POI section where you can view and manage your saved points of interest.",
+          "This is the saved POI section where you can view and manage your saved POIs.",
         side: "right",
         align: "start",
       },
@@ -81,7 +81,7 @@ const GuidedTour = () => {
       popover: {
         title: "Comparison Report",
         description:
-          "This is the comparison report section allows you to create detailed, personalized reports that rank and evaluate rental properties based on their marked Points of Interest (POIs), preferences, and other input criteria.",
+          "This is the comparison report section allows you to create detailed, personalized reports that rank and evaluate rental properties based on their marked POIs, preferences, and other input criteria.",
         side: "right",
         align: "start",
       },
