@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import {
   APIProvider,
   Map,
@@ -8,10 +7,6 @@ import {
   useMapsLibrary,
 } from "@vis.gl/react-google-maps";
 import { MAPS_CONFIG } from "@/lib/constants/mapConfigure";
-import {
-  GOOGLE_DARK_MAPS_ID,
-  GOOGLE_LIGHT_MAPS_ID,
-} from "@/lib/constants/mapId";
 import Loading from "@/components/ui/Loading";
 import { useTheme } from "next-themes";
 import { MapContent } from "./MapContent";
@@ -45,7 +40,11 @@ export function MapContainer() {
       <Map
         defaultCenter={MAPS_CONFIG.defaultCenter}
         defaultZoom={MAPS_CONFIG.defaultZoom}
-        mapId={theme === "dark" ? GOOGLE_DARK_MAPS_ID : GOOGLE_LIGHT_MAPS_ID}
+        mapId={
+          theme === "dark"
+            ? process.env.NEXT_PUBLIC_GOOGLE_DARK_MAPS_ID
+            : process.env.NEXT_PUBLIC_GOOGLE_LIGHT_MAPS_ID
+        }
         onClick={async (event) => {
           console.log("event=========", event);
           if (event.detail?.placeId) {
