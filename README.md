@@ -2,7 +2,7 @@
 
 This project aims to develop an intelligent rental platform that empowers tenants to make better housing decisions. By integrating a customizable scoring system and a recommendation engine based on natural language processing, the platform allows users to evaluate and compare rental properties based on key priorities such as proximity to essential services and neighborhood safety. The goal is to move beyond static listings and offer a personalized, data-driven rental search experience.
 
-## ⚙️ Tech Stacks used in this portfolio project
+## ⚙️ Tech Stacks used in this project
 
 <ul>
 <li>Framework: React 18 + Next.js</li>
