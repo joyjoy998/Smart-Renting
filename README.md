@@ -58,6 +58,12 @@ NEXT_PUBLIC_GOOGLE_DARK_MAPS_ID =
 
 The keys with the prefix `NEXT_PUBLIC_` need to be exposed to the frontend, and the keys without the prefix are high-privilege keys, which are only used in the backend.
 
+4. Run development server
+
+```bash
+npm run dev
+```
+
 ## 🏆 Contribution
 
 This project was developed in collaboration with [ClaireWu27](https://github.com/ClaireWu27), [mushroom18](https://github.com/mushroom18), [YaraWang999](https://github.com/YaraWang999) and [quilla3](https://github.com/quilla3).
