@@ -5,6 +5,7 @@ import {
   Map,
   useMap,
   useMapsLibrary,
+  ColorScheme,
 } from "@vis.gl/react-google-maps";
 import { MAPS_CONFIG } from "@/lib/constants/mapConfigure";
 import Loading from "@/components/ui/Loading";
@@ -38,13 +39,10 @@ export function MapContainer() {
       />
 
       <Map
+        colorScheme={theme === "dark" ? ColorScheme.DARK : ColorScheme.LIGHT}
         defaultCenter={MAPS_CONFIG.defaultCenter}
         defaultZoom={MAPS_CONFIG.defaultZoom}
-        mapId={
-          theme === "dark"
-            ? process.env.NEXT_PUBLIC_GOOGLE_DARK_MAPS_ID
-            : process.env.NEXT_PUBLIC_GOOGLE_LIGHT_MAPS_ID
-        }
+        mapId={process.env.NEXT_PUBLIC_MAPS_ID}
         onClick={async (event) => {
           console.log("event=========", event);
           if (event.detail?.placeId) {
@@ -58,10 +56,10 @@ export function MapContainer() {
 
             setCurrentInfoWindow(detail);
           } else {
-            console.log(
-              "getplaceDetail==================",
-              event.detail.latLng && gecoder
-            );
+            // console.log(
+            //   "getplaceDetail==================",
+            //   event.detail.latLng && gecoder
+            // );
             if (event.detail.latLng && gecoder) {
               const result = await geocode(gecoder, event.detail.latLng);
               if (result) {
@@ -69,7 +67,7 @@ export function MapContainer() {
                   placesSerivce!,
                   result.place_id
                 );
-                console.log("detail==========", detail);
+                // console.log("detail==========", detail);
                 setCurrentGeometry({
                   lat: result?.geometry?.location.lat()!,
                   lng: result?.geometry?.location.lng()!,
